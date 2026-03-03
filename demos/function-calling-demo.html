@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Function Calling — Step by Step</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #F8FAFC 0%, #F1F5F9 50%, #E8EDF4 100%);
+    font-family: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+    padding: 24px 16px;
+  }
+
+  .container { max-width: 720px; margin: 0 auto; }
+
+  h1 {
+    font-size: 28px; font-weight: 700; color: #0F172A;
+    margin: 0 0 6px 0; letter-spacing: -0.02em; text-align: center;
+  }
+  .subtitle {
+    color: #64748B; font-size: 15px; text-align: center; line-height: 1.5; margin-bottom: 4px;
+  }
+
+  /* Architecture diagram */
+  .arch { display: flex; align-items: center; justify-content: center; gap: 0; padding: 16px 0; flex-wrap: wrap; }
+  .arch-box {
+    border-radius: 10px; padding: 8px 12px; text-align: center;
+    font-size: 12px; font-weight: 600; color: #334155; min-width: 80px;
+  }
+  .arch-icon { font-size: 18px; }
+  .arch-arrow { font-size: 20px; color: #94A3B8; padding: 0 2px; }
+
+  /* Scenario buttons */
+  .scenarios { display: flex; gap: 8px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+  .scenario-btn {
+    padding: 8px 20px; border-radius: 20px; border: 2px solid #E2E8F0;
+    background: #fff; color: #475569; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .scenario-btn.active { border-color: #3B82F6; background: #EFF6FF; color: #1D4ED8; }
+
+  /* Schema toggle */
+  .schema-toggle {
+    text-align: center; margin-bottom: 16px;
+  }
+  .schema-toggle button {
+    background: none; border: none; color: #6366F1; cursor: pointer;
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+
+  /* Code block */
+  .code-block { border-radius: 10px; overflow: hidden; border: 1px solid #E2E8F0; margin-bottom: 8px; }
+  .code-label {
+    background: #1E293B; color: #94A3B8; font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace; padding: 6px 14px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .code-block pre {
+    background: #0F172A; color: #E2E8F0; padding: 14px 16px; margin: 0;
+    font-size: 13px; font-family: 'IBM Plex Mono', monospace;
+    overflow-x: auto; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+  }
+
+  /* Progress bar */
+  .progress { display: flex; gap: 4px; margin-bottom: 20px; }
+  .progress-seg { flex: 1; height: 4px; border-radius: 2px; background: #E2E8F0; transition: background 0.5s; }
+
+  /* Step cards */
+  .steps { display: flex; flex-direction: column; gap: 14px; }
+  .step-card {
+    background: #fff; border-radius: 14px; border: 2px solid #E2E8F0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04); padding: 16px 20px;
+    cursor: pointer; transition: all 0.3s;
+    animation: slideIn 0.35s ease-out both;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .step-header { display: flex; align-items: center; gap: 10px; }
+  .step-icon { font-size: 20px; }
+  .step-label {
+    font-weight: 700; font-size: 14px; letter-spacing: 0.02em; text-transform: uppercase;
+  }
+  .step-done { margin-left: auto; font-size: 11px; color: #94A3B8; font-weight: 500; }
+  .step-content { padding-left: 30px; margin-top: 12px; }
+
+  /* Thinking bubbles */
+  .thought {
+    padding: 8px 14px; background: rgba(139, 92, 246, 0.08); border-radius: 10px;
+    border-left: 3px solid #8B5CF6; font-size: 14px;
+    font-family: 'IBM Plex Mono', monospace; color: #5B21B6;
+    margin-bottom: 8px; opacity: 0; transform: translateX(-12px);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .thought.visible { opacity: 1; transform: translateX(0); }
+
+  /* Execution steps */
+  .exec-step {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #065F46;
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    opacity: 0; transition: opacity 0.5s;
+  }
+  .exec-step.visible { opacity: 1; }
+  .exec-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #D1D5DB; transition: background 0.3s; flex-shrink: 0;
+  }
+  .exec-step.visible .exec-dot { background: #10B981; }
+
+  /* Insight box */
+  .insight {
+    font-size: 12px; color: #78716C; background: #FAFAF9;
+    padding: 10px 14px; border-radius: 8px; border: 1px dashed #D6D3D1;
+    line-height: 1.6; margin-top: 8px;
+  }
+
+  /* Typewriter cursor */
+  .cursor { opacity: 1; transition: opacity 0.3s; }
+  .cursor.done { opacity: 0; }
+
+  /* Controls */
+  .controls { display: flex; justify-content: center; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  .btn-primary {
+    padding: 12px 32px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, #3B82F6 0%, #6366F1 100%);
+    color: #fff; font-weight: 700; font-size: 15px; cursor: pointer;
+    font-family: inherit; box-shadow: 0 4px 14px rgba(59,130,246,0.3);
+    transition: transform 0.15s;
+  }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-secondary {
+    padding: 12px 24px; border-radius: 12px; border: 2px solid #E2E8F0;
+    background: #fff; color: #64748B; font-weight: 600; font-size: 14px;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+
+  /* Takeaways */
+  .takeaways {
+    margin-top: 28px;
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    border-radius: 16px; padding: 24px 28px; color: #E2E8F0;
+    animation: slideIn 0.5s ease-out both;
+  }
+  .takeaways h3 {
+    margin: 0 0 14px 0; font-size: 16px; font-weight: 700;
+    color: #F8FAFC; letter-spacing: 0.02em; text-align: left;
+  }
+  .takeaway { display: flex; gap: 10px; margin-bottom: 10px; font-size: 14px; line-height: 1.7; }
+  .takeaway-icon { font-size: 18px; flex-shrink: 0; }
+
+  .user-text { font-size: 17px; line-height: 1.6; color: #1E3A5F; }
+  .final-text { font-size: 16px; line-height: 1.7; color: #164E63; padding: 4px 0; }
+  .toolcall-hint { font-size: 13px; color: #92400E; font-style: italic; margin-bottom: 8px; }
+  .result-hint { font-size: 13px; color: #9D174D; font-style: italic; margin-bottom: 8px; }
+  .exec-title { font-size: 13px; color: #065F46; font-weight: 600; margin-bottom: 8px; }
+
+  #schema-container { margin-bottom: 16px; display: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Function Calling — Step by Step</h1>
+  <p class="subtitle">Watch how a model decides to call your functions, and how your code executes them</p>
+
+  <!-- Architecture Diagram -->
+  <div class="arch">
+    <div class="arch-box" style="background:#DBEAFE"><div class="arch-icon">🖥️</div>Your App</div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-box" style="background:#EDE9FE"><div class="arch-icon">🤖</div>OpenAI API</div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-box" style="background:#FEF3C7"><div class="arch-icon">🧠</div>Model Decides</div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-box" style="background:#D1FAE5"><div class="arch-icon">⚙️</div>Your App Executes</div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-box" style="background:#CFFAFE"><div class="arch-icon">✨</div>Model Responds</div>
+  </div>
+
+  <!-- Scenario Selector -->
+  <div class="scenarios" id="scenarios"></div>
+
+  <!-- Schema Toggle -->
+  <div class="schema-toggle">
+    <button id="schema-btn" onclick="toggleSchema()">Show tool schema definition</button>
+  </div>
+  <div id="schema-container"></div>
+
+  <!-- Progress Bar -->
+  <div class="progress" id="progress" style="display:none"></div>
+
+  <!-- Steps -->
+  <div class="steps" id="steps"></div>
+
+  <!-- Controls -->
+  <div class="controls" id="controls"></div>
+
+  <!-- Takeaways -->
+  <div id="takeaways"></div>
+</div>
+
+<script>
+const SCENARIOS = [
+  {
+    id: "weather", label: "Get Weather",
+    userMessage: "What's the weather like in Prague right now?",
+    thinking: [
+      "The user wants current weather data...",
+      "I don't have real-time weather access myself.",
+      "But I have a tool called \"get_weather\" available!",
+      "I'll call it with location: Prague, Czech Republic"
+    ],
+    functionName: "get_weather",
+    functionSchema: { name: "get_weather", description: "Get current weather for a location", parameters: { location: "string", units: "celsius | fahrenheit" } },
+    args: { location: "Prague, Czech Republic", units: "celsius" },
+    executionSteps: [
+      "Calling weather API for Prague...",
+      "Parsing response from weather service...",
+      "Returning result: {\"temp\": 12, \"condition\": \"Partly cloudy\", \"humidity\": 65}"
+    ],
+    result: JSON.stringify({ temp: 12, condition: "Partly cloudy", humidity: "65%" }, null, 2),
+    finalResponse: "It's currently 12°C in Prague with partly cloudy skies. Humidity is at 65%. A light jacket should be enough!"
+  },
+  {
+    id: "email", label: "Send Email",
+    userMessage: "Send an email to alice@example.com saying the meeting is at 3pm",
+    thinking: [
+      "The user wants to send an email...",
+      "I cannot send emails directly — I'm a language model.",
+      "But there's a \"send_email\" tool I can use!",
+      "I'll extract the recipient, subject, and body from the request."
+    ],
+    functionName: "send_email",
+    functionSchema: { name: "send_email", description: "Send an email to a recipient", parameters: { to: "string", subject: "string", body: "string" } },
+    args: { to: "alice@example.com", subject: "Meeting Time Update", body: "Hi Alice, just confirming our meeting is scheduled for 3pm today." },
+    executionSteps: [
+      "Connecting to email service...",
+      "Composing email with provided arguments...",
+      "Email sent successfully. Returning: {\"status\": \"sent\", \"message_id\": \"msg_8821\"}"
+    ],
+    result: JSON.stringify({ status: "sent", message_id: "msg_8821" }, null, 2),
+    finalResponse: "Done! I've sent an email to alice@example.com with the subject \"Meeting Time Update\" confirming the 3pm meeting time."
+  },
+  {
+    id: "multi", label: "Multi-tool",
+    userMessage: "What's the weather in Berlin and Paris? Also email bob@test.com with both forecasts.",
+    thinking: [
+      "The user wants weather for TWO cities AND an email sent...",
+      "This requires multiple tool calls — I can make them in parallel!",
+      "I'll call get_weather twice (Berlin + Paris), then send_email.",
+      "Let me issue all three function calls at once."
+    ],
+    functionName: "get_weather × 2 + send_email",
+    functionSchema: { name: "multiple tools", description: "Parallel calls to get_weather and send_email", parameters: { "...": "see individual schemas" } },
+    args: {
+      "call_1 → get_weather": { location: "Berlin, Germany", units: "celsius" },
+      "call_2 → get_weather": { location: "Paris, France", units: "celsius" },
+      "call_3 → send_email": { to: "bob@test.com", subject: "Weather Update", body: "(will include results)" }
+    },
+    executionSteps: [
+      "Executing call_1: get_weather(Berlin) → 8°C, Rainy",
+      "Executing call_2: get_weather(Paris) → 14°C, Sunny",
+      "Executing call_3: send_email(bob@test.com) → sent",
+      "All 3 results returned to model simultaneously."
+    ],
+    result: JSON.stringify({ call_1: { temp: 8, condition: "Rainy" }, call_2: { temp: 14, condition: "Sunny" }, call_3: { status: "sent" } }, null, 2),
+    finalResponse: "Here's the weather: Berlin is 8°C and rainy — bring an umbrella! Paris is a pleasant 14°C and sunny. I've emailed both forecasts to bob@test.com."
+  }
+];
+
+const STEPS = [
+  { id: "user", label: "User Request", icon: "👤", color: "#3B82F6", borderColor: "#BFDBFE" },
+  { id: "thinking", label: "Model Reasoning", icon: "🧠", color: "#8B5CF6", borderColor: "#DDD6FE" },
+  { id: "toolcall", label: "Function Call", icon: "📡", color: "#F59E0B", borderColor: "#FDE68A" },
+  { id: "execution", label: "Your Code Runs", icon: "⚙️", color: "#10B981", borderColor: "#A7F3D0" },
+  { id: "result", label: "Result → Model", icon: "📦", color: "#EC4899", borderColor: "#FBCFE8" },
+  { id: "response", label: "Final Response", icon: "✨", color: "#06B6D4", borderColor: "#A5F3FC" }
+];
+
+let scenarioIdx = 0;
+let currentStep = -1;
+let maxRevealed = -1;
+let autoPlay = false;
+let showSchema = false;
+let typewriterInterval = null;
+let animationTimeouts = [];
+
+function clearAllTimers() {
+  if (typewriterInterval) { clearInterval(typewriterInterval); typewriterInterval = null; }
+  animationTimeouts.forEach(t => clearTimeout(t));
+  animationTimeouts = [];
+}
+
+function scenario() { return SCENARIOS[scenarioIdx]; }
+
+function renderScenarios() {
+  const el = document.getElementById('scenarios');
+  el.innerHTML = SCENARIOS.map((s, i) =>
+    `<button class="scenario-btn ${i === scenarioIdx ? 'active' : ''}" onclick="selectScenario(${i})">${s.label}</button>`
+  ).join('');
+}
+
+function toggleSchema() {
+  showSchema = !showSchema;
+  document.getElementById('schema-btn').textContent = (showSchema ? 'Hide' : 'Show') + ' tool schema definition';
+  const container = document.getElementById('schema-container');
+  if (showSchema) {
+    container.style.display = 'block';
+    container.innerHTML = codeBlock('Tool Definition (what the model sees)', JSON.stringify(scenario().functionSchema, null, 2));
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function codeBlock(label, content) {
+  return `<div class="code-block">${label ? `<div class="code-label">${label}</div>` : ''}<pre>${escapeHtml(content)}</pre></div>`;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderProgress() {
+  const el = document.getElementById('progress');
+  if (currentStep < 0) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.innerHTML = STEPS.map((s, i) =>
+    `<div class="progress-seg" style="background:${i <= currentStep ? s.color : '#E2E8F0'}"></div>`
+  ).join('');
+}
+
+function renderControls() {
+  const el = document.getElementById('controls');
+  let html = '';
+  if (currentStep < STEPS.length - 1) {
+    const label = currentStep === -1 ? '▶  Start the Flow' : 'Next Step →';
+    html += `<button class="btn-primary" onclick="advance()">${label}</button>`;
+  }
+  if (currentStep === -1) {
+    html += `<button class="btn-secondary" onclick="startAutoPlay()">⏩ Auto-play all steps</button>`;
+  }
+  if (currentStep >= 0) {
+    html += `<button class="btn-secondary" onclick="reset()">↺ Reset</button>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderTakeaways() {
+  const el = document.getElementById('takeaways');
+  if (currentStep !== STEPS.length - 1) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="takeaways">
+      <h3>Key Takeaways</h3>
+      <div class="takeaway"><span class="takeaway-icon">🎯</span><span><strong>The model doesn't execute anything.</strong> It only outputs a structured JSON request saying <em>"call this function with these args."</em></span></div>
+      <div class="takeaway"><span class="takeaway-icon">🔧</span><span><strong>Your code does the real work.</strong> You receive the function call, run your logic (API calls, DB queries, etc.), and return the result.</span></div>
+      <div class="takeaway"><span class="takeaway-icon">🔁</span><span><strong>It's a conversation loop.</strong> Request → model decides → you execute → model reads result → model responds. Multiple round-trips are possible.</span></div>
+      <div class="takeaway"><span class="takeaway-icon">📋</span><span><strong>Schema is everything.</strong> Clear function names, descriptions, and parameter types help the model make accurate tool calls.</span></div>
+    </div>`;
+}
+
+function renderSteps() {
+  const el = document.getElementById('steps');
+  if (currentStep < 0) { el.innerHTML = ''; return; }
+
+  // Only add new cards, don't re-render existing ones (to preserve animations)
+  const existingCards = el.querySelectorAll('.step-card');
+  
+  for (let i = 0; i <= maxRevealed; i++) {
+    const step = STEPS[i];
+    let card = el.querySelector(`[data-step="${i}"]`);
+
+    if (!card) {
+      card = document.createElement('div');
+      card.className = 'step-card';
+      card.dataset.step = i;
+      card.onclick = () => goToStep(i);
+      el.appendChild(card);
+    }
+
+    const isActive = i === currentStep;
+    card.style.borderColor = isActive ? step.color : step.borderColor;
+    card.style.boxShadow = isActive ? `0 4px 24px ${step.color}18` : '0 1px 4px rgba(0,0,0,0.04)';
+
+    let html = `<div class="step-header">
+      <span class="step-icon">${step.icon}</span>
+      <span class="step-label" style="color:${step.color}">Step ${i + 1}: ${step.label}</span>
+      ${i < currentStep ? '<span class="step-done">✓ done — click to review</span>' : ''}
+    </div>`;
+
+    if (isActive) {
+      html += `<div class="step-content" id="step-content-${i}"></div>`;
+    }
+
+    card.innerHTML = html;
+
+    if (isActive) {
+      renderStepContent(i);
+    }
+  }
+
+  // Remove cards beyond maxRevealed
+  el.querySelectorAll('.step-card').forEach(card => {
+    if (parseInt(card.dataset.step) > maxRevealed) card.remove();
+  });
+}
+
+function renderStepContent(stepIdx) {
+  const contentEl = document.getElementById(`step-content-${stepIdx}`);
+  if (!contentEl) return;
+  const s = scenario();
+  const stepId = STEPS[stepIdx].id;
+
+  switch (stepId) {
+    case 'user':
+      contentEl.innerHTML = `<div class="user-text"><span id="tw-user"></span><span class="cursor" id="cursor-user">▋</span></div>`;
+      typewrite('tw-user', s.userMessage, 30, () => {
+        document.getElementById('cursor-user')?.classList.add('done');
+        onStepAnimComplete();
+      });
+      break;
+
+    case 'thinking':
+      contentEl.innerHTML = s.thinking.map((t, i) => `<div class="thought" id="thought-${i}">${escapeHtml(t)}</div>`).join('');
+      s.thinking.forEach((_, i) => {
+        const tid = setTimeout(() => {
+          const el = document.getElementById(`thought-${i}`);
+          if (el) el.classList.add('visible');
+          if (i === s.thinking.length - 1) {
+            const tid2 = setTimeout(onStepAnimComplete, 600);
+            animationTimeouts.push(tid2);
+          }
+        }, (i + 1) * 900);
+        animationTimeouts.push(tid);
+      });
+      break;
+
+    case 'toolcall':
+      contentEl.innerHTML = `
+        <div class="toolcall-hint">The model outputs a structured function call — YOUR app receives this:</div>
+        ${codeBlock('Function Call (JSON)', JSON.stringify({ name: s.functionName, arguments: s.args }, null, 2))}
+        <div class="insight">💡 <strong>Key insight:</strong> The model doesn't execute anything. It just says <em>"I want to call this function with these arguments."</em> Your code does the rest.</div>`;
+      const tid = setTimeout(onStepAnimComplete, 800);
+      animationTimeouts.push(tid);
+      break;
+
+    case 'execution':
+      contentEl.innerHTML = `<div class="exec-title">🖥️ This runs on YOUR server / YOUR code:</div>` +
+        s.executionSteps.map((st, i) => `<div class="exec-step" id="exec-${i}"><span class="exec-dot"></span>${escapeHtml(st)}</div>`).join('');
+      s.executionSteps.forEach((_, i) => {
+        const tid = setTimeout(() => {
+          const el = document.getElementById(`exec-${i}`);
+          if (el) el.classList.add('visible');
+          if (i === s.executionSteps.length - 1) {
+            const tid2 = setTimeout(onStepAnimComplete, 600);
+            animationTimeouts.push(tid2);
+          }
+        }, (i + 1) * 1100);
+        animationTimeouts.push(tid);
+      });
+      break;
+
+    case 'result':
+      contentEl.innerHTML = `
+        <div class="result-hint">You send the result back to the model in the next API call:</div>
+        ${codeBlock('function_call_output', s.result)}`;
+      const tid2 = setTimeout(onStepAnimComplete, 600);
+      animationTimeouts.push(tid2);
+      break;
+
+    case 'response':
+      contentEl.innerHTML = `<div class="final-text"><span id="tw-final"></span><span class="cursor" id="cursor-final">▋</span></div>`;
+      typewrite('tw-final', s.finalResponse, 20, () => {
+        document.getElementById('cursor-final')?.classList.add('done');
+        onStepAnimComplete();
+      });
+      break;
+  }
+}
+
+function typewrite(elId, text, speed, onComplete) {
+  clearInterval(typewriterInterval);
+  const el = document.getElementById(elId);
+  if (!el) return;
+  let idx = 0;
+  typewriterInterval = setInterval(() => {
+    if (idx < text.length) {
+      el.textContent = text.slice(0, idx + 1);
+      idx++;
+    } else {
+      clearInterval(typewriterInterval);
+      typewriterInterval = null;
+      onComplete?.();
+    }
+  }, speed);
+}
+
+function onStepAnimComplete() {
+  if (autoPlay && currentStep < STEPS.length - 1) {
+    const tid = setTimeout(advance, 700);
+    animationTimeouts.push(tid);
+  }
+}
+
+function advance() {
+  clearAllTimers();
+  if (currentStep < STEPS.length - 1) {
+    currentStep++;
+    maxRevealed = Math.max(maxRevealed, currentStep);
+    render();
+    // Scroll to latest step
+    const tid = setTimeout(() => {
+      const card = document.querySelector(`[data-step="${currentStep}"]`);
+      card?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+    animationTimeouts.push(tid);
+  }
+}
+
+function goToStep(i) {
+  if (i > maxRevealed) return;
+  clearAllTimers();
+  currentStep = i;
+  render();
+}
+
+function reset() {
+  clearAllTimers();
+  currentStep = -1;
+  maxRevealed = -1;
+  autoPlay = false;
+  document.getElementById('steps').innerHTML = '';
+  render();
+}
+
+function selectScenario(idx) {
+  scenarioIdx = idx;
+  reset();
+  if (showSchema) {
+    document.getElementById('schema-container').innerHTML = codeBlock('Tool Definition (what the model sees)', JSON.stringify(scenario().functionSchema, null, 2));
+  }
+}
+
+function startAutoPlay() {
+  autoPlay = true;
+  advance();
+}
+
+function render() {
+  renderScenarios();
+  renderProgress();
+  renderSteps();
+  renderControls();
+  renderTakeaways();
+}
+
+// Init
+render();
+</script>
+</body>
+</html>

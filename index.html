@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Demos — barcik.training</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; }
+        header { background: #1e3a5f; color: #fff; padding: 1.5rem 2rem; text-align: center; }
+        header h1 { font-size: 1.6rem; font-weight: 600; margin-bottom: 0.25rem; }
+        header p { font-size: 0.95rem; color: #cbd5e0; }
+        main { max-width: 720px; margin: 2.5rem auto; padding: 0 1.5rem; }
+        .demo-list { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
+        .demo-list a { text-decoration: none; color: inherit; display: block; background: #fff; border-radius: 10px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-left: 4px solid #1e3a5f; transition: transform 0.15s, box-shadow 0.15s; }
+        .demo-list a:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .demo-title { font-size: 1.15rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.3rem; }
+        .demo-desc { font-size: 0.9rem; color: #4a5568; }
+        footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>barcik.training</h1>
+        <p>Interactive AI &amp; ML Demos</p>
+    </header>
+    <main>
+        <ul class="demo-list">
+            <li><a href="demos/attention_cocktail_party.html">
+                <div class="demo-title">The Cocktail Party — Understanding Attention</div>
+                <div class="demo-desc">Explore how the attention mechanism works through an intuitive cocktail-party analogy.</div>
+            </a></li>
+            <li><a href="demos/rag-explorer.html">
+                <div class="demo-title">RAG Explorer — Intuitive Guide</div>
+                <div class="demo-desc">Step through Retrieval-Augmented Generation: embedding, retrieval, and answer synthesis.</div>
+            </a></li>
+            <li><a href="demos/function-calling-demo.html">
+                <div class="demo-title">Function Calling — Step by Step</div>
+                <div class="demo-desc">See how LLMs use function calling to interact with external tools and APIs.</div>
+            </a></li>
+            <li><a href="demos/finetune.html">
+                <div class="demo-title">Understanding Fine-Tuning &amp; LoRA</div>
+                <div class="demo-desc">Visualize how fine-tuning and LoRA adapt a pre-trained model to new tasks.</div>
+            </a></li>
+        </ul>
+    </main>
+    <footer>&copy; 2026 barcik.training</footer>
+</body>
+</html>

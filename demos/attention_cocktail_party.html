@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cocktail Party — Understanding Attention</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F8F5EF;
+    --bg-dark: #1A1A2E;
+    --card: #FFFFFF;
+    --text: #2C2C3A;
+    --text-muted: #7A7A8C;
+    --text-light: #F8F5EF;
+    --query: #E07A5F;
+    --query-light: #FDF0EC;
+    --key: #3D84A8;
+    --key-light: #EBF3F8;
+    --value: #48A9A6;
+    --value-light: #EBF7F7;
+    --highlight: #F2CC8F;
+    --highlight-light: #FDF8ED;
+    --neuron: #7C3AED;
+    --neuron-light: #F3ECFF;
+    --attention: #0D9488;
+    --attention-light: #ECFDF5;
+    --danger: #DC2626;
+    --success: #16A34A;
+    --dimmed: #D1D5DB;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: var(--bg-dark);
+    padding: 2rem 2rem 1.2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(224,122,95,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: 10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(72,169,166,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.2rem;
+    color: var(--text-light);
+    position: relative;
+    z-index: 1;
+  }
+  .header p {
+    color: var(--highlight);
+    font-size: 0.95rem;
+    margin-top: 0.3rem;
+    position: relative;
+    z-index: 1;
+    font-weight: 500;
+  }
+
+  /* ===== TABS ===== */
+  .tabs {
+    display: flex;
+    gap: 0;
+    background: var(--bg-dark);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid rgba(255,255,255,0.06);
+  }
+  .tab {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(248,245,239,0.45);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    user-select: none;
+    position: relative;
+  }
+  .tab:hover { color: rgba(248,245,239,0.7); }
+  .tab.active {
+    color: var(--text-light);
+    border-bottom-color: var(--highlight);
+  }
+  .tab .tab-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    font-size: 0.7rem;
+    margin-right: 0.5rem;
+    transition: all 0.3s ease;
+  }
+  .tab.active .tab-num {
+    background: var(--highlight);
+    color: var(--bg-dark);
+  }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    display: none;
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    animation: fadeIn 0.4s ease;
+  }
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem;
+    margin-bottom: 0.3rem;
+  }
+  .section-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.8rem;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.2rem;
+  }
+
+  /* ===== SECTION 1: THE PARTY ===== */
+  .party-scene {
+    background: var(--bg-dark);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .party-scene::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(242,204,143,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .party-instruction {
+    color: var(--highlight);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
+    text-align: center;
+  }
+
+  .sentence-display {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .word-pill {
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+  }
+  .word-pill.idle {
+    background: rgba(255,255,255,0.08);
+    color: rgba(248,245,239,0.5);
+  }
+  .word-pill.selected {
+    background: var(--highlight);
+    color: var(--bg-dark);
+    box-shadow: 0 0 20px rgba(242,204,143,0.3);
+    transform: scale(1.08);
+  }
+  .word-pill.high-attention {
+    background: var(--value);
+    color: var(--text-light);
+    box-shadow: 0 0 16px rgba(72,169,166,0.35);
+    transform: scale(1.05);
+  }
+  .word-pill.low-attention {
+    background: rgba(255,255,255,0.04);
+    color: rgba(248,245,239,0.2);
+    transform: scale(0.95);
+  }
+
+  .attention-weight-bar {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 6px;
+    transition: all 0.4s ease;
+    background: var(--value);
+  }
+
+  .party-explanation {
+    color: var(--text-light);
+    text-align: center;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 60px;
+  }
+  .party-explanation .em-query { color: var(--query); font-weight: 600; }
+  .party-explanation .em-key { color: var(--key); font-weight: 600; }
+  .party-explanation .em-value { color: var(--value); font-weight: 600; }
+  .party-explanation .em-highlight { color: var(--highlight); font-weight: 600; }
+
+  /* QKV cards */
+  .qkv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .qkv-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 1.3rem;
+    box-shadow: var(--shadow);
+    border-left: 4px solid;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .qkv-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  .qkv-card.query { border-left-color: var(--query); }
+  .qkv-card.key { border-left-color: var(--key); }
+  .qkv-card.value { border-left-color: var(--value); }
+  .qkv-label {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.2rem;
+  }
+  .qkv-card.query .qkv-label { color: var(--query); }
+  .qkv-card.key .qkv-label { color: var(--key); }
+  .qkv-card.value .qkv-label { color: var(--value); }
+  .qkv-meaning {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+  .qkv-analogy {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ===== SECTION 2: WHAT'S STORED ===== */
+  .training-visual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 700px) {
+    .training-visual { grid-template-columns: 1fr; }
+  }
+
+  .training-course-card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .training-course-header {
+    background: var(--bg-dark);
+    padding: 1rem 1.3rem;
+    color: var(--text-light);
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+  }
+  .training-course-body {
+    padding: 1.3rem;
+  }
+  .skill-item {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .skill-item:hover { background: rgba(0,0,0,0.02); }
+  .skill-item.active-skill { background: var(--highlight-light); }
+  .skill-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: white;
+    flex-shrink: 0;
+  }
+  .skill-item:nth-child(1) .skill-num { background: var(--query); }
+  .skill-item:nth-child(2) .skill-num { background: var(--key); }
+  .skill-item:nth-child(3) .skill-num { background: var(--value); }
+  .skill-title { font-weight: 600; font-size: 0.9rem; }
+  .skill-produces { font-size: 0.8rem; color: var(--text-muted); }
+
+  .comparison-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .model-card {
+    border-radius: 12px;
+    padding: 1.3rem;
+    box-shadow: var(--shadow);
+    border-left: 4px solid;
+    background: var(--card);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .model-card:hover { transform: translateX(4px); }
+  .model-card.untrained { border-left-color: var(--danger); }
+  .model-card.trained { border-left-color: var(--success); }
+  .model-card .model-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.4rem;
+  }
+  .model-card.untrained .model-title { color: var(--danger); }
+  .model-card.trained .model-title { color: var(--success); }
+  .model-card .model-desc {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .model-card .model-result {
+    font-weight: 600;
+    font-size: 0.88rem;
+    margin-top: 0.6rem;
+  }
+  .model-card.untrained .model-result { color: var(--danger); }
+  .model-card.trained .model-result { color: var(--success); }
+
+  /* Interactive demo area for trained vs untrained */
+  .demo-area {
+    background: var(--bg-dark);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.2rem;
+    text-align: center;
+  }
+  .demo-label {
+    color: var(--highlight);
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .demo-sentence {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .demo-word {
+    padding: 0.4rem 0.7rem;
+    border-radius: 6px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 0.95rem;
+    transition: all 0.5s ease;
+  }
+
+  /* Key insight callout */
+  .insight-box {
+    background: var(--highlight-light);
+    border-radius: 10px;
+    padding: 1rem 1.3rem;
+    margin-top: 1.2rem;
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+  }
+  .insight-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+  .insight-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+
+  /* ===== SECTION 3: WHERE DOES IT LIVE ===== */
+  .systems-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 700px) {
+    .systems-grid { grid-template-columns: 1fr; }
+  }
+
+  .system-card {
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    background: var(--card);
+    transition: transform 0.2s ease;
+  }
+  .system-card:hover { transform: translateY(-3px); }
+  .system-header {
+    padding: 1rem 1.3rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .system-header.neurons { background: var(--neuron); }
+  .system-header.attention { background: var(--attention); }
+  .system-header-icon { font-size: 1.4rem; }
+  .system-header-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+  }
+  .system-body { padding: 1.3rem; }
+  .system-subtitle {
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.2rem;
+  }
+  .system-card.neurons-card .system-subtitle { color: var(--neuron); }
+  .system-card.attention-card .system-subtitle { color: var(--attention); }
+  .system-main {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+  .system-desc {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .example-pill {
+    display: inline-block;
+    padding: 0.35rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-style: italic;
+    margin: 0.2rem 0.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .example-pill.neuron-ex {
+    background: var(--neuron-light);
+    color: var(--neuron);
+  }
+  .example-pill.neuron-ex:hover {
+    background: var(--neuron);
+    color: white;
+  }
+  .example-pill.attention-ex {
+    background: var(--attention-light);
+    color: var(--attention);
+  }
+  .example-pill.attention-ex:hover {
+    background: var(--attention);
+    color: white;
+  }
+
+  .examples-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  /* Alternating flow visualization */
+  .flow-bar {
+    background: var(--bg-dark);
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .flow-step {
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    opacity: 0.4;
+  }
+  .flow-step.active-flow { opacity: 1; transform: scale(1.08); }
+  .flow-step.neuron-step { background: var(--neuron); }
+  .flow-step.attention-step { background: var(--attention); }
+  .flow-arrow {
+    color: rgba(255,255,255,0.25);
+    font-size: 0.9rem;
+  }
+  .flow-caption {
+    color: var(--highlight);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 0.8rem;
+    width: 100%;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  /* ===== NAV BUTTONS ===== */
+  .nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  .nav-btn {
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .nav-btn.prev {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--dimmed);
+  }
+  .nav-btn.prev:hover { border-color: var(--text); color: var(--text); }
+  .nav-btn.next {
+    background: var(--bg-dark);
+    color: var(--text-light);
+  }
+  .nav-btn.next:hover { background: #2A2A4E; }
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Custom sentence input */
+  .custom-sentence {
+    margin-top: 1rem;
+    text-align: center;
+  }
+  .custom-sentence input {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--dimmed);
+    border-radius: 8px;
+    width: 320px;
+    max-width: 100%;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+  .custom-sentence input:focus {
+    border-color: var(--highlight);
+  }
+  .custom-sentence label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+
+  /* Toggle for untrained/trained */
+  .toggle-container {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 1rem;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 4px;
+    display: inline-flex;
+  }
+  .toggle-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: rgba(248,245,239,0.5);
+    transition: all 0.3s ease;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .toggle-btn.active-toggle {
+    background: var(--highlight);
+    color: var(--bg-dark);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>The Cocktail Party</h1>
+  <p>An interactive guide to the Attention mechanism in LLMs</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="1">
+    <span class="tab-num">1</span>How Attention Works
+  </div>
+  <div class="tab" data-tab="2">
+    <span class="tab-num">2</span>What's Stored in the Model
+  </div>
+  <div class="tab" data-tab="3">
+    <span class="tab-num">3</span>Neurons vs Attention
+  </div>
+</div>
+
+<!-- ==================== SECTION 1 ==================== -->
+<div class="section active" id="section-1">
+  <h2 class="section-title">The Cocktail Party</h2>
+  <p class="section-subtitle">Click on any word to see how it "pays attention" to the others.</p>
+
+  <div class="party-scene">
+    <div class="party-instruction">Click a word to see its attention pattern</div>
+    <div class="sentence-display" id="sentence-display"></div>
+    <div class="party-explanation" id="party-explanation">
+      Each word looks at every other word and decides: <span class="em-highlight">who is relevant to me right now?</span> Some words matter a lot, others are nearly invisible.
+    </div>
+  </div>
+
+  <div class="custom-sentence">
+    <label for="custom-input">Try your own sentence:</label>
+    <input type="text" id="custom-input" placeholder="The cat sat on the couch" maxlength="80">
+  </div>
+
+  <div class="qkv-grid">
+    <div class="qkv-card query">
+      <div class="qkv-label">Query</div>
+      <div class="qkv-meaning">What do I need?</div>
+      <div class="qkv-analogy">You shout at the party: "Who can help me move?"</div>
+    </div>
+    <div class="qkv-card key">
+      <div class="qkv-label">Key</div>
+      <div class="qkv-meaning">What can I offer?</div>
+      <div class="qkv-analogy">Everyone wears a name tag: "Strong & free", "Has a truck"...</div>
+    </div>
+    <div class="qkv-card value">
+      <div class="qkv-label">Value</div>
+      <div class="qkv-meaning">My actual useful content</div>
+      <div class="qkv-analogy">Matched people share: "I can come at 9am, I'll bring boxes."</div>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <div class="insight-icon">💡</div>
+    <div class="insight-text">Every word does this with every other word, all at the same time. That's why it's called "attention" — the model learns where to focus for each word.</div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" disabled>← Previous</button>
+    <button class="nav-btn next" onclick="goToTab(2)">What's Stored? →</button>
+  </div>
+</div>
+
+<!-- ==================== SECTION 2 ==================== -->
+<div class="section" id="section-2">
+  <h2 class="section-title">What Does the Model Actually Store?</h2>
+  <p class="section-subtitle">Not the answers — the rules for finding them.</p>
+
+  <div class="training-visual">
+    <div class="training-course-card">
+      <div class="training-course-header">The "Training Course"</div>
+      <div class="training-course-body">
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.6;">
+          Before the party, every guest takes a course that teaches three skills:
+        </p>
+        <div class="skill-item active-skill" data-skill="1">
+          <div class="skill-num">1</div>
+          <div>
+            <div class="skill-title">How to ask good questions</div>
+            <div class="skill-produces">→ produces the Query</div>
+          </div>
+        </div>
+        <div class="skill-item" data-skill="2">
+          <div class="skill-num">2</div>
+          <div>
+            <div class="skill-title">How to write your name tag</div>
+            <div class="skill-produces">→ produces the Key</div>
+          </div>
+        </div>
+        <div class="skill-item" data-skill="3">
+          <div class="skill-num">3</div>
+          <div>
+            <div class="skill-title">How to share useful information</div>
+            <div class="skill-produces">→ produces the Value</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-stack">
+      <div class="model-card untrained" id="untrained-card">
+        <div class="model-title">✕ Untrained Model</div>
+        <div class="model-desc">Guests took a terrible course. They ask random questions, write confusing name tags, and share useless information.</div>
+        <div class="model-result">→ Attention goes everywhere randomly</div>
+      </div>
+      <div class="model-card trained" id="trained-card">
+        <div class="model-title">✓ Trained Model</div>
+        <div class="model-desc">Guests went through a course refined over billions of examples. Sharp questions, accurate tags, exactly the right info.</div>
+        <div class="model-result">→ Attention goes to the right places</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-area">
+    <div style="text-align:center; margin-bottom:0.8rem;">
+      <div class="toggle-container">
+        <button class="toggle-btn active-toggle" id="toggle-untrained" onclick="setModelMode('untrained')">Untrained</button>
+        <button class="toggle-btn" id="toggle-trained" onclick="setModelMode('trained')">Trained</button>
+      </div>
+    </div>
+    <div class="demo-label" id="demo-label">Random attention — nothing makes sense</div>
+    <div class="demo-sentence" id="demo-sentence-2"></div>
+  </div>
+
+  <div class="insight-box">
+    <div class="insight-icon">💡</div>
+    <div class="insight-text">
+      The model doesn't store "cat is important when you see sat." It stores the <strong>recipe</strong> that allows any word, in any sentence, to figure out who to pay attention to — on the fly.
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="goToTab(1)">← The Party</button>
+    <button class="nav-btn next" onclick="goToTab(3)">Neurons vs Attention →</button>
+  </div>
+</div>
+
+<!-- ==================== SECTION 3 ==================== -->
+<div class="section" id="section-3">
+  <h2 class="section-title">Where Does the Knowledge Live?</h2>
+  <p class="section-subtitle">Two systems, one model — they work together.</p>
+
+  <div class="systems-grid">
+    <div class="system-card neurons-card">
+      <div class="system-header neurons">
+        <div class="system-header-icon">🗄️</div>
+        <div class="system-header-text">The Archives</div>
+      </div>
+      <div class="system-body">
+        <div class="system-subtitle">Feed-Forward Layers (Neurons)</div>
+        <div class="system-main">Stores facts and knowledge</div>
+        <div class="system-desc">
+          Each neuron memorized specific things during training. Stronger connections between neurons = more confident knowledge.
+        </div>
+        <div class="examples-label">Examples of what's stored:</div>
+        <div>
+          <span class="example-pill neuron-ex">"Paris → capital of France"</span>
+          <span class="example-pill neuron-ex">"Water boils → 100°C"</span>
+          <span class="example-pill neuron-ex">"Dog → animal, pet, loyal"</span>
+          <span class="example-pill neuron-ex">"Shakespeare → playwright"</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="system-card attention-card">
+      <div class="system-header attention">
+        <div class="system-header-icon">💬</div>
+        <div class="system-header-text">The Meeting Room</div>
+      </div>
+      <div class="system-body">
+        <div class="system-subtitle">Attention Layers (Multi-Head)</div>
+        <div class="system-main">Stores rules for communication</div>
+        <div class="system-desc">
+          No facts stored here — only the skill of figuring out which words matter for each other, right now. Each head asks a different question:
+        </div>
+        <div class="examples-label">Each head specializes:</div>
+        <div>
+          <span class="example-pill attention-ex">Head 1: "Who did the action?"</span>
+          <span class="example-pill attention-ex">Head 2: "Where did it happen?"</span>
+          <span class="example-pill attention-ex">Head 3: "Positive or negative?"</span>
+          <span class="example-pill attention-ex">Head 4: "Related earlier word?"</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-bar" id="flow-bar">
+    <div class="flow-step attention-step" data-flow="0">Attention</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step neuron-step" data-flow="1">Neurons</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step attention-step" data-flow="2">Attention</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step neuron-step" data-flow="3">Neurons</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step attention-step" data-flow="4">Attention</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step neuron-step" data-flow="5">Neurons</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="background:var(--highlight);color:var(--bg-dark);" data-flow="6">Output</div>
+    <div class="flow-caption" id="flow-caption">Click to animate — watch the layers alternate</div>
+  </div>
+
+  <div class="insight-box">
+    <div class="insight-icon">💡</div>
+    <div class="insight-text">
+      <strong>Communicate → Recall → Communicate → Recall.</strong> Each round deepens understanding. The attention layers figure out relationships, the feed-forward layers contribute knowledge. Together, layer after layer, they build meaning.
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="goToTab(2)">← What's Stored</button>
+    <button class="nav-btn next" disabled>Complete ✓</button>
+  </div>
+</div>
+
+<div class="footer">
+  Under the Hood of GenAI — barcik.training
+</div>
+
+<script>
+// ===== TAB NAVIGATION =====
+const tabs = document.querySelectorAll('.tab');
+const sections = document.querySelectorAll('.section');
+
+function goToTab(num) {
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.tab == num));
+  sections.forEach(s => s.classList.toggle('active', s.id === `section-${num}`));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => goToTab(tab.dataset.tab));
+});
+
+// ===== SECTION 1: INTERACTIVE ATTENTION =====
+const defaultSentence = "The cat sat on the couch";
+
+// Simulated attention patterns for common words/relationships
+function computeAttention(words, selectedIdx) {
+  const selected = words[selectedIdx].toLowerCase();
+  const n = words.length;
+  const weights = new Array(n).fill(0);
+
+  // Simple heuristic-based attention simulation
+  const funcWords = new Set(['the', 'a', 'an', 'on', 'in', 'at', 'to', 'of', 'is', 'was', 'and', 'or', 'but', 'for', 'with', 'by', 'from', 'that', 'this', 'it']);
+  const verbs = new Set(['sat', 'ran', 'ate', 'saw', 'went', 'came', 'put', 'got', 'made', 'took', 'gave', 'said', 'told', 'asked', 'walked', 'jumped', 'played', 'loved', 'hated', 'built', 'wrote', 'read', 'slept', 'cooked', 'drove', 'flew', 'sang', 'danced', 'bought', 'sold', 'found', 'lost', 'hit', 'kicked', 'threw', 'caught', 'opened', 'closed', 'likes', 'runs', 'eats', 'sees', 'goes', 'comes', 'puts', 'gets', 'makes', 'takes', 'gives', 'says', 'tells', 'asks', 'walks', 'jumps', 'plays', 'loves', 'hates', 'builds', 'writes', 'reads', 'sleeps', 'cooks', 'drives', 'flies', 'sings', 'dances', 'buys', 'sells', 'finds', 'hits', 'kicks', 'throws', 'catches', 'opens', 'closes']);
+  const adjectives = new Set(['big', 'small', 'red', 'blue', 'green', 'old', 'new', 'good', 'bad', 'happy', 'sad', 'fast', 'slow', 'hot', 'cold', 'tall', 'short', 'beautiful', 'ugly', 'smart', 'lazy', 'bright', 'dark', 'soft', 'hard', 'wet', 'dry', 'heavy', 'light', 'young', 'large', 'fluffy', 'shiny', 'quiet', 'loud']);
+
+  const isFunc = funcWords.has(selected);
+  const isVerb = verbs.has(selected);
+  const isAdj = adjectives.has(selected);
+
+  for (let i = 0; i < n; i++) {
+    if (i === selectedIdx) { weights[i] = 0; continue; }
+    const w = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
+    const dist = Math.abs(i - selectedIdx);
+
+    if (isVerb) {
+      // Verbs attend strongly to nearby nouns (subject before, object after)
+      if (!funcWords.has(w)) {
+        if (i < selectedIdx) weights[i] = 0.7 / dist; // subject
+        else weights[i] = 0.6 / dist; // object
+      } else {
+        weights[i] = 0.05;
+      }
+    } else if (isFunc) {
+      // Function words attend to next content word
+      if (!funcWords.has(w) && i > selectedIdx && dist <= 2) {
+        weights[i] = 0.8;
+      } else {
+        weights[i] = 0.1 / (dist + 1);
+      }
+    } else if (isAdj) {
+      // Adjectives attend to the noun they modify (usually next word)
+      if (!funcWords.has(w) && !verbs.has(w)) {
+        weights[i] = 0.6 / dist;
+      } else if (verbs.has(w)) {
+        weights[i] = 0.3 / dist;
+      } else {
+        weights[i] = 0.05;
+      }
+    } else {
+      // Nouns attend to verbs and adjectives
+      if (verbs.has(w)) {
+        weights[i] = 0.7 / dist;
+      } else if (adjectives.has(w)) {
+        weights[i] = 0.6 / dist;
+      } else if (!funcWords.has(w)) {
+        weights[i] = 0.3 / dist;
+      } else {
+        weights[i] = 0.05;
+      }
+    }
+  }
+
+  // Normalize to 0-1
+  const max = Math.max(...weights);
+  if (max > 0) {
+    for (let i = 0; i < n; i++) weights[i] = weights[i] / max;
+  }
+  return weights;
+}
+
+function getExplanation(words, selectedIdx, weights) {
+  const selected = words[selectedIdx];
+  const pairs = weights.map((w, i) => ({ word: words[i], weight: w, idx: i }))
+    .filter(p => p.idx !== selectedIdx)
+    .sort((a, b) => b.weight - a.weight);
+
+  const top = pairs.filter(p => p.weight > 0.4);
+  const low = pairs.filter(p => p.weight <= 0.2);
+
+  if (top.length === 0) {
+    return `<span class="em-highlight">"${selected}"</span> has relatively even attention across the sentence — no single word stands out as especially relevant.`;
+  }
+
+  const topWords = top.map(p => `<span class="em-value">"${p.word}"</span>`).join(' and ');
+  const lowWords = low.slice(0, 2).map(p => `"${p.word}"`).join(', ');
+
+  let reason = '';
+  const funcWords = new Set(['the', 'a', 'an', 'on', 'in', 'at', 'to', 'of', 'is', 'was', 'and', 'or', 'but', 'for', 'with', 'by', 'from']);
+  if (funcWords.has(selected.toLowerCase())) {
+    reason = `As a function word, <span class="em-query">"${selected}"</span> mainly points toward the content word it introduces.`;
+  } else {
+    reason = `<span class="em-query">"${selected}"</span> asks: <span class="em-key">"Who is most relevant to me?"</span>`;
+  }
+
+  return `${reason} High match: ${topWords}.${lowWords ? ` Low match: ${lowWords} — mostly ignored.` : ''}`;
+}
+
+let currentWords = [];
+let selectedWordIdx = -1;
+
+function renderSentence(sentence) {
+  currentWords = sentence.split(/\s+/).filter(w => w.length > 0);
+  selectedWordIdx = -1;
+  const container = document.getElementById('sentence-display');
+  container.innerHTML = '';
+
+  currentWords.forEach((word, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'word-pill idle';
+    pill.textContent = word;
+    pill.dataset.idx = i;
+
+    const bar = document.createElement('div');
+    bar.className = 'attention-weight-bar';
+    bar.style.width = '0%';
+    bar.style.opacity = '0';
+    pill.appendChild(bar);
+
+    pill.addEventListener('click', () => selectWord(i));
+    container.appendChild(pill);
+  });
+
+  document.getElementById('party-explanation').innerHTML =
+    'Each word looks at every other word and decides: <span class="em-highlight">who is relevant to me right now?</span> Some words matter a lot, others are nearly invisible.';
+}
+
+function selectWord(idx) {
+  selectedWordIdx = idx;
+  const weights = computeAttention(currentWords, idx);
+  const pills = document.querySelectorAll('#sentence-display .word-pill');
+
+  pills.forEach((pill, i) => {
+    pill.className = 'word-pill';
+    const bar = pill.querySelector('.attention-weight-bar');
+    if (i === idx) {
+      pill.classList.add('selected');
+      bar.style.width = '0%';
+      bar.style.opacity = '0';
+    } else if (weights[i] > 0.4) {
+      pill.classList.add('high-attention');
+      bar.style.width = (weights[i] * 100) + '%';
+      bar.style.opacity = '1';
+    } else {
+      pill.classList.add('low-attention');
+      bar.style.width = (weights[i] * 100) + '%';
+      bar.style.opacity = '0.3';
+    }
+  });
+
+  document.getElementById('party-explanation').innerHTML = getExplanation(currentWords, idx, weights);
+}
+
+// Custom sentence input
+document.getElementById('custom-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const val = e.target.value.trim();
+    if (val.length > 0) renderSentence(val);
+  }
+});
+document.getElementById('custom-input').addEventListener('blur', (e) => {
+  const val = e.target.value.trim();
+  if (val.length > 0) renderSentence(val);
+});
+
+// Initialize
+renderSentence(defaultSentence);
+
+// ===== SECTION 2: TRAINED VS UNTRAINED DEMO =====
+const demoWords = ['The', 'cat', 'sat', 'on', 'the', 'couch'];
+let modelMode = 'untrained';
+
+function renderDemo() {
+  const container = document.getElementById('demo-sentence-2');
+  container.innerHTML = '';
+
+  // For "sat" (index 2) as the reference word
+  const trainedWeights = [0.05, 0.85, 0, 0.05, 0.03, 0.75];
+  const randomWeights = demoWords.map(() => 0.2 + Math.random() * 0.8);
+  randomWeights[2] = 0;
+
+  const weights = modelMode === 'trained' ? trainedWeights : randomWeights;
+  const max = Math.max(...weights);
+
+  demoWords.forEach((word, i) => {
+    const el = document.createElement('div');
+    el.className = 'demo-word';
+    el.textContent = word;
+
+    const norm = max > 0 ? weights[i] / max : 0;
+    if (i === 2) {
+      el.style.background = 'var(--highlight)';
+      el.style.color = 'var(--bg-dark)';
+      el.style.fontWeight = '700';
+    } else if (norm > 0.6) {
+      const opacity = 0.6 + norm * 0.4;
+      el.style.background = `rgba(72, 169, 166, ${opacity})`;
+      el.style.color = 'white';
+      el.style.fontWeight = '600';
+      el.style.transform = `scale(${0.9 + norm * 0.15})`;
+    } else {
+      const opacity = 0.1 + norm * 0.2;
+      el.style.background = `rgba(255,255,255, ${opacity})`;
+      el.style.color = `rgba(248,245,239, ${0.2 + norm * 0.3})`;
+      el.style.transform = `scale(${0.85 + norm * 0.1})`;
+    }
+
+    container.appendChild(el);
+  });
+
+  const label = document.getElementById('demo-label');
+  if (modelMode === 'untrained') {
+    label.textContent = 'Random attention from "sat" — nothing makes sense';
+    label.style.color = 'var(--danger)';
+  } else {
+    label.textContent = '"sat" focuses on "cat" (who) and "couch" (where) — sharp and useful';
+    label.style.color = 'var(--success)';
+  }
+}
+
+function setModelMode(mode) {
+  modelMode = mode;
+  document.getElementById('toggle-untrained').classList.toggle('active-toggle', mode === 'untrained');
+  document.getElementById('toggle-trained').classList.toggle('active-toggle', mode === 'trained');
+  renderDemo();
+}
+
+// Auto-refresh untrained to show randomness
+setInterval(() => {
+  if (modelMode === 'untrained') renderDemo();
+}, 1200);
+
+renderDemo();
+
+// Skill item hover
+document.querySelectorAll('.skill-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.skill-item').forEach(i => i.classList.remove('active-skill'));
+    item.classList.add('active-skill');
+  });
+});
+
+// ===== SECTION 3: FLOW ANIMATION =====
+let flowAnimating = false;
+let flowInterval = null;
+
+document.getElementById('flow-bar').addEventListener('click', () => {
+  if (flowAnimating) return;
+  flowAnimating = true;
+
+  const steps = document.querySelectorAll('.flow-step');
+  const caption = document.getElementById('flow-caption');
+  let current = 0;
+
+  // Reset
+  steps.forEach(s => s.classList.remove('active-flow'));
+
+  const captions = [
+    'Attention: words figure out who to talk to...',
+    'Neurons: recall relevant facts...',
+    'Attention: communicate again, now with richer context...',
+    'Neurons: deeper knowledge activated...',
+    'Attention: final relationships locked in...',
+    'Neurons: precise knowledge for this context...',
+    'Output: confident enough to predict the next word!'
+  ];
+
+  function step() {
+    steps.forEach(s => s.classList.remove('active-flow'));
+    if (current < steps.length) {
+      steps[current].classList.add('active-flow');
+      caption.textContent = captions[current] || '';
+      current++;
+      flowInterval = setTimeout(step, 900);
+    } else {
+      flowAnimating = false;
+      caption.textContent = 'Click to animate again';
+    }
+  }
+  step();
+});
+</script>
+</body>
+</html>

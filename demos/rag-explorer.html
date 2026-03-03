@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Explorer — Intuitive Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e14;
+    --surface: #141620;
+    --surface2: #1a1d2e;
+    --border: #2a2d42;
+    --text: #e2e4ef;
+    --text-dim: #8b8fa6;
+    --accent: #5eead4;
+    --accent2: #a78bfa;
+    --accent3: #f97316;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --highlight-bg: rgba(94, 234, 212, 0.08);
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Header */
+  header {
+    padding: 40px 32px 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  header p { color: var(--text-dim); font-size: 0.95rem; max-width: 720px; }
+
+  /* Main layout */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  /* Step navigation */
+  .step-nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 4px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .step-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s;
+    white-space: nowrap;
+  }
+  .step-btn:hover { color: var(--text); background: var(--surface2); }
+  .step-btn.active {
+    background: linear-gradient(135deg, rgba(94,234,212,0.15), rgba(167,139,250,0.15));
+    color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(94,234,212,0.3);
+  }
+  .step-num {
+    display: inline-block;
+    width: 20px; height: 20px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 50%;
+    background: var(--surface2);
+    font-size: 0.7rem;
+    margin-right: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .step-btn.active .step-num {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* Step content */
+  .step-panel { display: none; animation: fadeIn 0.3s ease; }
+  .step-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .step-header {
+    margin-bottom: 24px;
+  }
+  .step-header h2 { font-size: 1.35rem; font-weight: 700; margin-bottom: 6px; }
+  .step-header p { color: var(--text-dim); font-size: 0.9rem; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 10px; color: var(--accent); }
+
+  /* Ticket cards */
+  .ticket {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .ticket.highlighted {
+    border-color: var(--accent);
+    background: var(--highlight-bg);
+    box-shadow: 0 0 20px rgba(94,234,212,0.08);
+  }
+  .ticket-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent2);
+    margin-bottom: 4px;
+  }
+  .ticket-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+  .ticket-text { font-size: 0.82rem; color: var(--text-dim); line-height: 1.55; }
+  .ticket-resolution {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    font-size: 0.82rem;
+    color: var(--success);
+  }
+  .similarity-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  .sim-high { background: rgba(94,234,212,0.15); color: var(--accent); }
+  .sim-med { background: rgba(249,115,22,0.15); color: var(--accent3); }
+  .sim-low { background: rgba(139,143,166,0.1); color: var(--text-dim); }
+
+  /* Vector visualization */
+  .vector-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.78rem;
+  }
+  .vector-label {
+    width: 90px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .vector-bar-container {
+    flex: 1;
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .vector-cell {
+    height: 28px;
+    flex: 1;
+    border-radius: 3px;
+    transition: all 0.4s ease;
+    position: relative;
+  }
+  .vector-cell:hover::after {
+    content: attr(data-val);
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text);
+    white-space: nowrap;
+    z-index: 10;
+  }
+
+  /* Pooling animation */
+  .pool-vis {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .pool-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .pool-arrow {
+    color: var(--accent);
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .mini-vectors {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .mini-vec {
+    display: flex;
+    gap: 2px;
+  }
+  .mini-cell {
+    width: 18px;
+    height: 12px;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  /* Context window vis */
+  .context-window {
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 16px 0;
+    position: relative;
+  }
+  .context-window::before {
+    content: 'LLM Context Window';
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--surface2);
+    padding: 0 8px;
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent2);
+  }
+  .ctx-section {
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+  }
+  .ctx-system { background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.2); }
+  .ctx-rag { background: rgba(94,234,212,0.08); border: 1px solid rgba(94,234,212,0.2); }
+  .ctx-query { background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2); }
+  .ctx-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .ctx-system .ctx-label { color: var(--accent2); }
+  .ctx-rag .ctx-label { color: var(--accent); }
+  .ctx-query .ctx-label { color: var(--accent3); }
+
+  /* Size bar */
+  .size-bar {
+    height: 24px;
+    border-radius: 4px;
+    position: relative;
+    margin: 8px 0;
+    overflow: hidden;
+  }
+  .size-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--bg);
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #2dd4bf);
+    color: var(--bg);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(94,234,212,0.3); }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+  /* Query input */
+  .query-input-wrap {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .query-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .query-input:focus { border-color: var(--accent); }
+  .query-input::placeholder { color: var(--text-dim); }
+
+  /* Two column */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  /* Insight box */
+  .insight {
+    background: linear-gradient(135deg, rgba(94,234,212,0.06), rgba(167,139,250,0.06));
+    border: 1px solid rgba(94,234,212,0.2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 0.88rem;
+    line-height: 1.65;
+  }
+  .insight strong { color: var(--accent); }
+
+  /* Token counter */
+  .token-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    display: flex;
+    gap: 16px;
+    color: var(--text-dim);
+    margin: 8px 0;
+  }
+  .token-counter span { color: var(--accent); font-weight: 700; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+  }
+  .tag-teal { background: rgba(94,234,212,0.15); color: var(--accent); }
+  .tag-purple { background: rgba(167,139,250,0.15); color: var(--accent2); }
+  .tag-orange { background: rgba(249,115,22,0.15); color: var(--accent3); }
+
+  .dim { color: var(--text-dim); }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .mb-16 { margin-bottom: 16px; }
+
+  /* Response area */
+  .response-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 16px;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    min-height: 60px;
+  }
+  .response-area .typing {
+    color: var(--accent);
+    animation: blink 0.8s infinite;
+  }
+  @keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+
+  /* Flow diagram */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+  }
+  .flow-box {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .flow-arrow { color: var(--text-dim); font-size: 1.1rem; }
+  .flow-teal { background: rgba(94,234,212,0.1); border-color: rgba(94,234,212,0.3); color: var(--accent); }
+  .flow-purple { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.3); color: var(--accent2); }
+  .flow-orange { background: rgba(249,115,22,0.1); border-color: rgba(249,115,22,0.3); color: var(--accent3); }
+
+  select.query-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%238b8fa6' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>RAG Explorer</h1>
+  <p>An interactive walkthrough of Retrieval Augmented Generation using IT support tickets. Step through the process to build intuition for how RAG works and <em>why</em> we need it.</p>
+</header>
+
+<main>
+  <nav class="step-nav" id="stepNav"></nav>
+  <div id="stepContent"></div>
+</main>
+
+<script>
+// ============================================================
+// DATA: Simulated IT support ticket knowledge base
+// ============================================================
+const TICKETS = [
+  {
+    id: "TKT-1042",
+    title: "VPN disconnects every 30 minutes",
+    text: "User reports VPN connection drops exactly every 30 minutes during remote work. Using Cisco AnyConnect on Windows 11. Tried reinstalling client.",
+    resolution: "Root cause: idle timeout set to 30 min on firewall. Increased to 8 hours. Also enabled DTLS to prevent TCP overhead drops.",
+    category: "vpn"
+  },
+  {
+    id: "TKT-1087",
+    title: "Cannot access shared drive after password change",
+    text: "After changing domain password, user cannot connect to \\\\fileserver\\shared. Getting 'access denied' error. Other network resources work fine.",
+    resolution: "Cached credentials in Windows Credential Manager were stale. Removed old entry, re-authenticated with new password. Mapped drive reconnected.",
+    category: "access"
+  },
+  {
+    id: "TKT-1103",
+    title: "Outlook keeps asking for password repeatedly",
+    text: "Outlook 365 prompts for password every 10 minutes. User enters correct password but it keeps coming back. Modern authentication is enabled on tenant.",
+    resolution: "Cleared cached tokens from Credential Manager and Office credential cache. Rebuilt Outlook profile. Issue was corrupted OAuth token that couldn't auto-refresh.",
+    category: "auth"
+  },
+  {
+    id: "TKT-1156",
+    title: "Printer not visible after office move",
+    text: "User moved from 3rd floor to 5th floor. The floor printer HP LaserJet 4500 is not showing up. Other users on 5th floor can print fine.",
+    resolution: "User's laptop still had old printer subnet GPO. Ran gpupdate /force and reassigned to Floor5-Printers group. Printer appeared after reboot.",
+    category: "printer"
+  },
+  {
+    id: "TKT-1201",
+    title: "VPN extremely slow, can barely load internal pages",
+    text: "Remote user says VPN is connected but everything is extremely slow. Ping to internal servers shows 400ms+ latency. Speed test outside VPN is fine.",
+    resolution: "Split tunneling was disabled, routing ALL traffic through VPN including video calls. Enabled split tunneling for trusted external services. Latency dropped to 35ms.",
+    category: "vpn"
+  },
+  {
+    id: "TKT-1218",
+    title: "Two-factor authentication app not syncing",
+    text: "User's Microsoft Authenticator shows codes but they keep getting rejected. Phone time is correct. Happens for both email and VPN login.",
+    resolution: "Time drift on the authenticator backend was 45 seconds off. Forced time sync on user's phone. Re-registered the authenticator app with fresh QR code. Codes now accepted.",
+    category: "auth"
+  },
+  {
+    id: "TKT-1267",
+    title: "New laptop cannot join company WiFi",
+    text: "Brand new Dell laptop cannot connect to corporate WPA2-Enterprise WiFi. Gets 'cannot connect to this network' error. Personal hotspot works fine.",
+    resolution: "Machine certificate was missing. Enrolled device in Intune, pushed WiFi configuration profile with root CA cert. Connected successfully after profile sync.",
+    category: "network"
+  },
+  {
+    id: "TKT-1289",
+    title: "File permissions lost after SharePoint migration",
+    text: "Team documents moved from on-prem file server to SharePoint Online. Several folders now accessible to everyone instead of restricted team only.",
+    resolution: "Migration tool didn't preserve NTFS ACLs. Manually recreated permission groups in SharePoint, applied to document libraries, broke inheritance where needed.",
+    category: "access"
+  }
+];
+
+// ============================================================
+// Simulated embeddings (8 conceptual dimensions for visualization)
+// Dimensions: [network, authentication, storage, hardware, remote_work, microsoft, urgency, config]
+// ============================================================
+const EMBEDDINGS = {
+  "TKT-1042": [0.85, 0.15, 0.05, 0.10, 0.90, 0.20, 0.60, 0.70],
+  "TKT-1087": [0.30, 0.55, 0.75, 0.05, 0.20, 0.40, 0.45, 0.30],
+  "TKT-1103": [0.10, 0.90, 0.10, 0.05, 0.30, 0.85, 0.50, 0.35],
+  "TKT-1156": [0.25, 0.10, 0.05, 0.80, 0.10, 0.15, 0.30, 0.65],
+  "TKT-1201": [0.80, 0.10, 0.05, 0.10, 0.95, 0.15, 0.75, 0.60],
+  "TKT-1218": [0.15, 0.95, 0.05, 0.20, 0.40, 0.70, 0.55, 0.45],
+  "TKT-1267": [0.90, 0.30, 0.05, 0.50, 0.15, 0.25, 0.40, 0.80],
+  "TKT-1289": [0.15, 0.45, 0.90, 0.05, 0.20, 0.60, 0.50, 0.40],
+};
+
+const DIM_LABELS = ["network", "auth", "storage", "hardware", "remote", "microsoft", "urgency", "config"];
+
+const QUERIES = {
+  "vpn-drop": {
+    text: "My VPN keeps disconnecting while I'm working from home",
+    embedding: [0.82, 0.12, 0.05, 0.08, 0.92, 0.18, 0.65, 0.55],
+    response: "Based on similar cases we've resolved, VPN disconnections during remote work are commonly caused by:\n\n1. **Idle timeout settings** on the firewall — in case TKT-1042, the timeout was only 30 minutes. We increased it to 8 hours and enabled DTLS to prevent TCP overhead drops.\n\n2. **Split tunneling configuration** — in TKT-1201, all traffic was routed through VPN causing severe slowdowns that appeared as disconnections. Enabling split tunneling for trusted external services resolved it.\n\nI'd recommend checking with our network team whether your VPN profile has an aggressive idle timeout, and whether split tunneling is enabled for services like video conferencing."
+  },
+  "password-issue": {
+    text: "I changed my password and now I can't access anything",
+    embedding: [0.20, 0.80, 0.40, 0.05, 0.25, 0.55, 0.70, 0.30],
+    response: "This is a common issue after password changes. Based on our resolved tickets:\n\n1. **Cached credentials** are often the culprit — in TKT-1087, stale credentials in Windows Credential Manager prevented access to shared drives after a password change. Clearing the old cached entry and re-authenticating fixed it.\n\n2. **OAuth token corruption** — in TKT-1103, Outlook kept re-prompting for passwords because the cached OAuth token couldn't auto-refresh. Clearing credential caches and rebuilding the Outlook profile resolved it.\n\nTry opening Credential Manager (search for it in Start Menu), removing any entries related to the services you can't access, then sign in fresh with your new password."
+  },
+  "printer-not-working": {
+    text: "I moved desks and now my printer doesn't work",
+    embedding: [0.30, 0.10, 0.05, 0.75, 0.10, 0.15, 0.35, 0.70],
+    response: "After a desk/floor move, printer issues are usually related to network group assignments. In TKT-1156, a user who moved floors still had the old floor's printer Group Policy applied.\n\nThe fix was to run `gpupdate /force` in Command Prompt and get reassigned to the correct floor's printer group. The printer appeared after a reboot.\n\nPlease let me know which floor you moved to and I'll request the IT team update your printer group assignment."
+  }
+};
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function cosineSim(a, b) {
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+}
+
+function valToColor(val, hue = 174) {
+  const alpha = Math.max(0.08, val);
+  if (hue === 174) return `rgba(94,234,212,${alpha})`;
+  if (hue === 260) return `rgba(167,139,250,${alpha})`;
+  if (hue === 28) return `rgba(249,115,22,${alpha})`;
+  return `hsla(${hue},70%,60%,${alpha})`;
+}
+
+function renderVectorRow(label, vec, hue = 174) {
+  const cells = vec.map((v, i) =>
+    `<div class="vector-cell" style="background:${valToColor(v, hue)}" data-val="${DIM_LABELS[i]}: ${v.toFixed(2)}"></div>`
+  ).join('');
+  return `<div class="vector-row">
+    <div class="vector-label">${label}</div>
+    <div class="vector-bar-container">${cells}</div>
+  </div>`;
+}
+
+function renderTicket(t, similarity = null, highlighted = false) {
+  let simBadge = '';
+  if (similarity !== null) {
+    const pct = (similarity * 100).toFixed(1);
+    const cls = similarity > 0.85 ? 'sim-high' : similarity > 0.65 ? 'sim-med' : 'sim-low';
+    simBadge = `<div class="similarity-badge ${cls}">${pct}% match</div>`;
+  }
+  return `<div class="ticket ${highlighted ? 'highlighted' : ''}">
+    ${simBadge}
+    <div class="ticket-id">${t.id} · <span class="tag tag-teal">${t.category}</span></div>
+    <div class="ticket-title">${t.title}</div>
+    <div class="ticket-text">${t.text}</div>
+    <div class="ticket-resolution">✓ ${t.resolution}</div>
+  </div>`;
+}
+
+function approxTokens(text) {
+  return Math.round(text.length / 4);
+}
+
+// ============================================================
+// STEP DEFINITIONS
+// ============================================================
+const STEPS = [
+  {
+    label: "The Problem",
+    render: renderStep0
+  },
+  {
+    label: "Knowledge Base",
+    render: renderStep1
+  },
+  {
+    label: "Chunking & Embedding",
+    render: renderStep2
+  },
+  {
+    label: "Mean Pooling",
+    render: renderStep3
+  },
+  {
+    label: "Semantic Search",
+    render: renderStep4
+  },
+  {
+    label: "Augmented Prompt",
+    render: renderStep5
+  },
+  {
+    label: "Full RAG Demo",
+    render: renderStep6
+  }
+];
+
+// ---- STEP 0: THE PROBLEM ----
+function renderStep0() {
+  const totalText = TICKETS.map(t => t.text + ' ' + t.resolution).join(' ');
+  const totalTokens = approxTokens(totalText);
+  const allTicketsTokens = totalTokens;
+  const scaledTokens = allTicketsTokens * 125; // simulate 1000 tickets
+
+  return `
+    <div class="step-header">
+      <h2>Why do we need RAG?</h2>
+      <p>Imagine you have a knowledge base of historical IT support tickets and you want an LLM to answer new support questions using this knowledge.</p>
+    </div>
+
+    <div class="insight">
+      <strong>The core tension:</strong> Your knowledge base contains valuable resolution history, but an LLM only knows what was in its training data. It doesn't know your company's specific VPN configs, printer groups, or credential policies. You need to somehow get your knowledge <em>into</em> the LLM's context.
+    </div>
+
+    <div class="card">
+      <h3>Why not just paste everything into the prompt?</h3>
+      <p class="dim" style="font-size:0.85rem; margin-bottom:12px;">Let's see what happens when we try the naïve approach — just dump all tickets into the context window:</p>
+
+      <div style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:4px;">
+          <span class="mono">Our 8 sample tickets</span>
+          <span class="mono" style="color:var(--accent)">~${allTicketsTokens} tokens</span>
+        </div>
+        <div class="size-bar" style="background:var(--surface2)">
+          <div class="size-fill" style="width:${(allTicketsTokens/128000*100).toFixed(1)}%; background:var(--accent);">${allTicketsTokens}</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:4px;">
+          <span class="mono">Realistic: 1,000 tickets</span>
+          <span class="mono" style="color:var(--accent3)">~${scaledTokens.toLocaleString()} tokens</span>
+        </div>
+        <div class="size-bar" style="background:var(--surface2)">
+          <div class="size-fill" style="width:${Math.min(100, scaledTokens/128000*100).toFixed(1)}%; background:var(--accent3);">${scaledTokens.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:4px;">
+          <span class="mono">Typical context window</span>
+          <span class="mono" style="color:var(--accent2)">128,000 tokens</span>
+        </div>
+        <div class="size-bar" style="background:var(--surface2)">
+          <div class="size-fill" style="width:100%; background:var(--accent2);">128,000</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <strong>Three problems with stuffing everything in:</strong><br>
+      ① <strong>It simply doesn't fit.</strong> Real knowledge bases have thousands of documents. Even modern context windows overflow.<br>
+      ② <strong>It's expensive.</strong> Every token costs money. Sending 100k tokens when you need info from 2 tickets wastes 99%+ of your budget.<br>
+      ③ <strong>It degrades quality.</strong> LLMs suffer from "lost in the middle" — they pay less attention to information buried in a massive context. Precision beats volume.
+    </div>
+
+    <div class="card">
+      <h3>RAG: The elegant solution</h3>
+      <div class="flow-row">
+        <div class="flow-box flow-orange">User Query</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box flow-teal">Search Knowledge Base</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box flow-purple">Inject Top Matches into Prompt</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box flow-teal">LLM Generates Answer</div>
+      </div>
+      <p class="dim mt-8" style="font-size:0.85rem;">Instead of sending <em>everything</em>, we <strong>retrieve</strong> only the relevant pieces and <strong>augment</strong> the prompt with just those. The LLM then <strong>generates</strong> a response grounded in that focused context.</p>
+    </div>
+  `;
+}
+
+// ---- STEP 1: KNOWLEDGE BASE ----
+function renderStep1() {
+  return `
+    <div class="step-header">
+      <h2>Our Knowledge Base: IT Support Tickets</h2>
+      <p>Here are 8 historical IT tickets that form our knowledge base. In reality, this could be thousands of tickets, wiki pages, or documents.</p>
+    </div>
+    <div class="token-counter">
+      Total tickets: <span>${TICKETS.length}</span> &nbsp;|&nbsp;
+      Total tokens: <span>~${approxTokens(TICKETS.map(t=>t.text+t.resolution).join(' '))}</span>
+    </div>
+    ${TICKETS.map(t => renderTicket(t)).join('')}
+    <div class="insight">
+      <strong>Key idea:</strong> Each ticket contains a <em>problem description</em> and a <em>resolution</em>. When a new user reports a similar problem, we want to find the most relevant past tickets and use their resolutions to inform our response — without needing to send all 8 (or 8,000) tickets to the LLM.
+    </div>
+  `;
+}
+
+// ---- STEP 2: CHUNKING & EMBEDDING ----
+function renderStep2() {
+  let vecRows = TICKETS.map(t =>
+    renderVectorRow(t.id, EMBEDDINGS[t.id])
+  ).join('');
+
+  return `
+    <div class="step-header">
+      <h2>Chunking & Embedding</h2>
+      <p>Each ticket is converted into a numerical vector (embedding) that captures its <em>meaning</em>, not just its keywords.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step 1: Chunk the documents</h3>
+      <p class="dim" style="font-size:0.85rem;">Each ticket is already a natural "chunk." For longer documents (like a 50-page manual), you'd split them into paragraphs or sections of ~200-500 tokens each. The goal: each chunk should be a self-contained unit of meaning.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step 2: Embed each chunk into a vector</h3>
+      <p class="dim" style="font-size:0.85rem; margin-bottom:16px;">An embedding model (like OpenAI's <code>text-embedding-3-small</code>) reads each ticket and outputs a vector — a list of numbers that encodes its meaning. Real embeddings have 1,536 dimensions. Here we show 8 intuitive dimensions for visualization:</p>
+
+      <div style="display:flex; gap:4px; margin-bottom:12px; padding-left:98px;">
+        ${DIM_LABELS.map(d => `<div style="flex:1; text-align:center; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text-dim); transform:rotate(-35deg); transform-origin:center;">${d}</div>`).join('')}
+      </div>
+      ${vecRows}
+    </div>
+
+    <div class="insight">
+      <strong>What do these numbers mean?</strong> Each dimension captures some aspect of meaning. A ticket about VPN issues scores high on "network" and "remote." A ticket about password problems scores high on "auth" and "microsoft." The beautiful thing: <em>semantically similar tickets will have similar vectors</em>, even if they use completely different words.
+    </div>
+
+    <div class="card">
+      <h3>Step 3: Store in a vector database</h3>
+      <p class="dim" style="font-size:0.85rem;">These vectors are stored in a specialized database (like Pinecone, Weaviate, or Chroma) that's optimized for one thing: quickly finding the most similar vectors to a given query vector. Think of it as a "meaning-based index."</p>
+      <div class="flow-row">
+        <div class="flow-box flow-orange">Raw ticket text</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box flow-teal">Embedding model</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box flow-purple">[0.85, 0.15, 0.05, ...]</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box flow-teal">Vector DB</div>
+      </div>
+    </div>
+  `;
+}
+
+// ---- STEP 3: MEAN POOLING ----
+function renderStep3() {
+  // Simulate word-level vectors for one ticket
+  const wordVecs = [
+    { word: "VPN",          vec: [0.95, 0.10, 0.02, 0.05, 0.80, 0.15, 0.30, 0.50] },
+    { word: "disconnects",  vec: [0.70, 0.05, 0.03, 0.20, 0.60, 0.10, 0.90, 0.40] },
+    { word: "every",        vec: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.10, 0.05] },
+    { word: "30",           vec: [0.03, 0.03, 0.03, 0.03, 0.03, 0.03, 0.05, 0.03] },
+    { word: "minutes",      vec: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.15, 0.10] },
+    { word: "remote",       vec: [0.60, 0.10, 0.05, 0.05, 0.95, 0.20, 0.40, 0.35] },
+    { word: "work",         vec: [0.20, 0.10, 0.10, 0.10, 0.85, 0.30, 0.20, 0.20] },
+    { word: "Cisco",        vec: [0.80, 0.15, 0.05, 0.30, 0.50, 0.05, 0.20, 0.70] },
+    { word: "AnyConnect",   vec: [0.90, 0.20, 0.05, 0.15, 0.70, 0.10, 0.30, 0.60] },
+  ];
+
+  // Calculate actual mean
+  const meanVec = Array(8).fill(0);
+  wordVecs.forEach(wv => wv.vec.forEach((v, i) => meanVec[i] += v));
+  meanVec.forEach((v, i) => meanVec[i] = +(v / wordVecs.length).toFixed(2));
+
+  const wordVecRows = wordVecs.map(wv =>
+    `<div class="vector-row">
+      <div class="vector-label" style="color:var(--accent3)">"${wv.word}"</div>
+      <div class="vector-bar-container">${wv.vec.map((v,i) => `<div class="vector-cell" style="background:${valToColor(v, 28)}" data-val="${DIM_LABELS[i]}: ${v.toFixed(2)}"></div>`).join('')}</div>
+    </div>`
+  ).join('');
+
+  return `
+    <div class="step-header">
+      <h2>Mean Pooling: From Words to Document Vectors</h2>
+      <p>How does a sentence become a single vector? The key technique is <strong>mean pooling</strong> — averaging the vectors of all tokens.</p>
+    </div>
+
+    <div class="insight">
+      <strong>The challenge:</strong> A transformer model processes text token by token, producing a vector for <em>each</em> token. But we need <em>one</em> vector to represent the whole document in our vector database. How do we collapse many vectors into one?
+    </div>
+
+    <div class="card">
+      <h3>Token-level vectors for TKT-1042</h3>
+      <p class="dim" style="font-size:0.85rem; margin-bottom:12px;">"VPN disconnects every 30 minutes during remote work. Cisco AnyConnect." — each word gets its own vector from the model:</p>
+
+      <div style="display:flex; gap:4px; margin-bottom:8px; padding-left:98px;">
+        ${DIM_LABELS.map(d => `<div style="flex:1; text-align:center; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text-dim);">${d}</div>`).join('')}
+      </div>
+      ${wordVecRows}
+    </div>
+
+    <div class="card">
+      <h3>Mean pooling: Average all vectors</h3>
+      <p class="dim" style="font-size:0.85rem; margin-bottom:12px;">We simply <strong>average each dimension</strong> across all word vectors. This is "mean pooling" — it gives us a single vector that captures the overall meaning of the entire text:</p>
+
+      <div style="display:flex; align-items:center; gap:16px; margin:20px 0;">
+        <div style="flex:1;">
+          <div style="font-size:0.75rem; color:var(--text-dim); font-family:'JetBrains Mono',monospace; text-align:center; margin-bottom:8px;">${wordVecs.length} word vectors</div>
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            ${wordVecs.map(wv => `<div style="display:flex; gap:2px;">${wv.vec.map(v => `<div class="mini-cell" style="flex:1; background:${valToColor(v, 28)}"></div>`).join('')}</div>`).join('')}
+          </div>
+        </div>
+
+        <div style="text-align:center; flex-shrink:0;">
+          <div style="font-size:1.5rem; color:var(--accent);">→</div>
+          <div style="font-size:0.65rem; color:var(--text-dim); font-family:'JetBrains Mono',monospace;">mean()</div>
+        </div>
+
+        <div style="flex:0.5;">
+          <div style="font-size:0.75rem; color:var(--text-dim); font-family:'JetBrains Mono',monospace; text-align:center; margin-bottom:8px;">1 document vector</div>
+          <div style="display:flex; gap:2px;">
+            ${meanVec.map(v => `<div class="mini-cell" style="flex:1; height:${28 * wordVecs.length + (wordVecs.length-1)*2}px; background:${valToColor(v)}; border-radius:3px;"></div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:4px; padding-left:98px; margin-bottom:4px;">
+        ${DIM_LABELS.map(d => `<div style="flex:1; text-align:center; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text-dim);">${d}</div>`).join('')}
+      </div>
+      ${renderVectorRow('MEAN →', meanVec)}
+    </div>
+
+    <div class="insight">
+      <strong>Why mean pooling works:</strong> Notice how "VPN," "Cisco," and "AnyConnect" all strongly activate the "network" dimension. Even after averaging with generic words like "every" and "30," the network signal dominates. The <em>meaningful</em> words contribute the most to the averaged vector because their values are strongest. Generic words contribute near-zero, naturally fading into noise. The result is a vector that "knows" this document is primarily about network/VPN/remote work issues.
+    </div>
+
+    <div class="card">
+      <h3>Real vs. simplified</h3>
+      <p class="dim" style="font-size:0.85rem;">In practice, embedding models like <code>text-embedding-3-small</code> use 1,536 dimensions (not 8), and the model uses learned attention to weigh which tokens matter most. But the principle is identical: collapse many token vectors into one document vector that captures the essential meaning. Some models also use the [CLS] token's output or weighted attention pooling, but mean pooling is the most common and intuitive.</p>
+    </div>
+  `;
+}
+
+// ---- STEP 4: SEMANTIC SEARCH ----
+function renderStep4() {
+  return `
+    <div class="step-header">
+      <h2>Semantic Search: Finding Relevant Tickets</h2>
+      <p>Now the magic happens. A user asks a question, we embed it, and search for the most similar ticket vectors.</p>
+    </div>
+
+    <div class="card">
+      <h3>Try a query</h3>
+      <p class="dim" style="font-size:0.85rem; margin-bottom:12px;">Select a support question to see how semantic search finds the most relevant tickets:</p>
+
+      <select class="query-input" id="querySelect" onchange="runSearch()">
+        <option value="">— Choose a customer query —</option>
+        <option value="vpn-drop">🔌 "My VPN keeps disconnecting while I'm working from home"</option>
+        <option value="password-issue">🔑 "I changed my password and now I can't access anything"</option>
+        <option value="printer-not-working">🖨️ "I moved desks and now my printer doesn't work"</option>
+      </select>
+    </div>
+
+    <div id="searchResults"></div>
+  `;
+}
+
+function runSearch() {
+  const sel = document.getElementById('querySelect').value;
+  const container = document.getElementById('searchResults');
+  if (!sel) { container.innerHTML = ''; return; }
+
+  const query = QUERIES[sel];
+  const queryVec = query.embedding;
+
+  // Calculate similarities
+  const sims = TICKETS.map(t => ({
+    ticket: t,
+    sim: cosineSim(queryVec, EMBEDDINGS[t.id])
+  })).sort((a, b) => b.sim - a.sim);
+
+  const topK = 2;
+
+  container.innerHTML = `
+    <div class="card mt-16">
+      <h3>Query embedding</h3>
+      <p class="dim" style="font-size:0.82rem; margin-bottom:8px;">"${query.text}"</p>
+      <div style="display:flex; gap:4px; padding-left:98px; margin-bottom:4px;">
+        ${DIM_LABELS.map(d => `<div style="flex:1; text-align:center; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text-dim);">${d}</div>`).join('')}
+      </div>
+      ${renderVectorRow('QUERY', queryVec, 28)}
+    </div>
+
+    <div class="card">
+      <h3>Cosine similarity ranking</h3>
+      <p class="dim" style="font-size:0.82rem; margin-bottom:12px;">We compare the query vector against every ticket vector using cosine similarity. The top ${topK} matches are retrieved:</p>
+      ${sims.map((s, i) => renderTicket(s.ticket, s.sim, i < topK)).join('')}
+    </div>
+
+    <div class="insight">
+      <strong>Notice:</strong> The search found relevant tickets based on <em>meaning</em>, not keyword matching. The query "${query.text}" doesn't need to contain the exact words from the tickets. "Disconnecting" matches "disconnects" and "slow" — because semantically they describe similar VPN problems. This is the power of semantic search over traditional keyword search.
+    </div>
+  `;
+}
+
+// ---- STEP 5: AUGMENTED PROMPT ----
+function renderStep5() {
+  return `
+    <div class="step-header">
+      <h2>Augmenting the Prompt</h2>
+      <p>Now we inject the retrieved tickets into the LLM's prompt. This is the "Augmented" in RAG.</p>
+    </div>
+
+    <div class="card">
+      <h3>Select a scenario to see the augmented prompt</h3>
+      <select class="query-input" id="promptSelect" onchange="showAugmented()">
+        <option value="">— Choose a query —</option>
+        <option value="vpn-drop">🔌 "My VPN keeps disconnecting while I'm working from home"</option>
+        <option value="password-issue">🔑 "I changed my password and now I can't access anything"</option>
+        <option value="printer-not-working">🖨️ "I moved desks and now my printer doesn't work"</option>
+      </select>
+    </div>
+
+    <div id="augmentedView"></div>
+  `;
+}
+
+function showAugmented() {
+  const sel = document.getElementById('promptSelect').value;
+  const container = document.getElementById('augmentedView');
+  if (!sel) { container.innerHTML = ''; return; }
+
+  const query = QUERIES[sel];
+  const queryVec = query.embedding;
+  const sims = TICKETS.map(t => ({
+    ticket: t,
+    sim: cosineSim(queryVec, EMBEDDINGS[t.id])
+  })).sort((a, b) => b.sim - a.sim);
+  const top2 = sims.slice(0, 2);
+
+  const systemText = "You are an IT support assistant. Use the provided context from historical tickets to help the user. If the context doesn't contain relevant info, say so.";
+  const ragText = top2.map(s =>
+    `[${s.ticket.id}] ${s.ticket.title}\nProblem: ${s.ticket.text}\nResolution: ${s.ticket.resolution}`
+  ).join('\n\n');
+  const queryText = query.text;
+
+  const allTicketsTokens = approxTokens(TICKETS.map(t => t.text + t.resolution).join(' '));
+  const ragTokens = approxTokens(ragText);
+
+  container.innerHTML = `
+    <div class="context-window mt-16">
+      <div class="ctx-section ctx-system">
+        <div class="ctx-label">System Prompt</div>
+        <div style="font-size:0.82rem;">${systemText}</div>
+      </div>
+      <div class="ctx-section ctx-rag">
+        <div class="ctx-label">Retrieved Context (RAG) <span class="tag tag-teal" style="margin-left:8px;">${ragTokens} tokens</span></div>
+        <div style="font-size:0.82rem; white-space:pre-line;">${ragText}</div>
+      </div>
+      <div class="ctx-section ctx-query">
+        <div class="ctx-label">User Query</div>
+        <div style="font-size:0.82rem;">${queryText}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Token budget comparison</h3>
+      <div style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:4px;">
+          <span class="mono">❌ Naïve: all ${TICKETS.length} tickets</span>
+          <span class="mono" style="color:var(--danger)">~${allTicketsTokens} tokens</span>
+        </div>
+        <div class="size-bar" style="background:var(--surface2)">
+          <div class="size-fill" style="width:100%; background:var(--danger);">${allTicketsTokens}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:4px;">
+          <span class="mono">✅ RAG: top 2 relevant tickets</span>
+          <span class="mono" style="color:var(--success)">~${ragTokens} tokens</span>
+        </div>
+        <div class="size-bar" style="background:var(--surface2)">
+          <div class="size-fill" style="width:${(ragTokens/allTicketsTokens*100).toFixed(0)}%; background:var(--success);">${ragTokens}</div>
+        </div>
+      </div>
+      <p class="dim mt-8" style="font-size:0.82rem;">RAG uses <strong>${(ragTokens/allTicketsTokens*100).toFixed(0)}%</strong> of the tokens while delivering <em>more</em> relevant context. With 1,000 tickets, the savings would be ~99.5%.</p>
+    </div>
+
+    <div class="insight">
+      <strong>This is the key insight of RAG:</strong> The LLM sees only the 2 most relevant tickets, not all 8 (or 8,000). It can now focus entirely on the relevant context to generate a precise, grounded answer. Less noise, more signal, lower cost.
+    </div>
+  `;
+}
+
+// ---- STEP 6: FULL DEMO ----
+function renderStep6() {
+  return `
+    <div class="step-header">
+      <h2>Full RAG Pipeline Demo</h2>
+      <p>Watch the entire pipeline from query to response. Select a customer problem below.</p>
+    </div>
+
+    <div class="card">
+      <h3>Customer support query</h3>
+      <select class="query-input" id="demoSelect" onchange="runFullDemo()">
+        <option value="">— Select a customer problem —</option>
+        <option value="vpn-drop">🔌 "My VPN keeps disconnecting while I'm working from home"</option>
+        <option value="password-issue">🔑 "I changed my password and now I can't access anything"</option>
+        <option value="printer-not-working">🖨️ "I moved desks and now my printer doesn't work"</option>
+      </select>
+    </div>
+
+    <div id="demoOutput"></div>
+  `;
+}
+
+function runFullDemo() {
+  const sel = document.getElementById('demoSelect').value;
+  const container = document.getElementById('demoOutput');
+  if (!sel) { container.innerHTML = ''; return; }
+
+  const query = QUERIES[sel];
+  const queryVec = query.embedding;
+  const sims = TICKETS.map(t => ({
+    ticket: t,
+    sim: cosineSim(queryVec, EMBEDDINGS[t.id])
+  })).sort((a, b) => b.sim - a.sim);
+  const top2 = sims.slice(0, 2);
+
+  // Show pipeline stages with delays
+  container.innerHTML = `
+    <div class="flow-row mt-16" style="justify-content:center; flex-wrap:wrap;">
+      <div class="flow-box flow-orange" id="d-q" style="opacity:0.3; transition:all 0.5s;">① Embed Query</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box flow-teal" id="d-s" style="opacity:0.3; transition:all 0.5s;">② Semantic Search</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box flow-purple" id="d-a" style="opacity:0.3; transition:all 0.5s;">③ Augment Prompt</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box flow-teal" id="d-g" style="opacity:0.3; transition:all 0.5s;">④ Generate</div>
+    </div>
+
+    <div id="demoStages"></div>
+  `;
+
+  const stages = document.getElementById('demoStages');
+
+  // Stage 1: Embed
+  setTimeout(() => {
+    document.getElementById('d-q').style.opacity = '1';
+    stages.innerHTML = `
+      <div class="card mt-16" style="animation: fadeIn 0.4s ease;">
+        <h3>① Query embedded</h3>
+        <p class="dim" style="font-size:0.82rem; margin-bottom:8px;">"${query.text}"</p>
+        ${renderVectorRow('QUERY', queryVec, 28)}
+      </div>
+    `;
+  }, 300);
+
+  // Stage 2: Search
+  setTimeout(() => {
+    document.getElementById('d-s').style.opacity = '1';
+    stages.innerHTML += `
+      <div class="card" style="animation: fadeIn 0.4s ease;">
+        <h3>② Top 2 matches found</h3>
+        ${top2.map(s => `
+          <div class="ticket highlighted" style="animation: fadeIn 0.3s ease;">
+            <div class="similarity-badge sim-high">${(s.sim * 100).toFixed(1)}%</div>
+            <div class="ticket-id">${s.ticket.id}</div>
+            <div class="ticket-title">${s.ticket.title}</div>
+            <div class="ticket-text">${s.ticket.text}</div>
+            <div class="ticket-resolution">✓ ${s.ticket.resolution}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }, 1000);
+
+  // Stage 3: Augment
+  setTimeout(() => {
+    document.getElementById('d-a').style.opacity = '1';
+    stages.innerHTML += `
+      <div class="card" style="animation: fadeIn 0.4s ease;">
+        <h3>③ Prompt augmented with retrieved context</h3>
+        <p class="dim" style="font-size:0.82rem;">System prompt + 2 relevant tickets + user query → sent to LLM</p>
+      </div>
+    `;
+  }, 1800);
+
+  // Stage 4: Generate
+  setTimeout(() => {
+    document.getElementById('d-g').style.opacity = '1';
+    stages.innerHTML += `
+      <div class="card" style="animation: fadeIn 0.4s ease;">
+        <h3>④ LLM Response (grounded in retrieved context)</h3>
+        <div class="response-area" id="demoResponse"><span class="typing">▌</span></div>
+      </div>
+    `;
+
+    // Typewriter effect
+    const responseEl = document.getElementById('demoResponse');
+    const text = query.response;
+    let idx = 0;
+    const typeSpeed = 8;
+    function typeChar() {
+      if (idx < text.length) {
+        // Handle markdown bold
+        let chunk = text[idx];
+        if (text.substr(idx, 2) === '**') {
+          const end = text.indexOf('**', idx + 2);
+          if (end !== -1) {
+            chunk = '<strong>' + text.substring(idx+2, end) + '</strong>';
+            idx = end + 2;
+          } else {
+            idx++;
+          }
+        } else if (text[idx] === '\n') {
+          chunk = '<br>';
+          idx++;
+        } else {
+          idx++;
+        }
+        responseEl.innerHTML = responseEl.innerHTML.replace('<span class="typing">▌</span>', '') +
+          chunk + '<span class="typing">▌</span>';
+        setTimeout(typeChar, typeSpeed);
+      } else {
+        responseEl.innerHTML = responseEl.innerHTML.replace('<span class="typing">▌</span>', '');
+      }
+    }
+    typeChar();
+  }, 2600);
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+let currentStep = 0;
+
+function renderNav() {
+  const nav = document.getElementById('stepNav');
+  nav.innerHTML = STEPS.map((s, i) =>
+    `<button class="step-btn ${i === currentStep ? 'active' : ''}" onclick="goToStep(${i})">
+      <span class="step-num">${i + 1}</span>${s.label}
+    </button>`
+  ).join('');
+}
+
+function renderCurrentStep() {
+  const content = document.getElementById('stepContent');
+  content.innerHTML = `<div class="step-panel active">${STEPS[currentStep].render()}</div>`;
+}
+
+function goToStep(n) {
+  currentStep = n;
+  renderNav();
+  renderCurrentStep();
+  window.scrollTo({ top: 200, behavior: 'smooth' });
+}
+
+// Initial render
+renderNav();
+renderCurrentStep();
+</script>
+
+</body>
+</html>

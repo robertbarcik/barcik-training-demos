@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understanding Fine-Tuning & LoRA</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --border: #2a2a3a;
+  --text: #e8e8f0;
+  --text-dim: #8888a8;
+  --accent: #6366f1;
+  --accent2: #a78bfa;
+  --green: #34d399;
+  --orange: #fb923c;
+  --pink: #f472b6;
+  --cyan: #22d3ee;
+  --red: #f87171;
+  --yellow: #fbbf24;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.7;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* Hero */
+.hero {
+  padding: 80px 0 60px;
+  text-align: center;
+  position: relative;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent2), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 16px;
+  letter-spacing: -1px;
+}
+.hero p {
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Navigation tabs */
+.nav-tabs {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 32px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.nav-tab {
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'DM Sans', sans-serif;
+}
+.nav-tab:hover { border-color: var(--accent); color: var(--text); }
+.nav-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+/* Sections */
+.section { display: none; padding: 48px 0 80px; animation: fadeUp 0.4s ease; }
+.section.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.section-sub {
+  color: var(--text-dim);
+  margin-bottom: 40px;
+  font-size: 1rem;
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+}
+
+.card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent2);
+  margin-bottom: 12px;
+}
+
+/* Interactive neural viz */
+.neuron-viz {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  flex-wrap: wrap;
+}
+
+.matrix-box {
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  position: relative;
+  transition: all 0.5s;
+}
+.matrix-box .label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.matrix-grid {
+  display: grid;
+  gap: 3px;
+}
+.matrix-cell {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.op-symbol {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+/* Frozen indicator */
+.frozen-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-top: 8px;
+}
+.frozen-badge.frozen { background: rgba(34,211,238,0.15); color: var(--cyan); }
+.frozen-badge.trainable { background: rgba(251,146,60,0.15); color: var(--orange); }
+
+/* Toggle switch */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+  justify-content: center;
+}
+.toggle-label { font-size: 0.9rem; color: var(--text-dim); }
+.toggle-label.active-label { color: var(--text); font-weight: 600; }
+.toggle {
+  width: 56px;
+  height: 28px;
+  background: var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.3s;
+}
+.toggle.on { background: var(--accent); }
+.toggle .thumb {
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.3s;
+}
+.toggle.on .thumb { transform: translateX(28px); }
+
+/* Slider */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0;
+  justify-content: center;
+}
+.slider-row label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  min-width: 70px;
+}
+.slider-row input[type="range"] {
+  -webkit-appearance: none;
+  width: 200px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+.slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.slider-row .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--accent2);
+  min-width: 20px;
+}
+
+/* Training data examples */
+.training-example {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  line-height: 1.8;
+}
+.training-example .tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-right: 6px;
+}
+.tag-system { background: rgba(99,102,241,0.2); color: var(--accent); }
+.tag-user { background: rgba(34,211,238,0.2); color: var(--cyan); }
+.tag-assistant { background: rgba(52,211,153,0.2); color: var(--green); }
+.tag-chosen { background: rgba(52,211,153,0.2); color: var(--green); }
+.tag-rejected { background: rgba(248,113,113,0.2); color: var(--red); }
+.tag-grade { background: rgba(251,191,36,0.2); color: var(--yellow); }
+
+/* Analogy boxes */
+.analogy {
+  background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(34,211,238,0.08));
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+  position: relative;
+}
+.analogy::before {
+  content: '💡';
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  font-size: 1.2rem;
+  background: var(--surface);
+  padding: 0 8px;
+}
+.analogy p {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+/* Flow diagram */
+.flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 0;
+  flex-wrap: wrap;
+}
+.flow-step {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: center;
+  min-width: 100px;
+}
+.flow-arrow { color: var(--accent); font-size: 1.3rem; }
+
+/* Data grid */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+/* Neuron interactive */
+.neuron-playground {
+  background: var(--surface2);
+  border-radius: 16px;
+  padding: 32px;
+  margin: 24px 0;
+}
+
+canvas { display: block; margin: 0 auto; }
+
+/* Comparison table */
+.compare-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 24px 0;
+  font-size: 0.82rem;
+}
+.compare-table th {
+  background: var(--surface2);
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.compare-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.compare-table tr:hover td { background: rgba(99,102,241,0.05); }
+
+/* Animated signal flow */
+@keyframes signalFlow {
+  0% { opacity: 0.2; transform: translateX(-4px); }
+  50% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0.2; transform: translateX(4px); }
+}
+.signal-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: signalFlow 1.5s ease infinite;
+}
+
+/* LoRA swap animation */
+@keyframes loraSlideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.lora-active { animation: loraSlideIn 0.5s ease forwards; }
+
+/* Highlight colors for matrices */
+.frozen-cell { background: rgba(34,211,238,0.12); color: var(--cyan); border: 1px solid rgba(34,211,238,0.2); }
+.delta-cell { background: rgba(251,146,60,0.15); color: var(--orange); border: 1px solid rgba(251,146,60,0.2); }
+.lora-a-cell { background: rgba(244,114,182,0.15); color: var(--pink); border: 1px solid rgba(244,114,182,0.25); }
+.lora-b-cell { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
+.result-cell { background: rgba(167,139,250,0.15); color: var(--accent2); border: 1px solid rgba(167,139,250,0.25); }
+
+.param-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+.small-note {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .neuron-viz { flex-direction: column; }
+  .matrix-cell { width: 22px; height: 22px; font-size: 0.5rem; }
+  .nav-tab { padding: 8px 12px; font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="hero">
+    <h1>Fine-Tuning & LoRA</h1>
+    <p>An interactive, intuitive guide to how we adapt large language models to specific tasks — without retraining them from scratch.</p>
+  </div>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-tab="big-picture">The Big Picture</div>
+    <div class="nav-tab" data-tab="inside-neuron">Inside a Neuron</div>
+    <div class="nav-tab" data-tab="lora">LoRA Magic</div>
+    <div class="nav-tab" data-tab="methods">4 Methods</div>
+    <div class="nav-tab" data-tab="data">Training Data</div>
+  </div>
+
+  <!-- ===================== SECTION 1: BIG PICTURE ===================== -->
+  <div class="section active" id="big-picture">
+    <h2 class="section-title">What is Fine-Tuning?</h2>
+    <p class="section-sub">Think of it as teaching a generalist doctor to become a specialist.</p>
+
+    <div class="analogy">
+      <p><strong>The analogy:</strong> A foundation model (like GPT-4.1 or Claude) is like a brilliant new medical school graduate. They know a LOT about everything — anatomy, chemistry, diagnostics. But they've never seen a patient at <em>your</em> hospital. Fine-tuning doesn't add new medical knowledge — it teaches them <em>your hospital's procedures, your paperwork format, your tone with patients</em>.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Key Insight</div>
+      <h3 style="font-size:1.3rem; margin-bottom:12px;">Fine-tune behavior, not knowledge</h3>
+      <p style="color:var(--text-dim);">The model already <em>knows</em> things from pre-training on internet-scale data. Fine-tuning changes <strong>how it responds</strong> — its format, tone, reasoning style, and consistency. You're not filling its brain with new facts; you're shaping its habits.</p>
+
+      <div class="flow" style="margin-top:24px;">
+        <div class="flow-step" style="border-color:var(--cyan);">
+          <div style="font-size:1.4rem;">🧠</div>
+          <div>Pre-trained Model</div>
+          <div style="font-size:0.7rem;color:var(--text-dim);">Knows everything,<br>but is generic</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:var(--orange);">
+          <div style="font-size:1.4rem;">🔧</div>
+          <div>Fine-Tuning</div>
+          <div style="font-size:0.7rem;color:var(--text-dim);">Show examples of<br>desired behavior</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:var(--green);">
+          <div style="font-size:1.4rem;">🎯</div>
+          <div>Specialized Model</div>
+          <div style="font-size:0.7rem;color:var(--text-dim);">Behaves exactly<br>how you want</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-grid">
+      <div class="card">
+        <div class="card-label">✅ Good for</div>
+        <p style="font-size:0.9rem;">Consistent JSON output format. A specific tone (formal, playful). Handling domain-specific jargon. Classification tasks. Following complex multi-step procedures.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">❌ Not ideal for</div>
+        <p style="font-size:0.9rem;">Teaching the model entirely new facts. Real-time data (use RAG instead). Tasks the base model fundamentally can't do. Replacing good prompt engineering.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">The problem of scale</div>
+      <h3 style="font-size:1.2rem; margin-bottom:12px;">Why can't we just retrain the whole thing?</h3>
+      <div style="display:flex; gap: 32px; flex-wrap: wrap; align-items: center; margin-top: 16px;">
+        <div style="text-align:center; flex:1; min-width:150px;">
+          <div class="param-count" style="color:var(--red);">175B</div>
+          <div style="font-size:0.8rem; color:var(--text-dim);">GPT-3 parameters</div>
+        </div>
+        <div style="text-align:center; flex:1; min-width:150px;">
+          <div class="param-count" style="color:var(--orange);">~700 GB</div>
+          <div style="font-size:0.8rem; color:var(--text-dim);">Memory for full fine-tune</div>
+        </div>
+        <div style="text-align:center; flex:1; min-width:150px;">
+          <div class="param-count" style="color:var(--green);">~18M</div>
+          <div style="font-size:0.8rem; color:var(--text-dim);">With LoRA (0.01%)</div>
+        </div>
+      </div>
+      <p class="small-note" style="text-align:center; margin-top:16px;">This is why techniques like LoRA exist — to make fine-tuning <em>practical</em>.</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 2: INSIDE A NEURON ===================== -->
+  <div class="section" id="inside-neuron">
+    <h2 class="section-title">Inside a Neural Layer</h2>
+    <p class="section-sub">What actually changes when we fine-tune? Let's look at the math — visually.</p>
+
+    <div class="card">
+      <div class="card-label">Interactive · Full Fine-Tuning vs LoRA</div>
+      <p style="color:var(--text-dim); margin-bottom:16px;">Every layer in a transformer has <strong>weight matrices</strong> — grids of numbers that transform input signals. Toggle between approaches to see how the model gets updated.</p>
+
+      <div class="toggle-row">
+        <span class="toggle-label active-label" id="lbl-full">Full Fine-Tune</span>
+        <div class="toggle" id="toggle-method" onclick="toggleMethod()">
+          <div class="thumb"></div>
+        </div>
+        <span class="toggle-label" id="lbl-lora">LoRA Adapters</span>
+      </div>
+
+      <!-- Full Fine-Tune visualization -->
+      <div id="viz-full">
+        <div class="neuron-viz">
+          <div class="matrix-box">
+            <div class="label" style="color:var(--cyan);">W (original)</div>
+            <div class="matrix-grid" style="grid-template-columns: repeat(4,1fr);" id="matrix-w-full">
+            </div>
+            <div class="frozen-badge trainable">🔥 ALL weights modified</div>
+          </div>
+          <div class="op-symbol">→</div>
+          <div class="matrix-box">
+            <div class="label" style="color:var(--accent2);">W' (updated)</div>
+            <div class="matrix-grid" style="grid-template-columns: repeat(4,1fr);" id="matrix-w-prime">
+            </div>
+            <div class="frozen-badge trainable">🔥 Every cell changed</div>
+          </div>
+        </div>
+        <p style="text-align:center; color:var(--text-dim); font-size:0.85rem;">In full fine-tuning, <strong>every single weight</strong> in the matrix gets updated. Expensive! 💸</p>
+      </div>
+
+      <!-- LoRA visualization -->
+      <div id="viz-lora" style="display:none;">
+        <div class="neuron-viz">
+          <div class="matrix-box">
+            <div class="label" style="color:var(--cyan);">W (frozen ❄️)</div>
+            <div class="matrix-grid" style="grid-template-columns: repeat(4,1fr);" id="matrix-w-frozen">
+            </div>
+            <div class="frozen-badge frozen">❄️ Frozen — not touched</div>
+          </div>
+          <div class="op-symbol">+</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div class="matrix-box">
+              <div class="label" style="color:var(--pink);">B</div>
+              <div class="matrix-grid" style="grid-template-columns: repeat(2,1fr);" id="matrix-b">
+              </div>
+              <div class="frozen-badge trainable">🔥 trained</div>
+            </div>
+            <div class="op-symbol" style="font-size:1.2rem;">×</div>
+            <div class="matrix-box">
+              <div class="label" style="color:var(--green);">A</div>
+              <div class="matrix-grid" style="grid-template-columns: repeat(4,1fr);" id="matrix-a">
+              </div>
+              <div class="frozen-badge trainable">🔥 trained</div>
+            </div>
+          </div>
+          <div class="op-symbol">=</div>
+          <div class="matrix-box">
+            <div class="label" style="color:var(--accent2);">W + BA</div>
+            <div class="matrix-grid" style="grid-template-columns: repeat(4,1fr);" id="matrix-result">
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <p style="color:var(--text-dim); font-size:0.85rem;">W stays frozen. Only the <strong>small</strong> B and A matrices are trained, then multiplied to create the update. <strong>Far fewer parameters!</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="analogy">
+      <p><strong>Analogy:</strong> Imagine the original weight matrix is a giant oil painting in a museum. <em>Full fine-tuning</em> = painting over the whole canvas. <em>LoRA</em> = placing a small transparent overlay on top that subtly shifts certain colors. The original painting is untouched; you can remove or swap overlays anytime.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Math intuition</div>
+      <h3 style="margin-bottom:12px;">W' = W + ΔW,&nbsp; where ΔW ≈ B × A</h3>
+      <p style="color:var(--text-dim); font-size:0.9rem;">Instead of computing a full 4096×4096 change matrix (16.7M params), LoRA decomposes it into two smaller matrices — say 4096×8 and 8×4096 — for only 65K params. The "rank" (r) controls how expressive this update is. Higher r = more capacity but more parameters.</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 3: LORA MAGIC ===================== -->
+  <div class="section" id="lora">
+    <h2 class="section-title">LoRA: The Swap-In Trick</h2>
+    <p class="section-sub">One base model, many lightweight adapters. Swap them like lenses on a camera.</p>
+
+    <div class="card">
+      <div class="card-label">Interactive · Rank Explorer</div>
+      <p style="color:var(--text-dim); margin-bottom:8px;">Adjust the rank to see how it affects the number of trainable parameters. Lower rank = smaller adapter, but less expressive.</p>
+
+      <div class="slider-row">
+        <label>Rank (r):</label>
+        <input type="range" min="1" max="64" value="8" id="rank-slider" oninput="updateRank()">
+        <span class="value" id="rank-value">8</span>
+      </div>
+
+      <div id="rank-viz" style="display:flex; flex-wrap:wrap; gap:24px; justify-content:center; align-items:flex-end; margin:24px 0;"></div>
+
+      <div style="text-align:center; margin-top:16px;">
+        <div style="display:inline-flex; gap:32px; flex-wrap:wrap; justify-content:center;">
+          <div>
+            <div style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Original W</div>
+            <div id="stat-original" class="param-count" style="color:var(--cyan);">—</div>
+            <div style="font-size:0.7rem; color:var(--text-dim);">parameters</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">LoRA (B + A)</div>
+            <div id="stat-lora" class="param-count" style="color:var(--orange);">—</div>
+            <div style="font-size:0.7rem; color:var(--text-dim);">parameters</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Savings</div>
+            <div id="stat-savings" class="param-count" style="color:var(--green);">—</div>
+            <div style="font-size:0.7rem; color:var(--text-dim);">reduction</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Concept · Adapter Swapping</div>
+      <h3 style="margin-bottom:16px;">One model, many skills</h3>
+      <p style="color:var(--text-dim); margin-bottom:24px;">Since the base model stays frozen, you can train many different LoRA adapters and swap them at inference time. Each adapter is tiny (a few MB vs. tens of GB).</p>
+
+      <div id="adapter-demo" style="position:relative;">
+        <div style="display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap;">
+          <div style="text-align:center; padding:24px; background:var(--surface2); border-radius:12px; border:2px solid var(--cyan); min-width:140px;">
+            <div style="font-size:2rem;">🧠</div>
+            <div style="font-size:0.85rem; font-weight:600; margin-top:8px;">Base Model</div>
+            <div style="font-size:0.7rem; color:var(--text-dim);">~7B params, frozen</div>
+          </div>
+
+          <div style="font-size:1.5rem; color:var(--text-dim);">+</div>
+
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div class="adapter-btn" onclick="selectAdapter(this, 'medical')" style="padding:10px 20px; background:var(--surface2); border:2px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.3s; text-align:center;">
+              <span style="font-size:1.1rem;">🏥</span>
+              <span style="font-size:0.8rem; font-weight:600;"> Medical QA</span>
+              <span style="font-size:0.65rem; color:var(--text-dim); display:block;">14MB adapter</span>
+            </div>
+            <div class="adapter-btn" onclick="selectAdapter(this, 'legal')" style="padding:10px 20px; background:var(--surface2); border:2px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.3s; text-align:center;">
+              <span style="font-size:1.1rem;">⚖️</span>
+              <span style="font-size:0.8rem; font-weight:600;"> Legal Brief</span>
+              <span style="font-size:0.65rem; color:var(--text-dim); display:block;">11MB adapter</span>
+            </div>
+            <div class="adapter-btn" onclick="selectAdapter(this, 'code')" style="padding:10px 20px; background:var(--surface2); border:2px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.3s; text-align:center;">
+              <span style="font-size:1.1rem;">💻</span>
+              <span style="font-size:0.8rem; font-weight:600;"> Code Review</span>
+              <span style="font-size:0.65rem; color:var(--text-dim); display:block;">9MB adapter</span>
+            </div>
+          </div>
+
+          <div style="font-size:1.5rem; color:var(--text-dim);">=</div>
+
+          <div id="result-model" style="text-align:center; padding:24px; background:var(--surface2); border-radius:12px; border:2px dashed var(--border); min-width:160px; transition:all 0.4s;">
+            <div style="font-size:2rem;" id="result-emoji">❓</div>
+            <div style="font-size:0.85rem; font-weight:600; margin-top:8px;" id="result-label">Pick an adapter →</div>
+            <div style="font-size:0.7rem; color:var(--text-dim);" id="result-desc">Click one to see it in action</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="analogy">
+      <p><strong>Camera lens analogy:</strong> The base model is your camera body. LoRA adapters are interchangeable lenses — one for macro photography, one for wide-angle, one for portraits. You don't need a separate camera for each style. You just swap the lens (adapter), which is much smaller and cheaper than the body (model).</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 4: METHODS ===================== -->
+  <div class="section" id="methods">
+    <h2 class="section-title">Fine-Tuning Methods</h2>
+    <p class="section-sub">Four different approaches for four different needs. Click each to explore.</p>
+
+    <div class="data-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+      <div class="card method-card" onclick="showMethod('sft')" style="cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:2rem; margin-bottom:8px;">📝</div>
+        <h3 style="font-size:1rem; margin-bottom:4px;">Supervised (SFT)</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">"Here's the correct answer for this input."</p>
+      </div>
+      <div class="card method-card" onclick="showMethod('dpo')" style="cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:2rem; margin-bottom:8px;">⚖️</div>
+        <h3 style="font-size:1rem; margin-bottom:4px;">Preference (DPO)</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">"This answer is better than that one."</p>
+      </div>
+      <div class="card method-card" onclick="showMethod('rft')" style="cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:2rem; margin-bottom:8px;">🏆</div>
+        <h3 style="font-size:1rem; margin-bottom:4px;">Reinforcement (RFT)</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">"Score this reasoning chain."</p>
+      </div>
+      <div class="card method-card" onclick="showMethod('vision')" style="cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:2rem; margin-bottom:8px;">👁️</div>
+        <h3 style="font-size:1rem; margin-bottom:4px;">Vision Fine-Tune</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">"Look at this image and respond."</p>
+      </div>
+    </div>
+
+    <div id="method-detail" style="display:none;">
+      <!-- Filled by JS -->
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <div class="card-label">Comparison</div>
+      <div style="overflow-x:auto;">
+        <table class="compare-table">
+          <tr>
+            <th>Method</th>
+            <th>What you provide</th>
+            <th>Best for</th>
+            <th>Models</th>
+          </tr>
+          <tr>
+            <td><strong>SFT</strong></td>
+            <td>Input → correct output pairs</td>
+            <td>Format, classification, translation</td>
+            <td>gpt-4.1, gpt-4.1-mini/nano</td>
+          </tr>
+          <tr>
+            <td><strong>DPO</strong></td>
+            <td>Input → chosen vs. rejected output</td>
+            <td>Tone, style, summarization focus</td>
+            <td>gpt-4.1, gpt-4.1-mini/nano</td>
+          </tr>
+          <tr>
+            <td><strong>RFT</strong></td>
+            <td>Input → model generates → expert grades</td>
+            <td>Complex reasoning, domain expertise</td>
+            <td>o4-mini (reasoning models)</td>
+          </tr>
+          <tr>
+            <td><strong>Vision</strong></td>
+            <td>Image + text → correct output</td>
+            <td>Image classification, visual QA</td>
+            <td>gpt-4o</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 5: TRAINING DATA ===================== -->
+  <div class="section" id="data">
+    <h2 class="section-title">What Training Data Looks Like</h2>
+    <p class="section-sub">Real-ish examples of JSONL training data for each method.</p>
+
+    <div class="card">
+      <div class="card-label">Supervised Fine-Tuning (SFT)</div>
+      <p style="color:var(--text-dim); margin-bottom:16px;">Each example is a conversation with the "correct" assistant response. The model learns to imitate these outputs.</p>
+      <div class="training-example">
+        <div><span class="tag tag-system">system</span> You are a medical triage assistant. Always respond with a JSON object containing "urgency" (1-5), "likely_category", and "next_step".</div>
+        <div style="margin-top:8px;"><span class="tag tag-user">user</span> I've had a persistent headache for 3 days. No fever. Vision is fine.</div>
+        <div style="margin-top:8px;"><span class="tag tag-assistant">assistant</span> {"urgency": 2, "likely_category": "neurology", "next_step": "Schedule appointment within 48hrs. Take OTC pain relief."}</div>
+      </div>
+      <div class="training-example">
+        <div><span class="tag tag-system">system</span> You are a medical triage assistant...</div>
+        <div style="margin-top:8px;"><span class="tag tag-user">user</span> Severe chest pain radiating to left arm. Sweating profusely.</div>
+        <div style="margin-top:8px;"><span class="tag tag-assistant">assistant</span> {"urgency": 5, "likely_category": "cardiology", "next_step": "Call emergency services (911) immediately."}</div>
+      </div>
+      <p class="small-note">💡 The model learns the format (JSON), the classification behavior, and the tone — all from examples like these.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Direct Preference Optimization (DPO)</div>
+      <p style="color:var(--text-dim); margin-bottom:16px;">Each example shows two possible responses — one preferred ("chosen") and one rejected. The model learns to prefer the better style.</p>
+      <div class="training-example">
+        <div><span class="tag tag-user">user</span> Summarize this earnings report for our investors.</div>
+        <div style="margin-top:12px;"><span class="tag tag-chosen">✅ chosen</span> Q3 revenue grew 12% YoY to $847M, driven by enterprise expansion. Operating margin improved 200bps. We're raising FY guidance to $3.2-3.4B.</div>
+        <div style="margin-top:8px;"><span class="tag tag-rejected">❌ rejected</span> So basically the company made more money this quarter. Revenue was up which is good. They think they'll make even more money next year. Overall pretty solid performance with some improvements in how efficiently they operate.</div>
+      </div>
+      <p class="small-note">💡 Same content, different quality. The model learns to prefer concise, data-rich, professional communication over vague summaries.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Reinforcement Fine-Tuning (RFT)</div>
+      <p style="color:var(--text-dim); margin-bottom:16px;">The model generates its own response, then an expert grader scores it. High-scoring reasoning chains get reinforced.</p>
+      <div class="training-example">
+        <div><span class="tag tag-user">user</span> Patient: 67M, diabetic, presenting with acute kidney injury. Creatinine 4.2 (baseline 1.1). Currently on metformin, lisinopril, ibuprofen. What medication changes do you recommend?</div>
+        <div style="margin-top:12px;"><span class="tag tag-assistant">model generates</span> Step 1: Identify nephrotoxic agents → ibuprofen (NSAID) is nephrotoxic. Step 2: Metformin risk → contraindicated in AKI (lactic acidosis risk). Step 3: ACE inhibitor → lisinopril may worsen AKI. Recommendation: Discontinue ibuprofen and metformin immediately. Hold lisinopril. Switch to acetaminophen for pain. Monitor creatinine daily.</div>
+        <div style="margin-top:8px;"><span class="tag tag-grade">⭐ expert grade: 9/10</span> Correct identification of all three problematic medications. Good reasoning chain. Minor: should also mention fluid resuscitation.</div>
+      </div>
+      <p class="small-note">💡 Unlike SFT, we don't provide the answer — the model reasons through it, and experts score the quality. High-scoring chains strengthen the model's reasoning paths.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-label">The JSONL Format</div>
+      <p style="color:var(--text-dim); margin-bottom:12px;">All training data is uploaded as <strong>.jsonl</strong> files — one JSON object per line:</p>
+      <div class="training-example" style="white-space:pre-wrap; word-break:break-all;">{"messages": [{"role": "system", "content": "You are a triage bot..."}, {"role": "user", "content": "Chest pain..."}, {"role": "assistant", "content": "{\"urgency\": 5, ...}"}]}
+{"messages": [{"role": "system", "content": "You are a triage bot..."}, {"role": "user", "content": "Mild headache..."}, {"role": "assistant", "content": "{\"urgency\": 2, ...}"}]}</div>
+      <p class="small-note">Each line is one training example. Typically you need hundreds to thousands of examples for good results.</p>
+    </div>
+  </div>
+
+</div>
+
+<div style="height:80px;"></div>
+
+<script>
+// Tab navigation
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+// Toggle full fine-tune vs LoRA
+let isLora = false;
+function toggleMethod() {
+  isLora = !isLora;
+  const toggle = document.getElementById('toggle-method');
+  toggle.classList.toggle('on', isLora);
+  document.getElementById('lbl-full').classList.toggle('active-label', !isLora);
+  document.getElementById('lbl-lora').classList.toggle('active-label', isLora);
+  document.getElementById('viz-full').style.display = isLora ? 'none' : 'block';
+  document.getElementById('viz-lora').style.display = isLora ? 'block' : 'none';
+}
+
+// Generate matrix cells
+function fillMatrix(id, rows, cols, cellClass, values) {
+  const grid = document.getElementById(id);
+  grid.innerHTML = '';
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  for (let i = 0; i < rows * cols; i++) {
+    const cell = document.createElement('div');
+    cell.className = `matrix-cell ${cellClass}`;
+    cell.textContent = values ? values[i] : (Math.random() * 2 - 1).toFixed(1);
+    grid.appendChild(cell);
+  }
+}
+
+// Initial matrix fills
+const wVals = [0.3, -0.7, 0.1, 0.5, -0.2, 0.8, -0.4, 0.6, 0.9, -0.1, 0.3, -0.8, -0.5, 0.4, -0.6, 0.2];
+const wPrimeVals = wVals.map(v => (v + (Math.random()*0.6-0.3)).toFixed(1));
+
+fillMatrix('matrix-w-full', 4, 4, 'delta-cell', wVals.map(v=>v.toFixed(1)));
+fillMatrix('matrix-w-prime', 4, 4, 'result-cell', wPrimeVals);
+fillMatrix('matrix-w-frozen', 4, 4, 'frozen-cell', wVals.map(v=>v.toFixed(1)));
+fillMatrix('matrix-b', 4, 2, 'lora-b-cell');
+fillMatrix('matrix-a', 2, 4, 'lora-a-cell');
+fillMatrix('matrix-result', 4, 4, 'result-cell', wPrimeVals);
+
+// Rank explorer
+const D = 4096; // model dimension
+function updateRank() {
+  const r = parseInt(document.getElementById('rank-slider').value);
+  document.getElementById('rank-value').textContent = r;
+
+  const originalParams = D * D;
+  const loraParams = (D * r) + (r * D);
+  const savings = ((1 - loraParams / originalParams) * 100).toFixed(1);
+
+  document.getElementById('stat-original').textContent = (originalParams / 1e6).toFixed(1) + 'M';
+  document.getElementById('stat-lora').textContent = (loraParams / 1e3).toFixed(0) + 'K';
+  document.getElementById('stat-savings').textContent = savings + '%';
+
+  // Visual bars
+  const viz = document.getElementById('rank-viz');
+  const maxH = 160;
+  const loraH = Math.max(8, (loraParams / originalParams) * maxH);
+
+  viz.innerHTML = `
+    <div style="text-align:center;">
+      <div style="width:60px; height:${maxH}px; background:linear-gradient(to top, var(--cyan), var(--accent)); border-radius:8px; margin:0 auto;"></div>
+      <div style="font-size:0.75rem; margin-top:8px; color:var(--cyan); font-family:'JetBrains Mono',monospace;">W</div>
+      <div style="font-size:0.65rem; color:var(--text-dim);">${D}×${D}</div>
+    </div>
+    <div style="font-size:1.2rem; color:var(--text-dim); align-self:center;">vs</div>
+    <div style="text-align:center;">
+      <div style="display:flex; gap:4px; align-items:flex-end; justify-content:center; height:${maxH}px;">
+        <div style="width:28px; height:${Math.max(8, (D*r/(D*D))*maxH*2)}px; background:linear-gradient(to top, var(--pink), var(--pink)); border-radius:6px; transition: height 0.3s;"></div>
+        <div style="width:28px; height:${Math.max(8, (r*D/(D*D))*maxH*2)}px; background:linear-gradient(to top, var(--green), var(--green)); border-radius:6px; transition: height 0.3s;"></div>
+      </div>
+      <div style="font-size:0.75rem; margin-top:8px; font-family:'JetBrains Mono',monospace;"><span style="color:var(--pink);">B</span> + <span style="color:var(--green);">A</span></div>
+      <div style="font-size:0.65rem; color:var(--text-dim);">${D}×${r} + ${r}×${D}</div>
+    </div>
+  `;
+}
+updateRank();
+
+// Adapter selection
+function selectAdapter(el, type) {
+  document.querySelectorAll('.adapter-btn').forEach(b => {
+    b.style.borderColor = 'var(--border)';
+    b.style.background = 'var(--surface2)';
+  });
+  el.style.borderColor = 'var(--accent)';
+  el.style.background = 'rgba(99,102,241,0.1)';
+
+  const resultBox = document.getElementById('result-model');
+  resultBox.style.borderColor = 'var(--green)';
+  resultBox.style.borderStyle = 'solid';
+
+  const configs = {
+    medical: { emoji: '🏥', label: 'Medical QA Model', desc: 'Structured triage responses' },
+    legal:   { emoji: '⚖️', label: 'Legal Brief Model', desc: 'Precise case law citations' },
+    code:    { emoji: '💻', label: 'Code Review Model', desc: 'Security-focused review style' }
+  };
+  const c = configs[type];
+  document.getElementById('result-emoji').textContent = c.emoji;
+  document.getElementById('result-label').textContent = c.label;
+  document.getElementById('result-desc').textContent = c.desc;
+
+  resultBox.style.animation = 'none';
+  resultBox.offsetHeight; // reflow
+  resultBox.style.animation = 'loraSlideIn 0.4s ease forwards';
+}
+
+// Method detail cards
+const methodDetails = {
+  sft: {
+    title: '📝 Supervised Fine-Tuning (SFT)',
+    color: 'var(--accent)',
+    how: 'You provide examples of <strong>correct responses</strong>. The model learns by comparing its output to your "ground truth" and adjusting weights to minimize the difference.',
+    analogy: 'Like a student studying an answer key. "When you see this question, this is what a good answer looks like."',
+    when: 'You know exactly what the output should look like. Classification, structured output, specific formatting, instruction-following.',
+    flow: ['Prompt', 'Correct response', 'Model learns to match']
+  },
+  dpo: {
+    title: '⚖️ Direct Preference Optimization (DPO)',
+    color: 'var(--pink)',
+    how: 'For each prompt, you provide TWO responses — one <strong>chosen</strong> (good) and one <strong>rejected</strong> (bad). The model learns to prefer the chosen style.',
+    analogy: 'Like a wine tasting. "Between these two, this one is better." Over many comparisons, the model develops good taste.',
+    when: 'The "right" answer is subjective — tone, style, focus, level of detail. You care about quality dimensions that are hard to specify but easy to compare.',
+    flow: ['Prompt', 'Response A ✅', 'Response B ❌', 'Learn preference']
+  },
+  rft: {
+    title: '🏆 Reinforcement Fine-Tuning (RFT)',
+    color: 'var(--yellow)',
+    how: 'The model generates its OWN response. An <strong>expert grader</strong> (human or automated) scores the quality. High-scoring reasoning chains get reinforced. Only for reasoning models (o4-mini).',
+    analogy: 'Like a med school resident seeing real patients. They reason through cases, and an attending physician grades their work. Over time, their clinical reasoning improves.',
+    when: 'Complex domain-specific reasoning. Medical diagnosis, legal analysis, scientific research. You need the model\'s chain-of-thought to improve, not just its final answer.',
+    flow: ['Prompt', 'Model reasons', 'Expert grades', 'Reinforce good chains']
+  },
+  vision: {
+    title: '👁️ Vision Fine-Tuning',
+    color: 'var(--green)',
+    how: 'Like SFT, but your training examples include <strong>images</strong> alongside text. The model learns to better interpret visual inputs for your specific use case.',
+    analogy: 'Like training a radiologist. You show them hundreds of X-rays with correct diagnoses until they can spot subtle patterns.',
+    when: 'Image classification, visual quality inspection, document understanding, medical imaging, diagram interpretation.',
+    flow: ['Image + prompt', 'Correct response', 'Model learns visual patterns']
+  }
+};
+
+function showMethod(key) {
+  const m = methodDetails[key];
+  const detail = document.getElementById('method-detail');
+  detail.style.display = 'block';
+  detail.innerHTML = `
+    <div class="card" style="border-top: 3px solid ${m.color};">
+      <h3 style="font-size:1.3rem; margin-bottom:16px;">${m.title}</h3>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); margin-bottom:4px;">How it works</div>
+        <p style="font-size:0.9rem;">${m.how}</p>
+      </div>
+      <div class="analogy">
+        <p>${m.analogy}</p>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); margin-bottom:4px;">When to use</div>
+        <p style="font-size:0.9rem; color:var(--text-dim);">${m.when}</p>
+      </div>
+      <div class="flow">
+        ${m.flow.map(s => `<div class="flow-step">${s}</div>`).join('<div class="flow-arrow">→</div>')}
+      </div>
+    </div>
+  `;
+  detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>
