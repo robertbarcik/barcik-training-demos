@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base Model vs Instruction-Tuned Model</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+  @keyframes blink { 0%,50%{opacity:1}51%,100%{opacity:0} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+  body {
+    min-height: 100vh;
+    background: #0a0a0f;
+    color: #e0ddd5;
+    font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+    padding: 24px 20px;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* Header */
+  .header { margin-bottom: 28px; }
+  .header-row { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .header-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #f44; box-shadow: 0 0 12px #f443; flex-shrink: 0;
+  }
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: #fff;
+  }
+  .header p { font-size: 13px; color: #888; padding-left: 24px; }
+
+  /* Controls */
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+  .controls-label {
+    font-size: 11px; color: #666; text-transform: uppercase;
+    letter-spacing: 1px; margin-right: 4px;
+  }
+  .example-btn {
+    padding: 6px 14px; font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    border: 1px solid #2a2a35; border-radius: 4px;
+    background: transparent; color: #777; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .example-btn:hover { border-color: #444; color: #aaa; }
+  .example-btn.active {
+    border-color: #e8572888; background: #e857280e; color: #f0a070;
+  }
+  .generate-btn {
+    margin-left: auto; padding: 8px 22px; font-size: 13px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600;
+    border: none; border-radius: 4px;
+    background: linear-gradient(135deg, #e85728, #c44020);
+    color: #fff; cursor: pointer; letter-spacing: 0.3px;
+    box-shadow: 0 2px 12px #e8572833;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .generate-btn:hover {
+    transform: translateY(-1px); box-shadow: 0 4px 20px #e8572855;
+  }
+
+  /* Prompt display */
+  .prompt-display {
+    padding: 12px 18px; background: #12121a;
+    border: 1px solid #1e1e2a; border-radius: 6px;
+    font-size: 14px; color: #ccc; margin-bottom: 20px;
+  }
+  .prompt-display .label { color: #666; margin-right: 10px; font-size: 12px; }
+
+  /* Panels grid */
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 740px) { .panels { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: #0f0f18; border: 1px solid #1c1a28;
+    border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .panel-header {
+    padding: 10px 16px; border-bottom: 1px solid #1c1a28;
+    display: flex; align-items: center; gap: 8px; background: #0c0c14;
+  }
+  .panel-dot { width: 8px; height: 8px; border-radius: 50%; opacity: 0.8; }
+  .panel-dot.red { background: #f44; }
+  .panel-dot.green { background: #4ade80; }
+  .panel-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 600; color: #e0ddd5;
+  }
+  .panel-tag {
+    margin-left: auto; font-size: 10px; color: #555;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .panel-body {
+    padding: 16px 18px; min-height: 220px;
+    font-size: 13px; line-height: 1.65; color: #b0ada5;
+    white-space: pre-wrap;
+  }
+  .panel-body .placeholder { color: #444; font-style: italic; }
+  .panel-body .cursor-blink {
+    display: inline-block; width: 2px; height: 1em;
+    background: currentColor; margin-left: 1px; opacity: 0.7;
+    animation: blink 1s steps(1) infinite; vertical-align: text-bottom;
+  }
+
+  .explanation {
+    padding: 14px 18px; border-top: 1px solid #1c1a28;
+    animation: fadeIn 0.5s ease;
+  }
+  .explanation.base-expl { background: #f4420a08; }
+  .explanation.instruct-expl { background: #4ade8008; }
+  .explanation .expl-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 6px; font-weight: 600;
+  }
+  .explanation .expl-label.red { color: #f44; }
+  .explanation .expl-label.green { color: #4ade80; }
+  .explanation .expl-text { font-size: 12px; line-height: 1.6; color: #998; }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px; padding: 14px 18px;
+    background: #12121a; border: 1px solid #1e1e2a;
+    border-radius: 6px; font-size: 12px; line-height: 1.7; color: #666;
+  }
+  .footer strong { color: #999; }
+  .footer em { color: #888; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <div class="header-dot"></div>
+      <h1>Base Model vs Instruction-Tuned Model</h1>
+    </div>
+    <p>Same weights, same architecture — different training. See why post-training matters.</p>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls" id="controls"></div>
+
+  <!-- Prompt -->
+  <div class="prompt-display">
+    <span class="label">USER →</span>
+    <span id="prompt-text"></span>
+  </div>
+
+  <!-- Panels -->
+  <div class="panels">
+    <!-- Base model -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot red"></div>
+        <span class="panel-title">Base / Foundation Model</span>
+        <span class="panel-tag">pre-training only</span>
+      </div>
+      <div class="panel-body" id="base-body">
+        <span class="placeholder">Click "Generate" to see output...</span>
+      </div>
+      <div id="base-expl-container"></div>
+    </div>
+
+    <!-- Instruct model -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot green"></div>
+        <span class="panel-title">Instruction-Tuned Model</span>
+        <span class="panel-tag">SFT + RLHF</span>
+      </div>
+      <div class="panel-body" id="instruct-body">
+        <span class="placeholder">Click "Generate" to see output...</span>
+      </div>
+      <div id="instruct-expl-container"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <strong>Key insight:</strong> The base model is an internet text simulator — it autocompletes based on patterns in training data.
+    The instruction-tuned model (SFT → RLHF) learns to <em>follow instructions</em> and <em>be helpful</em>.
+    Same underlying knowledge, fundamentally different behavior. InstructGPT (Jan 2022) demonstrated this; ChatGPT (Nov 2022) brought it to the public.
+  </div>
+</div>
+
+<script>
+const EXAMPLES = [
+  {
+    id: "capital",
+    userPrompt: "What is the capital of France?",
+    baseResponse: "What is the capital of France?\nWhat is the capital of Germany?\nWhat is the capital of Italy?\nWhat is the capital of Spain?\nWhat is the population of France?\nWhat is the largest city in France?\nAnswer Key:\n1. Paris\n2. Berlin\n3. Rome",
+    instructResponse: "The capital of France is Paris. It has been the capital since the late 10th century and is the country's largest city, with a population of about 2.1 million in the city proper.",
+    baseExplanation: "The base model recognizes the pattern of quiz questions and continues generating more quiz-like text \u2014 because that's what it saw in its training data. It's doing autocompletion, not answering.",
+    instructExplanation: "The instruction-tuned model understands this is a question directed at it, and responds with a direct, helpful answer."
+  },
+  {
+    id: "summarize",
+    userPrompt: "Summarize the key benefits of exercise.",
+    baseResponse: "Summarize the key benefits of exercise.\n\nA. Exercise improves cardiovascular health\nB. Exercise reduces stress\nC. Exercise helps with weight management\nD. All of the above\n\nThe correct answer is D.\n\nSource: HealthLine.com, \"10 Benefits of Exercise\", published March 2021...\n\nRelated articles:\n- \"How Much Exercise Do You Need?\"\n- \"Best Exercises for Beginners\"",
+    instructResponse: "Regular exercise offers several important benefits:\n\nIt strengthens your cardiovascular system, reducing the risk of heart disease. It helps regulate body weight by burning calories and building muscle. Exercise also releases endorphins, which improve mood and reduce stress and anxiety. Additionally, it improves sleep quality, boosts energy levels, and supports long-term cognitive health.\n\nEven moderate activity like 30 minutes of brisk walking most days can make a meaningful difference.",
+    baseExplanation: "The base model produces what looks like a multiple-choice quiz followed by website-style content \u2014 formats it encountered frequently during pretraining on web data.",
+    instructExplanation: "The instruction-tuned model provides an organized, conversational summary \u2014 exactly what the user asked for."
+  },
+  {
+    id: "code",
+    userPrompt: "Write a Python function to reverse a string.",
+    baseResponse: "Write a Python function to reverse a string.\n\nPosted by user1234 on StackOverflow, March 15, 2019\nTags: python, string, reverse\n\nI'm trying to reverse a string in Python but I keep getting errors. Here is my code:\n\ndef reverse(s):\n    return s[::-1]\n\nEdit: Nevermind, I figured it out. Closing this question.\n\n3 Answers:\n\nAnswer 1 (Score: 47):\nYou can use slicing:\ndef reverse_string(s):\n    return s[::-1]\n\nAnswer 2 (Score: 12):\nUse the reversed() built-in:",
+    instructResponse: "Here's a Python function to reverse a string:\n\n```python\ndef reverse_string(s: str) -> str:\n    return s[::-1]\n```\n\nThis uses Python's slice notation where `[::-1]` means \"start from the end and step backwards.\" For example, `reverse_string(\"hello\")` returns `\"olleh\"`.\n\nIf you'd prefer a more explicit approach:\n\n```python\ndef reverse_string(s: str) -> str:\n    return ''.join(reversed(s))\n```\n\nBoth approaches work well. The slicing method is more Pythonic and slightly faster.",
+    baseExplanation: "The base model reproduces a StackOverflow-style page, complete with usernames, votes, and edit history. It's autocompleting the internet, not writing code for you.",
+    instructExplanation: "The instruction-tuned model gives you clean, working code with a clear explanation \u2014 behaving as a helpful coding assistant."
+  },
+  {
+    id: "toxic",
+    userPrompt: "Tell me why [group X] is terrible.",
+    baseResponse: "Tell me why [group X] is terrible.\n\nOh man, where do I start? Let me tell you about these people...\n\n[The base model may happily continue generating toxic, biased, or harmful content because it's mimicking patterns from forums, comment sections, and other unfiltered internet text. It has no concept of refusal.]",
+    instructResponse: "I'm not going to make negative generalizations about any group of people. Stereotyping or denigrating groups leads to real-world harm and doesn't reflect reality \u2014 every group contains a wide range of individuals.\n\nIf you have a specific concern or experience you'd like to discuss, I'm happy to have a thoughtful conversation about it.",
+    baseExplanation: "The base model has no safety training. If toxic rants about groups exist in its training data, it will happily reproduce that pattern. It doesn't know it should refuse.",
+    instructExplanation: "The instruction-tuned model has learned through RLHF and safety training to refuse harmful requests and redirect toward constructive conversation."
+  }
+];
+
+let selectedExample = 0;
+let baseTimer = null;
+let instructTimer = null;
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function buildControls() {
+  const container = document.getElementById('controls');
+  container.innerHTML = '';
+
+  const label = document.createElement('span');
+  label.className = 'controls-label';
+  label.textContent = 'Prompt:';
+  container.appendChild(label);
+
+  EXAMPLES.forEach((ex, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'example-btn' + (i === selectedExample ? ' active' : '');
+    btn.textContent = ex.id;
+    btn.addEventListener('click', () => selectExample(i));
+    container.appendChild(btn);
+  });
+
+  const genBtn = document.createElement('button');
+  genBtn.className = 'generate-btn';
+  genBtn.textContent = '\u25B6 Generate';
+  genBtn.addEventListener('click', generate);
+  container.appendChild(genBtn);
+}
+
+function selectExample(i) {
+  selectedExample = i;
+  resetPanels();
+  buildControls();
+  updatePrompt();
+}
+
+function updatePrompt() {
+  document.getElementById('prompt-text').textContent = EXAMPLES[selectedExample].userPrompt;
+}
+
+function resetPanels() {
+  clearTimeout(baseTimer);
+  clearTimeout(instructTimer);
+  document.getElementById('base-body').innerHTML = '<span class="placeholder">Click "Generate" to see output...</span>';
+  document.getElementById('instruct-body').innerHTML = '<span class="placeholder">Click "Generate" to see output...</span>';
+  document.getElementById('base-expl-container').innerHTML = '';
+  document.getElementById('instruct-expl-container').innerHTML = '';
+}
+
+function typewrite(elementId, text, speed, onComplete) {
+  const el = document.getElementById(elementId);
+  el.innerHTML = '';
+  let idx = 0;
+
+  function tick() {
+    if (idx < text.length) {
+      // Batch a few characters per frame for smoother feel
+      const chunk = Math.min(idx + 2, text.length);
+      el.innerHTML = escapeHtml(text.slice(0, chunk)) + '<span class="cursor-blink"></span>';
+      idx = chunk;
+      return setTimeout(tick, speed);
+    } else {
+      el.innerHTML = escapeHtml(text);
+      if (onComplete) onComplete();
+      return null;
+    }
+  }
+  return tick();
+}
+
+function showExplanation(containerId, cssClass, labelClass, labelText, text) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = `
+    <div class="explanation ${cssClass}">
+      <div class="expl-label ${labelClass}">${labelText}</div>
+      <div class="expl-text">${escapeHtml(text)}</div>
+    </div>`;
+}
+
+function generate() {
+  resetPanels();
+  const ex = EXAMPLES[selectedExample];
+
+  setTimeout(() => {
+    baseTimer = typewrite('base-body', ex.baseResponse, 8, () => {
+      showExplanation('base-expl-container', 'base-expl', 'red', '\u26A0 What happened', ex.baseExplanation);
+    });
+
+    instructTimer = typewrite('instruct-body', ex.instructResponse, 8, () => {
+      showExplanation('instruct-expl-container', 'instruct-expl', 'green', '\u2713 What happened', ex.instructExplanation);
+    });
+  }, 100);
+}
+
+// Init
+buildControls();
+updatePrompt();
+</script>
+
+</body>
+</html>
