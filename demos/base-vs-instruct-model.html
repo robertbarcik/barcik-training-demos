@@ -198,7 +198,7 @@
 <script>
 const EXAMPLES = [
   {
-    id: "capital",
+    id: "capital", label: "Factual Q&A",
     userPrompt: "What is the capital of France?",
     baseResponse: "What is the capital of France?\nWhat is the capital of Germany?\nWhat is the capital of Italy?\nWhat is the capital of Spain?\nWhat is the population of France?\nWhat is the largest city in France?\nAnswer Key:\n1. Paris\n2. Berlin\n3. Rome",
     instructResponse: "The capital of France is Paris. It has been the capital since the late 10th century and is the country's largest city, with a population of about 2.1 million in the city proper.",
@@ -206,7 +206,7 @@ const EXAMPLES = [
     instructExplanation: "The instruction-tuned model understands this is a question directed at it, and responds with a direct, helpful answer."
   },
   {
-    id: "summarize",
+    id: "summarize", label: "Summarization",
     userPrompt: "Summarize the key benefits of exercise.",
     baseResponse: "Summarize the key benefits of exercise.\n\nA. Exercise improves cardiovascular health\nB. Exercise reduces stress\nC. Exercise helps with weight management\nD. All of the above\n\nThe correct answer is D.\n\nSource: HealthLine.com, \"10 Benefits of Exercise\", published March 2021...\n\nRelated articles:\n- \"How Much Exercise Do You Need?\"\n- \"Best Exercises for Beginners\"",
     instructResponse: "Regular exercise offers several important benefits:\n\nIt strengthens your cardiovascular system, reducing the risk of heart disease. It helps regulate body weight by burning calories and building muscle. Exercise also releases endorphins, which improve mood and reduce stress and anxiety. Additionally, it improves sleep quality, boosts energy levels, and supports long-term cognitive health.\n\nEven moderate activity like 30 minutes of brisk walking most days can make a meaningful difference.",
@@ -214,7 +214,7 @@ const EXAMPLES = [
     instructExplanation: "The instruction-tuned model provides an organized, conversational summary \u2014 exactly what the user asked for."
   },
   {
-    id: "code",
+    id: "code", label: "Code Generation",
     userPrompt: "Write a Python function to reverse a string.",
     baseResponse: "Write a Python function to reverse a string.\n\nPosted by user1234 on StackOverflow, March 15, 2019\nTags: python, string, reverse\n\nI'm trying to reverse a string in Python but I keep getting errors. Here is my code:\n\ndef reverse(s):\n    return s[::-1]\n\nEdit: Nevermind, I figured it out. Closing this question.\n\n3 Answers:\n\nAnswer 1 (Score: 47):\nYou can use slicing:\ndef reverse_string(s):\n    return s[::-1]\n\nAnswer 2 (Score: 12):\nUse the reversed() built-in:",
     instructResponse: "Here's a Python function to reverse a string:\n\n```python\ndef reverse_string(s: str) -> str:\n    return s[::-1]\n```\n\nThis uses Python's slice notation where `[::-1]` means \"start from the end and step backwards.\" For example, `reverse_string(\"hello\")` returns `\"olleh\"`.\n\nIf you'd prefer a more explicit approach:\n\n```python\ndef reverse_string(s: str) -> str:\n    return ''.join(reversed(s))\n```\n\nBoth approaches work well. The slicing method is more Pythonic and slightly faster.",
@@ -222,7 +222,7 @@ const EXAMPLES = [
     instructExplanation: "The instruction-tuned model gives you clean, working code with a clear explanation \u2014 behaving as a helpful coding assistant."
   },
   {
-    id: "toxic",
+    id: "toxic", label: "Safety / Refusal",
     userPrompt: "Tell me why [group X] is terrible.",
     baseResponse: "Tell me why [group X] is terrible.\n\nOh man, where do I start? Let me tell you about these people...\n\n[The base model may happily continue generating toxic, biased, or harmful content because it's mimicking patterns from forums, comment sections, and other unfiltered internet text. It has no concept of refusal.]",
     instructResponse: "I'm not going to make negative generalizations about any group of people. Stereotyping or denigrating groups leads to real-world harm and doesn't reflect reality \u2014 every group contains a wide range of individuals.\n\nIf you have a specific concern or experience you'd like to discuss, I'm happy to have a thoughtful conversation about it.",
@@ -251,7 +251,7 @@ function buildControls() {
   EXAMPLES.forEach((ex, i) => {
     const btn = document.createElement('button');
     btn.className = 'example-btn' + (i === selectedExample ? ' active' : '');
-    btn.textContent = ex.id;
+    btn.textContent = ex.label;
     btn.addEventListener('click', () => selectExample(i));
     container.appendChild(btn);
   });

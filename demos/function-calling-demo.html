@@ -313,7 +313,7 @@ function toggleSchema() {
   const container = document.getElementById('schema-container');
   if (showSchema) {
     container.style.display = 'block';
-    container.innerHTML = codeBlock('Tool Definition (what the model sees)', JSON.stringify(scenario().functionSchema, null, 2));
+    container.innerHTML = codeBlock('Tool Definition (what the model sees) — simplified for clarity; real schemas use full JSON Schema format', JSON.stringify(scenario().functionSchema, null, 2));
   } else {
     container.style.display = 'none';
   }
