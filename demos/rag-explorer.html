@@ -7,18 +7,18 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0c0e14;
-    --surface: #141620;
-    --surface2: #1a1d2e;
-    --border: #2a2d42;
-    --text: #e2e4ef;
-    --text-dim: #8b8fa6;
-    --accent: #5eead4;
-    --accent2: #a78bfa;
-    --accent3: #f97316;
-    --danger: #ef4444;
-    --success: #22c55e;
-    --highlight-bg: rgba(94, 234, 212, 0.08);
+    --bg: #f5f8fc;
+    --surface: #ffffff;
+    --surface2: #edf2f7;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --text-dim: #64748b;
+    --accent: #1e3a5f;
+    --accent2: #2563eb;
+    --accent3: #d97706;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --highlight-bg: rgba(30, 58, 95, 0.06);
     --radius: 12px;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -41,9 +41,10 @@
   header h1 {
     font-size: 2rem;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    background: linear-gradient(135deg, #1e3a5f, #2563eb);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 8px;
   }
   header p { color: var(--text-dim); font-size: 0.95rem; max-width: 720px; }
@@ -83,9 +84,9 @@
   }
   .step-btn:hover { color: var(--text); background: var(--surface2); }
   .step-btn.active {
-    background: linear-gradient(135deg, rgba(94,234,212,0.15), rgba(167,139,250,0.15));
+    background: linear-gradient(135deg, rgba(30,58,95,0.1), rgba(37,99,235,0.1));
     color: var(--accent);
-    box-shadow: 0 0 0 1px rgba(94,234,212,0.3);
+    box-shadow: 0 0 0 1px rgba(30,58,95,0.25);
   }
   .step-num {
     display: inline-block;
@@ -100,7 +101,7 @@
   }
   .step-btn.active .step-num {
     background: var(--accent);
-    color: var(--bg);
+    color: #ffffff;
   }
 
   /* Step content */
@@ -137,7 +138,7 @@
   .ticket.highlighted {
     border-color: var(--accent);
     background: var(--highlight-bg);
-    box-shadow: 0 0 20px rgba(94,234,212,0.08);
+    box-shadow: 0 0 20px rgba(30,58,95,0.08);
   }
   .ticket-id {
     font-family: 'JetBrains Mono', monospace;
@@ -164,9 +165,9 @@
     border-radius: 20px;
     font-weight: 700;
   }
-  .sim-high { background: rgba(94,234,212,0.15); color: var(--accent); }
-  .sim-med { background: rgba(249,115,22,0.15); color: var(--accent3); }
-  .sim-low { background: rgba(139,143,166,0.1); color: var(--text-dim); }
+  .sim-high { background: rgba(30,58,95,0.1); color: var(--accent); }
+  .sim-med { background: rgba(217,119,6,0.12); color: var(--accent3); }
+  .sim-low { background: rgba(100,116,139,0.1); color: var(--text-dim); }
 
   /* Vector visualization */
   .vector-row {
@@ -273,9 +274,9 @@
     margin-bottom: 8px;
     font-size: 0.82rem;
   }
-  .ctx-system { background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.2); }
-  .ctx-rag { background: rgba(94,234,212,0.08); border: 1px solid rgba(94,234,212,0.2); }
-  .ctx-query { background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2); }
+  .ctx-system { background: rgba(37,99,235,0.06); border: 1px solid rgba(37,99,235,0.15); }
+  .ctx-rag { background: rgba(30,58,95,0.05); border: 1px solid rgba(30,58,95,0.15); }
+  .ctx-query { background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.15); }
   .ctx-label {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.68rem;
@@ -306,7 +307,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.65rem;
     font-weight: 700;
-    color: var(--bg);
+    color: #ffffff;
   }
 
   /* Buttons */
@@ -321,10 +322,10 @@
     transition: all 0.2s;
   }
   .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #2dd4bf);
-    color: var(--bg);
+    background: linear-gradient(135deg, #1e3a5f, #2563eb);
+    color: #ffffff;
   }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(94,234,212,0.3); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(30,58,95,0.3); }
   .btn-secondary {
     background: var(--surface2);
     color: var(--text);
@@ -366,8 +367,8 @@
 
   /* Insight box */
   .insight {
-    background: linear-gradient(135deg, rgba(94,234,212,0.06), rgba(167,139,250,0.06));
-    border: 1px solid rgba(94,234,212,0.2);
+    background: linear-gradient(135deg, rgba(30,58,95,0.04), rgba(37,99,235,0.04));
+    border: 1px solid rgba(30,58,95,0.15);
     border-radius: var(--radius);
     padding: 16px 20px;
     margin: 16px 0;
@@ -395,9 +396,9 @@
     font-family: 'JetBrains Mono', monospace;
     font-weight: 600;
   }
-  .tag-teal { background: rgba(94,234,212,0.15); color: var(--accent); }
-  .tag-purple { background: rgba(167,139,250,0.15); color: var(--accent2); }
-  .tag-orange { background: rgba(249,115,22,0.15); color: var(--accent3); }
+  .tag-teal { background: rgba(30,58,95,0.08); color: var(--accent); }
+  .tag-purple { background: rgba(37,99,235,0.08); color: var(--accent2); }
+  .tag-orange { background: rgba(217,119,6,0.1); color: var(--accent3); }
 
   .dim { color: var(--text-dim); }
   .mt-8 { margin-top: 8px; }
@@ -438,13 +439,13 @@
     white-space: nowrap;
   }
   .flow-arrow { color: var(--text-dim); font-size: 1.1rem; }
-  .flow-teal { background: rgba(94,234,212,0.1); border-color: rgba(94,234,212,0.3); color: var(--accent); }
-  .flow-purple { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.3); color: var(--accent2); }
-  .flow-orange { background: rgba(249,115,22,0.1); border-color: rgba(249,115,22,0.3); color: var(--accent3); }
+  .flow-teal { background: rgba(30,58,95,0.06); border-color: rgba(30,58,95,0.2); color: var(--accent); }
+  .flow-purple { background: rgba(37,99,235,0.06); border-color: rgba(37,99,235,0.2); color: var(--accent2); }
+  .flow-orange { background: rgba(217,119,6,0.06); border-color: rgba(217,119,6,0.2); color: var(--accent3); }
 
   select.query-input {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%238b8fa6' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%2364748b' stroke-width='1.5'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     padding-right: 32px;
@@ -578,9 +579,9 @@ function cosineSim(a, b) {
 
 function valToColor(val, hue = 174) {
   const alpha = Math.max(0.08, val);
-  if (hue === 174) return `rgba(94,234,212,${alpha})`;
-  if (hue === 260) return `rgba(167,139,250,${alpha})`;
-  if (hue === 28) return `rgba(249,115,22,${alpha})`;
+  if (hue === 174) return `rgba(30,58,95,${alpha})`;
+  if (hue === 260) return `rgba(37,99,235,${alpha})`;
+  if (hue === 28) return `rgba(217,119,6,${alpha})`;
   return `hsla(${hue},70%,60%,${alpha})`;
 }
 
