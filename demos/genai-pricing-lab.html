@@ -10,9 +10,15 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #f0f4f8; color: #1a202c; min-height: 100vh; line-height: 1.5;
 }
-header { background: #1e3a5f; color: #fff; padding: 1.4rem 2rem; text-align: center; }
+header { background: #1e3a5f; color: #fff; padding: 1.4rem 2rem; text-align: center; position: relative; }
 header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
 header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
+.back-link {
+  position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+  color: #94a3b8; text-decoration: none; font-size: 0.85rem; font-weight: 600;
+  display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;
+}
+.back-link:hover { color: #fff; }
 
 .intro { max-width: 880px; margin: 1.5rem auto 0; padding: 0 1.25rem; text-align: center; }
 .intro p { font-size: 0.95rem; color: #4a5568; max-width: 700px; margin: 0 auto; line-height: 1.65; }
@@ -158,6 +164,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 <body>
 
 <header>
+  <a href="../" class="back-link" title="All Demos">&larr; All Demos</a>
   <h1>GenAI Pricing Lab</h1>
   <div class="brand">barcik.training</div>
 </header>
