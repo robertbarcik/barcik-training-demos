@@ -232,8 +232,6 @@ const EXAMPLES = [
 ];
 
 let selectedExample = 0;
-let baseTimer = null;
-let instructTimer = null;
 
 function escapeHtml(text) {
   const div = document.createElement('div');
@@ -277,33 +275,34 @@ function updatePrompt() {
 }
 
 function resetPanels() {
-  clearTimeout(baseTimer);
-  clearTimeout(instructTimer);
+  generationId++;
   document.getElementById('base-body').innerHTML = '<span class="placeholder">Click "Generate" to see output...</span>';
   document.getElementById('instruct-body').innerHTML = '<span class="placeholder">Click "Generate" to see output...</span>';
   document.getElementById('base-expl-container').innerHTML = '';
   document.getElementById('instruct-expl-container').innerHTML = '';
 }
 
+let generationId = 0;
+
 function typewrite(elementId, text, speed, onComplete) {
   const el = document.getElementById(elementId);
   el.innerHTML = '';
   let idx = 0;
+  const myGen = generationId;
 
   function tick() {
+    if (myGen !== generationId) return;
     if (idx < text.length) {
-      // Batch a few characters per frame for smoother feel
       const chunk = Math.min(idx + 2, text.length);
-      el.innerHTML = escapeHtml(text.slice(0, chunk)) + '<span class="cursor-blink"></span>';
+      el.innerHTML = escapeHtml(text.slice(0, chunk)) + '<span class="cursor-blink" aria-hidden="true"></span>';
       idx = chunk;
-      return setTimeout(tick, speed);
+      setTimeout(tick, speed);
     } else {
       el.innerHTML = escapeHtml(text);
       if (onComplete) onComplete();
-      return null;
     }
   }
-  return tick();
+  tick();
 }
 
 function showExplanation(containerId, cssClass, labelClass, labelText, text) {
@@ -320,11 +319,11 @@ function generate() {
   const ex = EXAMPLES[selectedExample];
 
   setTimeout(() => {
-    baseTimer = typewrite('base-body', ex.baseResponse, 8, () => {
+    typewrite('base-body', ex.baseResponse, 8, () => {
       showExplanation('base-expl-container', 'base-expl', 'red', '\u26A0 What happened', ex.baseExplanation);
     });
 
-    instructTimer = typewrite('instruct-body', ex.instructResponse, 8, () => {
+    typewrite('instruct-body', ex.instructResponse, 8, () => {
       showExplanation('instruct-expl-container', 'instruct-expl', 'green', '\u2713 What happened', ex.instructExplanation);
     });
   }, 100);

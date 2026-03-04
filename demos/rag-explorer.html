@@ -1050,7 +1050,14 @@ function renderStep6() {
   `;
 }
 
+let demoTimers = [];
+function clearDemoTimers() {
+  demoTimers.forEach(t => clearTimeout(t));
+  demoTimers = [];
+}
+
 function runFullDemo() {
+  clearDemoTimers();
   const sel = document.getElementById('demoSelect').value;
   const container = document.getElementById('demoOutput');
   if (!sel) { container.innerHTML = ''; return; }
@@ -1081,7 +1088,7 @@ function runFullDemo() {
   const stages = document.getElementById('demoStages');
 
   // Stage 1: Embed
-  setTimeout(() => {
+  demoTimers.push(setTimeout(() => {
     document.getElementById('d-q').style.opacity = '1';
     stages.innerHTML = `
       <div class="card mt-16" style="animation: fadeIn 0.4s ease;">
@@ -1090,10 +1097,10 @@ function runFullDemo() {
         ${renderVectorRow('QUERY', queryVec, 28)}
       </div>
     `;
-  }, 300);
+  }, 300));
 
   // Stage 2: Search
-  setTimeout(() => {
+  demoTimers.push(setTimeout(() => {
     document.getElementById('d-s').style.opacity = '1';
     stages.innerHTML += `
       <div class="card" style="animation: fadeIn 0.4s ease;">
@@ -1109,10 +1116,10 @@ function runFullDemo() {
         `).join('')}
       </div>
     `;
-  }, 1000);
+  }, 1000));
 
   // Stage 3: Augment
-  setTimeout(() => {
+  demoTimers.push(setTimeout(() => {
     document.getElementById('d-a').style.opacity = '1';
     stages.innerHTML += `
       <div class="card" style="animation: fadeIn 0.4s ease;">
@@ -1120,10 +1127,10 @@ function runFullDemo() {
         <p class="dim" style="font-size:0.82rem;">System prompt + 2 relevant tickets + user query → sent to LLM</p>
       </div>
     `;
-  }, 1800);
+  }, 1800));
 
   // Stage 4: Generate
-  setTimeout(() => {
+  demoTimers.push(setTimeout(() => {
     document.getElementById('d-g').style.opacity = '1';
     stages.innerHTML += `
       <div class="card" style="animation: fadeIn 0.4s ease;">
@@ -1137,11 +1144,11 @@ function runFullDemo() {
     const text = query.response;
     let idx = 0;
     const typeSpeed = 8;
+    let builtHtml = '';
     function typeChar() {
       if (idx < text.length) {
-        // Handle markdown bold
         let chunk = text[idx];
-        if (text.substr(idx, 2) === '**') {
+        if (text.slice(idx, idx + 2) === '**') {
           const end = text.indexOf('**', idx + 2);
           if (end !== -1) {
             chunk = '<strong>' + text.substring(idx+2, end) + '</strong>';
@@ -1155,15 +1162,15 @@ function runFullDemo() {
         } else {
           idx++;
         }
-        responseEl.innerHTML = responseEl.innerHTML.replace('<span class="typing">▌</span>', '') +
-          chunk + '<span class="typing">▌</span>';
-        setTimeout(typeChar, typeSpeed);
+        builtHtml += chunk;
+        responseEl.innerHTML = builtHtml + '<span class="typing">▌</span>';
+        demoTimers.push(setTimeout(typeChar, typeSpeed));
       } else {
-        responseEl.innerHTML = responseEl.innerHTML.replace('<span class="typing">▌</span>', '');
+        responseEl.innerHTML = builtHtml;
       }
     }
     typeChar();
-  }, 2600);
+  }, 2600));
 }
 
 // ============================================================
