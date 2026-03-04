@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meeting Cost Calculator — barcik.training</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ===== HEADER ===== */
+header {
+  background: #1e3a5f;
+  color: #fff;
+  padding: 1.4rem 2rem;
+  text-align: center;
+}
+header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
+header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
+
+/* ===== INTRO ===== */
+.intro {
+  max-width: 880px;
+  margin: 1.5rem auto 0;
+  padding: 0 1.25rem;
+  text-align: center;
+}
+.intro p {
+  font-size: 0.95rem;
+  color: #4a5568;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.5rem auto 0;
+  max-width: 880px;
+  padding: 0 1.25rem;
+}
+.tab-btn {
+  padding: 0.6rem 1.5rem;
+  border: 2px solid #1e3a5f;
+  background: #fff;
+  color: #1e3a5f;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn.active, .tab-btn:hover {
+  background: #1e3a5f;
+  color: #fff;
+}
+
+/* ===== PANEL ===== */
+.panel {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+/* ===== PHASE 1: THE RECKONING ===== */
+.phase { display: none; max-width: 880px; margin: 1.5rem auto; padding: 0 1.25rem; }
+.phase.active { display: block; }
+
+.sliders-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.slider-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e3a5f;
+  margin-bottom: 0.4rem;
+}
+.slider-group .slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.slider-group input[type="range"] {
+  flex: 1;
+  accent-color: #1e3a5f;
+  height: 6px;
+}
+.slider-group .val {
+  min-width: 3.5rem;
+  text-align: right;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1e3a5f;
+}
+.slider-group .hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+.cost-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.cost-input-row input[type="number"] {
+  width: 5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  text-align: right;
+}
+.cost-input-row input[type="number"]:focus {
+  outline: none;
+  border-color: #1e3a5f;
+}
+.cost-input-row span { font-size: 0.85rem; color: #4a5568; }
+
+/* Results */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.result-card {
+  background: #f0f4f8;
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+.result-card .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 0.3rem;
+}
+.result-card .value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e3a5f;
+}
+.result-card .sub {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+.result-card.highlight {
+  background: #1e3a5f;
+}
+.result-card.highlight .label { color: #94a3b8; }
+.result-card.highlight .value { color: #fff; }
+.result-card.highlight .sub { color: #94a3b8; }
+
+.multiplier-note {
+  font-size: 0.8rem;
+  color: #e67e22;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+/* Benchmark */
+.benchmark {
+  background: #f0f4f8;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.benchmark-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.benchmark-text {
+  font-size: 0.88rem;
+  color: #4a5568;
+  line-height: 1.5;
+}
+.benchmark-text strong { color: #1e3a5f; }
+
+/* Gauge */
+.gauge-container {
+  margin-top: 1rem;
+}
+.gauge-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+.gauge-track {
+  height: 12px;
+  background: linear-gradient(to right, #27ae60, #f39c12, #e74c3c);
+  border-radius: 6px;
+  position: relative;
+}
+.gauge-marker {
+  position: absolute;
+  top: -4px;
+  width: 20px;
+  height: 20px;
+  background: #1e3a5f;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  transform: translateX(-50%);
+  transition: left 0.4s ease;
+}
+
+/* ===== PHASE 2: THE TRIAGE ===== */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.scenario-card {
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  transition: border-color 0.2s;
+}
+.scenario-card.tagged {
+  border-color: #1e3a5f;
+}
+.scenario-card .sc-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1e3a5f;
+  margin-bottom: 0.25rem;
+}
+.scenario-card .sc-desc {
+  font-size: 0.82rem;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+.scenario-card .sc-duration {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 0.75rem;
+}
+
+.tag-row, .action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.tag-row label, .action-row label { font-size: 0.72rem; font-weight: 600; color: #64748b; margin-bottom: 0.2rem; display: block; width: 100%; }
+.tag-btn, .action-btn {
+  padding: 0.3rem 0.65rem;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #4a5568;
+}
+.tag-btn:hover, .action-btn:hover { border-color: #1e3a5f; color: #1e3a5f; }
+.tag-btn.selected { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+.action-btn.selected-keep { background: #27ae60; color: #fff; border-color: #27ae60; }
+.action-btn.selected-shorten { background: #2563eb; color: #fff; border-color: #2563eb; }
+.action-btn.selected-async { background: #e67e22; color: #fff; border-color: #e67e22; }
+.action-btn.selected-cancel { background: #e74c3c; color: #fff; border-color: #e74c3c; }
+
+.follow-up {
+  background: #f0f4f8;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: #4a5568;
+  display: none;
+}
+.follow-up.visible { display: block; }
+.follow-up input {
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+
+/* Triage Summary */
+.triage-summary {
+  display: none;
+  margin-top: 1.5rem;
+}
+.triage-summary.visible { display: block; }
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.stat-card {
+  background: #f0f4f8;
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+.stat-card .stat-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1e3a5f;
+}
+.stat-card .stat-label {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tag-dist {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.tag-chip {
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #e2e8f0;
+  color: #1e3a5f;
+}
+
+.culture-score {
+  text-align: center;
+  padding: 1.25rem;
+  background: #1e3a5f;
+  border-radius: 10px;
+  color: #fff;
+}
+.culture-score .score-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+.culture-score .score-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+.culture-score .score-desc {
+  font-size: 0.82rem;
+  color: #cbd5e0;
+  margin-top: 0.5rem;
+}
+
+/* ===== EXPORT ===== */
+.export-bar {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.5rem auto;
+  max-width: 880px;
+  padding: 0 1.25rem;
+}
+.export-btn {
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.export-btn.primary { background: #1e3a5f; color: #fff; }
+.export-btn.primary:hover { background: #2a4a73; }
+.export-btn.secondary { background: #e2e8f0; color: #1e3a5f; }
+.export-btn.secondary:hover { background: #cbd5e0; }
+
+.copy-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #1e3a5f;
+  color: #fff;
+  padding: 0.6rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 100;
+}
+.copy-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  text-align: center;
+  padding: 2rem;
+  font-size: 0.8rem;
+  color: #a0aec0;
+}
+
+/* ===== PRINT ===== */
+@media print {
+  body { background: #fff; }
+  header { background: #1e3a5f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .tabs, .export-bar, footer { display: none; }
+  .phase { display: block !important; page-break-inside: avoid; }
+  .panel { box-shadow: none; border: 1px solid #e2e8f0; }
+  .result-card.highlight { background: #1e3a5f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .result-card.highlight .value { color: #fff !important; }
+  .gauge-track { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .culture-score { background: #1e3a5f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .triage-summary { display: block !important; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 740px) {
+  .sliders-grid { grid-template-columns: 1fr; }
+  .results-grid { grid-template-columns: 1fr; }
+  .scenario-grid { grid-template-columns: 1fr; }
+  .summary-stats { grid-template-columns: 1fr 1fr; }
+  .tabs { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Meeting Cost Calculator</h1>
+  <div class="brand">barcik.training</div>
+</header>
+
+<div class="intro">
+  <p>Meetings are the largest unmanaged cost in most organizations. This tool helps you quantify the true cost of your meeting culture and triage meetings using the <strong>Decide / Learn / Bond / Do</strong> framework.</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showPhase(1)">Phase 1: The Reckoning</button>
+  <button class="tab-btn" onclick="showPhase(2)">Phase 2: The Triage</button>
+</div>
+
+<!-- ===== PHASE 1 ===== -->
+<div class="phase active" id="phase1">
+  <div class="panel">
+    <div class="sliders-grid">
+      <div class="slider-group">
+        <label>Your weekly meeting hours</label>
+        <div class="slider-row">
+          <input type="range" id="myHours" min="0" max="40" value="10" oninput="updatePhase1()">
+          <span class="val" id="myHoursVal">10 h</span>
+        </div>
+      </div>
+      <div class="slider-group">
+        <label>Team size (including you)</label>
+        <div class="slider-row">
+          <input type="range" id="teamSize" min="2" max="50" value="8" oninput="updatePhase1()">
+          <span class="val" id="teamSizeVal">8</span>
+        </div>
+      </div>
+      <div class="slider-group">
+        <label>Avg. team member weekly meeting hours</label>
+        <div class="slider-row">
+          <input type="range" id="teamHours" min="0" max="40" value="8" oninput="updatePhase1()">
+          <span class="val" id="teamHoursVal">8 h</span>
+        </div>
+      </div>
+      <div class="slider-group">
+        <label>Hourly cost per person (fully loaded)</label>
+        <div class="cost-input-row">
+          <span>&euro;</span>
+          <input type="number" id="hourlyCost" value="45" min="10" max="500" oninput="updatePhase1()">
+          <span>/ hour</span>
+        </div>
+        <div class="hint">Include salary, benefits, overhead (~1.3&ndash;1.5&times; gross salary &divide; working hours)</div>
+      </div>
+    </div>
+
+    <div class="multiplier-note">
+      All costs include a 1.75&times; hidden multiplier for prep time, post-meeting follow-ups, and context-switching refocus costs.
+    </div>
+
+    <div class="results-grid">
+      <div class="result-card">
+        <div class="label">Weekly</div>
+        <div class="value" id="costWeekly">&euro;0</div>
+        <div class="sub" id="costWeeklyRaw">raw: &euro;0</div>
+      </div>
+      <div class="result-card">
+        <div class="label">Monthly</div>
+        <div class="value" id="costMonthly">&euro;0</div>
+        <div class="sub" id="costMonthlyRaw">raw: &euro;0</div>
+      </div>
+      <div class="result-card highlight">
+        <div class="label">Annual</div>
+        <div class="value" id="costAnnual">&euro;0</div>
+        <div class="sub" id="costAnnualRaw">raw: &euro;0</div>
+      </div>
+    </div>
+
+    <div class="results-grid" style="grid-template-columns: 1fr 1fr;">
+      <div class="result-card">
+        <div class="label">Person-days consumed / week</div>
+        <div class="value" id="personDays">0</div>
+        <div class="sub">8-hour equivalent days</div>
+      </div>
+      <div class="result-card">
+        <div class="label">% of team capacity in meetings</div>
+        <div class="value" id="capacityPct">0%</div>
+        <div class="sub">of total available hours</div>
+      </div>
+    </div>
+
+    <div class="benchmark">
+      <div class="benchmark-icon">&#128200;</div>
+      <div class="benchmark-text">
+        <strong>Benchmark:</strong> Robert's average over 7 years of consulting: <strong>2 hours/week</strong>. Your personal meeting load is <strong id="benchmarkX">5&times;</strong> that benchmark.
+      </div>
+    </div>
+
+    <div class="gauge-container">
+      <div class="gauge-label-row">
+        <span>Deep work culture</span>
+        <span>Meeting-industrial complex</span>
+      </div>
+      <div class="gauge-track">
+        <div class="gauge-marker" id="gaugeMarker" style="left: 25%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PHASE 2 ===== -->
+<div class="phase" id="phase2">
+  <div class="panel">
+    <p style="font-size: 0.9rem; color: #4a5568; margin-bottom: 1.25rem; text-align: center;">
+      Tag each meeting with its <strong>primary purpose</strong> and decide its <strong>fate</strong>. The framework: every meeting should <em>Decide</em>, help people <em>Learn</em>, <em>Bond</em> the team, or <em>Do</em> real work.
+    </p>
+
+    <div class="scenario-grid" id="scenarioGrid">
+      <!-- Cards injected by JS -->
+    </div>
+
+    <div class="triage-summary" id="triageSummary">
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e3a5f; margin-bottom: 1rem; text-align: center;">Triage Results</h3>
+
+      <div class="tag-dist" id="tagDist"></div>
+
+      <div class="summary-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="statKept">0</div>
+          <div class="stat-label">Kept</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statShortened">0</div>
+          <div class="stat-label">Shortened</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statAsync">0</div>
+          <div class="stat-label">Made Async</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statCancelled">0</div>
+          <div class="stat-label">Cancelled</div>
+        </div>
+      </div>
+
+      <div class="results-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 1.25rem;">
+        <div class="result-card">
+          <div class="label">Estimated time saved / week</div>
+          <div class="value" id="timeSaved">0 h</div>
+        </div>
+        <div class="result-card highlight">
+          <div class="label">Estimated annual savings</div>
+          <div class="value" id="costSaved">&euro;0</div>
+        </div>
+      </div>
+
+      <div class="culture-score">
+        <div class="score-value" id="cultureScore">0</div>
+        <div class="score-label">Meeting Culture Score</div>
+        <div class="score-desc" id="cultureDesc">Complete all cards to see your score</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EXPORT ===== -->
+<div class="export-bar">
+  <button class="export-btn primary" onclick="window.print()">&#128424; Save as PDF</button>
+  <button class="export-btn secondary" onclick="copyResults()">&#128203; Copy to Clipboard</button>
+</div>
+
+<div class="copy-toast" id="copyToast">Copied to clipboard!</div>
+
+<footer>&copy; 2026 barcik.training</footer>
+
+<script>
+/* ===== DATA ===== */
+const MULTIPLIER = 1.75;
+const WEEKS_PER_MONTH = 4.33;
+const WEEKS_PER_YEAR = 48; // ~working weeks
+
+const scenarios = [
+  { id: 1, title: "Daily Standup", desc: "15-min sync every morning. Everyone shares what they did yesterday and today.", duration: 1.25, followUp: { tag: "Decide", question: "Who is the decision maker in this standup?" } },
+  { id: 2, title: "Budget Review", desc: "Monthly 90-min session reviewing departmental spending with finance team.", duration: 6, followUp: { tag: "Decide", question: "Who is the decision maker for budget approvals?" } },
+  { id: 3, title: "Brainstorm Session", desc: "Weekly 60-min open brainstorm for new product features.", duration: 4, followUp: { tag: "Learn", question: "Could this be replaced with an async idea board?" } },
+  { id: 4, title: "Welcome Lunch", desc: "Informal 60-min lunch when a new team member joins (~monthly).", duration: 1, followUp: null },
+  { id: 5, title: "The Email Thread Meeting", desc: "45-min meeting called because an email thread got too long.", duration: 3, followUp: { tag: "Decide", question: "Who is the decision maker here?" } },
+  { id: 6, title: "Sprint Retrospective", desc: "Bi-weekly 60-min retro to discuss what went well and what didn't.", duration: 2, followUp: { tag: "Learn", question: "Is a written retro template possible?" } },
+  { id: 7, title: "Alignment Meeting", desc: "Weekly 60-min cross-team alignment on project dependencies.", duration: 4, followUp: { tag: "Decide", question: "Who owns the final decision on priorities?" } },
+  { id: 8, title: "Pair Debugging", desc: "Ad-hoc 30-min sessions to tackle tricky bugs together (~3x/week).", duration: 1.5, followUp: null }
+];
+
+const state = {
+  cards: {} // cardId -> { tag, action, followUpAnswer }
+};
+
+/* ===== PHASE 1 ===== */
+function updatePhase1() {
+  const myH = +document.getElementById('myHours').value;
+  const teamN = +document.getElementById('teamSize').value;
+  const teamH = +document.getElementById('teamHours').value;
+  const rate = +document.getElementById('hourlyCost').value || 45;
+
+  document.getElementById('myHoursVal').textContent = myH + ' h';
+  document.getElementById('teamSizeVal').textContent = teamN;
+  document.getElementById('teamHoursVal').textContent = teamH + ' h';
+
+  const totalHoursWeek = myH + (teamN - 1) * teamH;
+  const rawWeekly = totalHoursWeek * rate;
+  const weekly = rawWeekly * MULTIPLIER;
+  const monthly = weekly * WEEKS_PER_MONTH;
+  const annual = weekly * WEEKS_PER_YEAR;
+
+  document.getElementById('costWeekly').textContent = fmtEur(weekly);
+  document.getElementById('costWeeklyRaw').textContent = 'raw: ' + fmtEur(rawWeekly);
+  document.getElementById('costMonthly').textContent = fmtEur(monthly);
+  document.getElementById('costMonthlyRaw').textContent = 'raw: ' + fmtEur(rawWeekly * WEEKS_PER_MONTH);
+  document.getElementById('costAnnual').textContent = fmtEur(annual);
+  document.getElementById('costAnnualRaw').textContent = 'raw: ' + fmtEur(rawWeekly * WEEKS_PER_YEAR);
+
+  const personDays = (totalHoursWeek / 8).toFixed(1);
+  document.getElementById('personDays').textContent = personDays;
+
+  const totalCapacity = teamN * 40;
+  const pct = totalCapacity > 0 ? Math.round((totalHoursWeek / totalCapacity) * 100) : 0;
+  document.getElementById('capacityPct').textContent = pct + '%';
+
+  const bx = myH > 0 ? (myH / 2).toFixed(1) : '0';
+  document.getElementById('benchmarkX').textContent = bx + '\u00d7';
+
+  // Gauge: based on % capacity
+  const gaugePos = Math.min(100, Math.max(0, pct * 2));
+  document.getElementById('gaugeMarker').style.left = gaugePos + '%';
+}
+
+function fmtEur(n) {
+  if (n >= 1000000) return '\u20ac' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '\u20ac' + (n / 1000).toFixed(1) + 'K';
+  return '\u20ac' + Math.round(n);
+}
+
+/* ===== PHASE 2 ===== */
+function buildScenarioCards() {
+  const grid = document.getElementById('scenarioGrid');
+  grid.innerHTML = '';
+  scenarios.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'scenario-card';
+    card.id = 'card-' + s.id;
+    card.innerHTML = `
+      <div class="sc-title">${s.title}</div>
+      <div class="sc-desc">${s.desc}</div>
+      <div class="sc-duration">${s.duration} hours/week</div>
+      <div class="tag-row">
+        <label>Purpose</label>
+        ${['Decide','Learn','Bond','Do'].map(t =>
+          `<button class="tag-btn" onclick="setTag(${s.id},'${t}')">${t}</button>`
+        ).join('')}
+      </div>
+      <div class="action-row">
+        <label>Action</label>
+        ${['Keep','Shorten','Async','Cancel'].map(a =>
+          `<button class="action-btn" onclick="setAction(${s.id},'${a}')">${a}</button>`
+        ).join('')}
+      </div>
+      <div class="follow-up" id="followup-${s.id}">
+        ${s.followUp ? `<span>${s.followUp.question}</span><input type="text" placeholder="Type your answer..." oninput="setFollowUp(${s.id}, this.value)">` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function setTag(id, tag) {
+  if (!state.cards[id]) state.cards[id] = {};
+  state.cards[id].tag = tag;
+
+  const card = document.getElementById('card-' + id);
+  card.querySelectorAll('.tag-btn').forEach(b => {
+    b.classList.toggle('selected', b.textContent === tag);
+  });
+
+  // Show follow-up if applicable
+  const sc = scenarios.find(s => s.id === id);
+  const fu = document.getElementById('followup-' + id);
+  if (sc.followUp && sc.followUp.tag === tag) {
+    fu.classList.add('visible');
+  } else {
+    fu.classList.remove('visible');
+  }
+
+  updateCardState(id);
+  updateTriageSummary();
+}
+
+function setAction(id, action) {
+  if (!state.cards[id]) state.cards[id] = {};
+  state.cards[id].action = action;
+
+  const card = document.getElementById('card-' + id);
+  card.querySelectorAll('.action-btn').forEach(b => {
+    const cls = 'selected-' + b.textContent.toLowerCase();
+    b.classList.toggle(cls, b.textContent === action);
+    if (b.textContent !== action) {
+      b.className = 'action-btn'; // reset
+    }
+  });
+
+  updateCardState(id);
+  updateTriageSummary();
+}
+
+function setFollowUp(id, val) {
+  if (!state.cards[id]) state.cards[id] = {};
+  state.cards[id].followUpAnswer = val;
+}
+
+function updateCardState(id) {
+  const card = document.getElementById('card-' + id);
+  const s = state.cards[id];
+  if (s && s.tag && s.action) {
+    card.classList.add('tagged');
+  }
+}
+
+function updateTriageSummary() {
+  const completed = Object.keys(state.cards).filter(k => state.cards[k].tag && state.cards[k].action);
+  const summaryEl = document.getElementById('triageSummary');
+
+  if (completed.length < 4) {
+    summaryEl.classList.remove('visible');
+    return;
+  }
+  summaryEl.classList.add('visible');
+
+  // Tag distribution
+  const tagCounts = { Decide: 0, Learn: 0, Bond: 0, Do: 0 };
+  const actionCounts = { Keep: 0, Shorten: 0, Async: 0, Cancel: 0 };
+  let timeSaved = 0;
+
+  completed.forEach(k => {
+    const c = state.cards[k];
+    tagCounts[c.tag]++;
+    actionCounts[c.action]++;
+    const sc = scenarios.find(s => s.id === +k);
+    if (c.action === 'Shorten') timeSaved += sc.duration * 0.5;
+    else if (c.action === 'Async') timeSaved += sc.duration * 0.75;
+    else if (c.action === 'Cancel') timeSaved += sc.duration;
+  });
+
+  const distEl = document.getElementById('tagDist');
+  distEl.innerHTML = Object.entries(tagCounts).filter(([,v]) => v > 0)
+    .map(([k,v]) => `<span class="tag-chip">${k}: ${v}</span>`).join('');
+
+  document.getElementById('statKept').textContent = actionCounts.Keep;
+  document.getElementById('statShortened').textContent = actionCounts.Shorten;
+  document.getElementById('statAsync').textContent = actionCounts.Async;
+  document.getElementById('statCancelled').textContent = actionCounts.Cancel;
+
+  document.getElementById('timeSaved').textContent = timeSaved.toFixed(1) + ' h';
+
+  const rate = +document.getElementById('hourlyCost').value || 45;
+  const teamN = +document.getElementById('teamSize').value;
+  const annualSaved = timeSaved * rate * teamN * MULTIPLIER * WEEKS_PER_YEAR;
+  document.getElementById('costSaved').textContent = fmtEur(annualSaved);
+
+  // Meeting Culture Score (0-100)
+  const totalTagged = completed.length;
+  const goodActions = actionCounts.Shorten + actionCounts.Async + actionCounts.Cancel;
+  const intentionality = totalTagged / scenarios.length;
+  const optimization = totalTagged > 0 ? goodActions / totalTagged : 0;
+  const diversity = Object.values(tagCounts).filter(v => v > 0).length / 4;
+  const score = Math.round((intentionality * 30 + optimization * 40 + diversity * 30));
+
+  document.getElementById('cultureScore').textContent = score;
+  let desc = '';
+  if (score >= 80) desc = 'Excellent! Your meeting culture is intentional and well-optimized.';
+  else if (score >= 60) desc = 'Good start. You\'re thinking critically about meetings.';
+  else if (score >= 40) desc = 'Room for improvement. Many meetings could be streamlined.';
+  else desc = 'Meeting overload detected. Consider a radical meeting audit.';
+  document.getElementById('cultureDesc').textContent = desc;
+}
+
+/* ===== TABS ===== */
+function showPhase(n) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById('phase' + n).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === n - 1));
+}
+
+/* ===== EXPORT ===== */
+function copyResults() {
+  const myH = +document.getElementById('myHours').value;
+  const teamN = +document.getElementById('teamSize').value;
+  const teamH = +document.getElementById('teamHours').value;
+  const rate = +document.getElementById('hourlyCost').value || 45;
+  const totalH = myH + (teamN - 1) * teamH;
+  const rawW = totalH * rate;
+  const w = rawW * MULTIPLIER;
+
+  let text = `MEETING COST CALCULATOR — Results\n`;
+  text += `================================\n\n`;
+  text += `YOUR INPUTS\n`;
+  text += `Personal hours/week: ${myH}h\n`;
+  text += `Team size: ${teamN}\n`;
+  text += `Avg team hours/week: ${teamH}h\n`;
+  text += `Hourly rate: €${rate}\n\n`;
+  text += `COST ANALYSIS (with 1.75× hidden cost multiplier)\n`;
+  text += `Weekly:  ${fmtEur(w)} (raw: ${fmtEur(rawW)})\n`;
+  text += `Monthly: ${fmtEur(w * WEEKS_PER_MONTH)} (raw: ${fmtEur(rawW * WEEKS_PER_MONTH)})\n`;
+  text += `Annual:  ${fmtEur(w * WEEKS_PER_YEAR)} (raw: ${fmtEur(rawW * WEEKS_PER_YEAR)})\n`;
+  text += `Person-days/week: ${(totalH / 8).toFixed(1)}\n\n`;
+
+  const completed = Object.keys(state.cards).filter(k => state.cards[k].tag && state.cards[k].action);
+  if (completed.length > 0) {
+    text += `TRIAGE RESULTS\n`;
+    completed.forEach(k => {
+      const sc = scenarios.find(s => s.id === +k);
+      const c = state.cards[k];
+      text += `• ${sc.title}: ${c.tag} → ${c.action}\n`;
+    });
+    text += `\nTime saved/week: ${document.getElementById('timeSaved').textContent}\n`;
+    text += `Annual savings: ${document.getElementById('costSaved').textContent}\n`;
+    text += `Culture Score: ${document.getElementById('cultureScore').textContent}/100\n`;
+  }
+
+  text += `\n— Generated by barcik.training Meeting Cost Calculator`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('copyToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+
+/* ===== INIT ===== */
+buildScenarioCards();
+updatePhase1();
+</script>
+</body>
+</html>

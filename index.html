@@ -16,7 +16,11 @@
         .demo-list a:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
         .demo-title { font-size: 1.15rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.3rem; }
         .demo-desc { font-size: 0.9rem; color: #4a5568; }
-        .tools-section { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; }
+        .deck-section { margin-bottom: 2.5rem; }
+        .deck-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 2px solid #e2e8f0; }
+        .deck-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #1e3a5f; font-weight: 700; }
+        .deck-badge { font-size: 0.7rem; background: #1e3a5f; color: #fff; padding: 0.15rem 0.5rem; border-radius: 10px; font-weight: 600; }
+        .tools-section { margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; }
         .tools-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #a0aec0; margin-bottom: 0.75rem; }
         .tools-section a { border-left-color: #a0aec0; }
         .tools-section .demo-title { color: #4a5568; font-size: 1rem; }
@@ -29,40 +33,63 @@
         <p>Interactive AI &amp; ML Demos</p>
     </header>
     <main>
-        <ul class="demo-list">
-            <li><a href="demos/embedding-space-explorer.html">
-                <div class="demo-title">Embedding Space Explorer</div>
-                <div class="demo-desc">Visualize word embeddings in 2D — explore clusters, nearest neighbors, and vector arithmetic like king − man + woman = queen.</div>
-            </a></li>
-            <li><a href="demos/neuron-playground.html">
-                <div class="demo-title">Neuron Playground</div>
-                <div class="demo-desc">Interactive single-neuron visualization — adjust inputs, weights, and bias, then see how activation functions shape the output.</div>
-            </a></li>
-            <li><a href="demos/attention_cocktail_party.html">
-                <div class="demo-title">The Cocktail Party — Understanding Attention</div>
-                <div class="demo-desc">Explore how the attention mechanism works through an intuitive cocktail-party analogy.</div>
-            </a></li>
-            <li><a href="demos/illusion-of-chat.html">
-                <div class="demo-title">The Illusion of Chat</div>
-                <div class="demo-desc">Toggle between a polished chat UI and the raw token stream underneath — see how special tokens create the "conversation."</div>
-            </a></li>
-            <li><a href="demos/base-vs-instruct-model.html">
-                <div class="demo-title">Base Model vs Instruction-Tuned Model</div>
-                <div class="demo-desc">Compare how a raw base model and an instruction-tuned model respond differently to the same prompts.</div>
-            </a></li>
-            <li><a href="demos/finetune.html">
-                <div class="demo-title">Understanding Fine-Tuning &amp; LoRA</div>
-                <div class="demo-desc">Visualize how fine-tuning and LoRA adapt a pre-trained model to new tasks.</div>
-            </a></li>
-            <li><a href="demos/function-calling-demo.html">
-                <div class="demo-title">Function Calling — Step by Step</div>
-                <div class="demo-desc">See how LLMs use function calling to interact with external tools and APIs.</div>
-            </a></li>
-            <li><a href="demos/rag-explorer.html">
-                <div class="demo-title">RAG Explorer — Intuitive Guide</div>
-                <div class="demo-desc">Step through Retrieval-Augmented Generation: embedding, retrieval, and answer synthesis.</div>
-            </a></li>
-        </ul>
+        <!-- Deck 1: Under the Hood -->
+        <div class="deck-section">
+            <div class="deck-header">
+                <span class="deck-label">Under the Hood of Generative AI (LLMs)</span>
+                <span class="deck-badge">8 demos</span>
+            </div>
+            <ul class="demo-list">
+                <li><a href="demos/embedding-space-explorer.html">
+                    <div class="demo-title">Embedding Space Explorer</div>
+                    <div class="demo-desc">Visualize word embeddings in 2D — explore clusters, nearest neighbors, and vector arithmetic like king − man + woman = queen.</div>
+                </a></li>
+                <li><a href="demos/neuron-playground.html">
+                    <div class="demo-title">Neuron Playground</div>
+                    <div class="demo-desc">Interactive single-neuron visualization — adjust inputs, weights, and bias, then see how activation functions shape the output.</div>
+                </a></li>
+                <li><a href="demos/attention_cocktail_party.html">
+                    <div class="demo-title">The Cocktail Party — Understanding Attention</div>
+                    <div class="demo-desc">Explore how the attention mechanism works through an intuitive cocktail-party analogy.</div>
+                </a></li>
+                <li><a href="demos/illusion-of-chat.html">
+                    <div class="demo-title">The Illusion of Chat</div>
+                    <div class="demo-desc">Toggle between a polished chat UI and the raw token stream underneath — see how special tokens create the "conversation."</div>
+                </a></li>
+                <li><a href="demos/base-vs-instruct-model.html">
+                    <div class="demo-title">Base Model vs Instruction-Tuned Model</div>
+                    <div class="demo-desc">Compare how a raw base model and an instruction-tuned model respond differently to the same prompts.</div>
+                </a></li>
+                <li><a href="demos/finetune.html">
+                    <div class="demo-title">Understanding Fine-Tuning &amp; LoRA</div>
+                    <div class="demo-desc">Visualize how fine-tuning and LoRA adapt a pre-trained model to new tasks.</div>
+                </a></li>
+                <li><a href="demos/function-calling-demo.html">
+                    <div class="demo-title">Function Calling — Step by Step</div>
+                    <div class="demo-desc">See how LLMs use function calling to interact with external tools and APIs.</div>
+                </a></li>
+                <li><a href="demos/rag-explorer.html">
+                    <div class="demo-title">RAG Explorer — Intuitive Guide</div>
+                    <div class="demo-desc">Step through Retrieval-Augmented Generation: embedding, retrieval, and answer synthesis.</div>
+                </a></li>
+            </ul>
+        </div>
+
+        <!-- Deck 2: GenAI Business Value Creation -->
+        <div class="deck-section">
+            <div class="deck-header">
+                <span class="deck-label">GenAI Business Value Creation</span>
+                <span class="deck-badge">1 demo</span>
+            </div>
+            <ul class="demo-list">
+                <li><a href="demos/meeting-cost-calculator.html">
+                    <div class="demo-title">Meeting Cost Calculator</div>
+                    <div class="demo-desc">Quantify the true cost of your meeting culture with hidden cost multipliers, then triage meetings using the Decide / Learn / Bond / Do framework.</div>
+                </a></li>
+            </ul>
+        </div>
+
+        <!-- Classroom Tools -->
         <div class="tools-section">
             <div class="tools-label">Classroom Tools</div>
             <ul class="demo-list">
