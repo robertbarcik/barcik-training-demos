@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neuron Playground — Interactive Single Neuron | barcik.training</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ===== HEADER ===== */
+header {
+  background: #1e3a5f;
+  color: #fff;
+  padding: 1.4rem 2rem;
+  text-align: center;
+}
+header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
+header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
+
+/* ===== INTRO ===== */
+.intro {
+  max-width: 880px;
+  margin: 1.5rem auto 0;
+  padding: 0 1.25rem;
+  text-align: center;
+}
+.intro p {
+  font-size: 0.95rem;
+  color: #4a5568;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+/* ===== MAIN LAYOUT ===== */
+.playground {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: 1.25rem;
+  max-width: 1100px;
+  margin: 1.5rem auto;
+  padding: 0 1.25rem;
+  align-items: start;
+}
+
+/* ===== PANELS ===== */
+.panel {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+.panel-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+/* ===== INPUT COLUMN ===== */
+.input-group { margin-bottom: 1rem; }
+.input-group:last-child { margin-bottom: 0; }
+.input-group-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e3a5f;
+  margin-bottom: 0.5rem;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.slider-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  min-width: 22px;
+  text-align: right;
+}
+.slider-row input[type="range"] {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e2e8f0;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+.slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #1e3a5f;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.slider-row input[type="range"]::-moz-range-thumb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #1e3a5f;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.slider-val {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e3a5f;
+  min-width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.product-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #64748b;
+  padding: 0.15rem 0 0.3rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.product-row:last-child { border-bottom: none; }
+.product-formula { font-family: 'Courier New', monospace; }
+.product-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 50px;
+  text-align: right;
+}
+.product-positive { color: #16a34a; }
+.product-negative { color: #dc2626; }
+.product-zero { color: #94a3b8; }
+
+/* ===== BIAS ===== */
+.bias-section { margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid #e2e8f0; }
+
+/* ===== SVG NEURON PANEL ===== */
+.neuron-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+}
+.neuron-panel svg { width: 100%; height: auto; max-height: 400px; }
+
+/* ===== OUTPUT COLUMN ===== */
+.output-section { margin-bottom: 1rem; }
+.output-section:last-child { margin-bottom: 0; }
+.output-section-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.formula-block {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #334155;
+  line-height: 1.7;
+}
+.formula-term { white-space: nowrap; }
+.formula-result {
+  font-weight: 700;
+  color: #1e3a5f;
+  font-size: 0.85rem;
+}
+
+/* Activation selector */
+.activation-selector {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+.act-btn {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.act-btn:hover { border-color: #94a3b8; color: #475569; }
+.act-btn.active {
+  border-color: #1e3a5f;
+  background: #1e3a5f;
+  color: #fff;
+}
+
+/* Activation graph */
+.graph-container {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+.graph-container canvas {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.formula-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-family: 'Courier New', monospace;
+  margin-top: 0.35rem;
+}
+
+/* Output display */
+.output-display {
+  text-align: center;
+  padding: 0.75rem 0;
+}
+.output-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1e3a5f;
+  font-variant-numeric: tabular-nums;
+}
+.output-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Signal strength bar */
+.signal-bar-container {
+  margin-top: 0.5rem;
+}
+.signal-bar-track {
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.signal-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.15s, background 0.15s;
+  min-width: 2px;
+}
+.signal-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+/* ===== EDUCATIONAL CARDS ===== */
+.cards {
+  max-width: 1100px;
+  margin: 0 auto 2rem;
+  padding: 0 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.card {
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.card-analogy { background: #eff6ff; border-left: 4px solid #3b82f6; }
+.card-scale { background: #f8fafc; border-left: 4px solid #94a3b8; }
+.card-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 0.4rem;
+}
+.card p {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.65;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 740px) {
+  .playground {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  .neuron-panel { min-height: 280px; }
+  header { padding: 1.2rem 1rem; }
+  header h1 { font-size: 1.25rem; }
+  .intro { margin-top: 1rem; }
+  .intro p { font-size: 0.88rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">barcik.training</div>
+  <h1>Neuron Playground</h1>
+</header>
+
+<div class="intro">
+  <p>
+    A neuron is the fundamental building block of neural networks. It takes multiple inputs,
+    multiplies each by a learnable weight, adds a bias, then passes the result through an
+    activation function to produce an output. Adjust the sliders below to see how each
+    parameter shapes the neuron's behavior in real time.
+  </p>
+</div>
+
+<div class="playground">
+
+  <!-- ===== INPUT COLUMN ===== -->
+  <div class="panel" id="input-panel">
+    <div class="panel-title">Inputs &amp; Weights</div>
+
+    <div class="input-group" id="group-0">
+      <div class="input-group-label">Input x<sub>1</sub></div>
+      <div class="slider-row">
+        <span class="slider-label">x<sub>1</sub></span>
+        <input type="range" id="x0" min="-2" max="2" step="0.1" value="0">
+        <span class="slider-val" id="x0-val">0.0</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">w<sub>1</sub></span>
+        <input type="range" id="w0" min="-2" max="2" step="0.1" value="0.5">
+        <span class="slider-val" id="w0-val">0.5</span>
+      </div>
+      <div class="product-row">
+        <span class="product-formula" id="prod0-formula">0.0 &times; 0.5</span>
+        <span class="product-value product-zero" id="prod0-value">= 0.00</span>
+      </div>
+    </div>
+
+    <div class="input-group" id="group-1">
+      <div class="input-group-label">Input x<sub>2</sub></div>
+      <div class="slider-row">
+        <span class="slider-label">x<sub>2</sub></span>
+        <input type="range" id="x1" min="-2" max="2" step="0.1" value="0">
+        <span class="slider-val" id="x1-val">0.0</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">w<sub>2</sub></span>
+        <input type="range" id="w1" min="-2" max="2" step="0.1" value="-0.8">
+        <span class="slider-val" id="w1-val">-0.8</span>
+      </div>
+      <div class="product-row">
+        <span class="product-formula" id="prod1-formula">0.0 &times; -0.8</span>
+        <span class="product-value product-zero" id="prod1-value">= 0.00</span>
+      </div>
+    </div>
+
+    <div class="input-group" id="group-2">
+      <div class="input-group-label">Input x<sub>3</sub></div>
+      <div class="slider-row">
+        <span class="slider-label">x<sub>3</sub></span>
+        <input type="range" id="x2" min="-2" max="2" step="0.1" value="0">
+        <span class="slider-val" id="x2-val">0.0</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">w<sub>3</sub></span>
+        <input type="range" id="w2" min="-2" max="2" step="0.1" value="1.2">
+        <span class="slider-val" id="w2-val">1.2</span>
+      </div>
+      <div class="product-row">
+        <span class="product-formula" id="prod2-formula">0.0 &times; 1.2</span>
+        <span class="product-value product-zero" id="prod2-value">= 0.00</span>
+      </div>
+    </div>
+
+    <div class="input-group bias-section">
+      <div class="input-group-label">Bias</div>
+      <div class="slider-row">
+        <span class="slider-label">b</span>
+        <input type="range" id="bias" min="-2" max="2" step="0.1" value="0">
+        <span class="slider-val" id="bias-val">0.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SVG NEURON DIAGRAM ===== -->
+  <div class="panel neuron-panel">
+    <svg id="neuron-svg" viewBox="0 0 420 340" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#1e3a5f"/>
+        </marker>
+      </defs>
+
+      <!-- Connection lines (drawn first, behind circles) -->
+      <line id="line0" x1="70" y1="70" x2="195" y2="170" stroke="#3b82f6" stroke-width="2"/>
+      <line id="line1" x1="70" y1="170" x2="195" y2="170" stroke="#dc2626" stroke-width="3"/>
+      <line id="line2" x1="70" y1="270" x2="195" y2="170" stroke="#3b82f6" stroke-width="4"/>
+
+      <!-- Weight labels on lines -->
+      <text id="wlabel0" x="120" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">0.5</text>
+      <text id="wlabel1" x="130" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">-0.8</text>
+      <text id="wlabel2" x="120" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">1.2</text>
+
+      <!-- Input circles -->
+      <circle cx="70" cy="70" r="26" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
+      <text x="70" y="67" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a5f">x<tspan baseline-shift="sub" font-size="10">1</tspan></text>
+      <text id="xdisp0" x="70" y="82" text-anchor="middle" font-size="10" fill="#64748b">0.0</text>
+
+      <circle cx="70" cy="170" r="26" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
+      <text x="70" y="167" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a5f">x<tspan baseline-shift="sub" font-size="10">2</tspan></text>
+      <text id="xdisp1" x="70" y="182" text-anchor="middle" font-size="10" fill="#64748b">0.0</text>
+
+      <circle cx="70" cy="270" r="26" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
+      <text x="70" y="267" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a5f">x<tspan baseline-shift="sub" font-size="10">3</tspan></text>
+      <text id="xdisp2" x="70" y="282" text-anchor="middle" font-size="10" fill="#64748b">0.0</text>
+
+      <!-- Central neuron -->
+      <circle id="neuron-glow" cx="220" cy="170" r="40" fill="rgba(30,58,95,0.08)" filter="url(#glow)"/>
+      <circle cx="220" cy="170" r="36" fill="#fff" stroke="#1e3a5f" stroke-width="3"/>
+      <text id="neuron-symbol" x="220" y="176" text-anchor="middle" font-size="20" font-weight="700" fill="#1e3a5f">&#963;</text>
+
+      <!-- Output arrow -->
+      <line x1="260" y1="170" x2="330" y2="170" stroke="#1e3a5f" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+
+      <!-- Output circle -->
+      <circle cx="355" cy="170" r="26" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
+      <text x="355" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="#94a3b8">output</text>
+      <text id="out-disp" x="355" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a5f">0.00</text>
+    </svg>
+  </div>
+
+  <!-- ===== OUTPUT COLUMN ===== -->
+  <div class="panel" id="output-panel">
+    <div class="panel-title">Output</div>
+
+    <div class="output-section">
+      <div class="output-section-title">Weighted Sum</div>
+      <div class="formula-block" id="formula-block">
+        <span class="formula-term" id="term0">0.5&middot;0.0</span> +
+        <span class="formula-term" id="term1">(-0.8)&middot;0.0</span> +
+        <span class="formula-term" id="term2">1.2&middot;0.0</span> +
+        <span class="formula-term" id="term-bias">0.0</span><br>
+        = <span class="formula-result" id="weighted-sum">0.00</span>
+      </div>
+    </div>
+
+    <div class="output-section">
+      <div class="output-section-title">Activation Function</div>
+      <div class="activation-selector">
+        <button class="act-btn active" data-fn="relu">ReLU</button>
+        <button class="act-btn" data-fn="sigmoid">Sigmoid</button>
+        <button class="act-btn" data-fn="tanh">Tanh</button>
+      </div>
+      <div class="graph-container">
+        <canvas id="act-graph" width="440" height="300"></canvas>
+        <div class="formula-label" id="formula-label">ReLU(x) = max(0, x)</div>
+      </div>
+    </div>
+
+    <div class="output-section">
+      <div class="output-display">
+        <div class="output-label">Neuron Output</div>
+        <div class="output-value" id="output-value">0.00</div>
+      </div>
+      <div class="signal-bar-container">
+        <div class="signal-bar-track">
+          <div class="signal-bar-fill" id="signal-bar" style="width:0%; background:#94a3b8;"></div>
+        </div>
+        <div class="signal-bar-label">
+          <span>-1</span>
+          <span>Signal Strength</span>
+          <span>+1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EDUCATIONAL CARDS ===== -->
+<div class="cards">
+  <div class="card card-analogy">
+    <div class="card-title">Analogy: Weights as Volume Knobs</div>
+    <p>Think of weights as volume knobs &mdash; they control how much the neuron &ldquo;cares&rdquo; about each input. A large positive weight amplifies the signal; a negative weight inverts it; zero means the neuron ignores that input entirely.</p>
+  </div>
+  <div class="card card-scale">
+    <div class="card-title">Scale: From One Neuron to Trillions of Weights</div>
+    <p>In a real neural network: GPT-4 is estimated to have ~1.8 trillion weights across its network. Each weight was learned during training by processing billions of text examples. This single neuron demonstrates the fundamental building block that, when combined in layers of millions, gives rise to language understanding.</p>
+  </div>
+</div>
+
+<footer>&copy; 2026 barcik.training</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // === DOM refs ===
+  const sliders = {
+    x: [document.getElementById('x0'), document.getElementById('x1'), document.getElementById('x2')],
+    w: [document.getElementById('w0'), document.getElementById('w1'), document.getElementById('w2')],
+    b: document.getElementById('bias')
+  };
+  const valDisplays = {
+    x: [document.getElementById('x0-val'), document.getElementById('x1-val'), document.getElementById('x2-val')],
+    w: [document.getElementById('w0-val'), document.getElementById('w1-val'), document.getElementById('w2-val')],
+    b: document.getElementById('bias-val')
+  };
+  const prodFormulas = [document.getElementById('prod0-formula'), document.getElementById('prod1-formula'), document.getElementById('prod2-formula')];
+  const prodValues = [document.getElementById('prod0-value'), document.getElementById('prod1-value'), document.getElementById('prod2-value')];
+
+  const terms = [document.getElementById('term0'), document.getElementById('term1'), document.getElementById('term2')];
+  const termBias = document.getElementById('term-bias');
+  const weightedSumEl = document.getElementById('weighted-sum');
+
+  const outputValueEl = document.getElementById('output-value');
+  const signalBar = document.getElementById('signal-bar');
+
+  // SVG refs
+  const lines = [document.getElementById('line0'), document.getElementById('line1'), document.getElementById('line2')];
+  const wLabels = [document.getElementById('wlabel0'), document.getElementById('wlabel1'), document.getElementById('wlabel2')];
+  const xDisps = [document.getElementById('xdisp0'), document.getElementById('xdisp1'), document.getElementById('xdisp2')];
+  const neuronGlow = document.getElementById('neuron-glow');
+  const neuronSymbol = document.getElementById('neuron-symbol');
+  const outDisp = document.getElementById('out-disp');
+
+  // Canvas
+  const canvas = document.getElementById('act-graph');
+  const ctx = canvas.getContext('2d');
+
+  const formulaLabel = document.getElementById('formula-label');
+  const actBtns = document.querySelectorAll('.act-btn');
+
+  // === State ===
+  let activationFn = 'relu';
+
+  // Activation functions
+  const activations = {
+    relu: x => Math.max(0, x),
+    sigmoid: x => 1 / (1 + Math.exp(-x)),
+    tanh: x => Math.tanh(x)
+  };
+
+  const activationSymbols = { relu: 'ReLU', sigmoid: '\u03C3', tanh: 'tanh' };
+  const activationFormulas = {
+    relu: 'ReLU(x) = max(0, x)',
+    sigmoid: '\u03C3(x) = 1 / (1 + e\u207B\u02E3)',
+    tanh: 'tanh(x) = (e\u02E3 \u2212 e\u207B\u02E3) / (e\u02E3 + e\u207B\u02E3)'
+  };
+
+  // === Activation button handlers ===
+  actBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      actBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      activationFn = this.dataset.fn;
+      update();
+    });
+  });
+
+  // === Slider handlers ===
+  function attachSliderListeners() {
+    for (let i = 0; i < 3; i++) {
+      sliders.x[i].addEventListener('input', update);
+      sliders.w[i].addEventListener('input', update);
+    }
+    sliders.b.addEventListener('input', update);
+  }
+
+  // === Format number ===
+  function fmt(n, decimals) {
+    decimals = decimals !== undefined ? decimals : 2;
+    return Number(n).toFixed(decimals);
+  }
+
+  // === Color helpers ===
+  function weightColor(w) {
+    if (Math.abs(w) < 0.05) return '#94a3b8';
+    return w > 0 ? '#3b82f6' : '#dc2626';
+  }
+  function productColorClass(p) {
+    if (Math.abs(p) < 0.005) return 'product-zero';
+    return p > 0 ? 'product-positive' : 'product-negative';
+  }
+
+  // === Draw activation graph ===
+  function drawGraph(z) {
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.width;
+    var h = canvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    var pad = 35 * dpr;
+    var gw = w - pad * 2;
+    var gh = h - pad * 2;
+
+    // Ranges
+    var xMin = -5, xMax = 5;
+    var yMin, yMax;
+    if (activationFn === 'relu') { yMin = -0.5; yMax = 5; }
+    else if (activationFn === 'sigmoid') { yMin = -0.1; yMax = 1.1; }
+    else { yMin = -1.2; yMax = 1.2; }
+
+    function toCanvasX(xVal) { return pad + (xVal - xMin) / (xMax - xMin) * gw; }
+    function toCanvasY(yVal) { return pad + (1 - (yVal - yMin) / (yMax - yMin)) * gh; }
+
+    // Grid
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    // Vertical gridlines
+    for (var gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      var cx = toCanvasX(gx);
+      ctx.moveTo(cx, pad); ctx.lineTo(cx, pad + gh);
+    }
+    // Horizontal gridlines
+    var yStep = activationFn === 'relu' ? 1 : (activationFn === 'sigmoid' ? 0.25 : 0.5);
+    for (var gy = Math.ceil(yMin / yStep) * yStep; gy <= yMax; gy += yStep) {
+      var cy = toCanvasY(gy);
+      ctx.moveTo(pad, cy); ctx.lineTo(pad + gw, cy);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    var zeroY = toCanvasY(0);
+    var zeroX = toCanvasX(0);
+    ctx.moveTo(pad, zeroY); ctx.lineTo(pad + gw, zeroY);
+    ctx.moveTo(zeroX, pad); ctx.lineTo(zeroX, pad + gh);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (10 * dpr) + 'px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    for (var lx = Math.ceil(xMin); lx <= Math.floor(xMax); lx++) {
+      if (lx === 0) continue;
+      ctx.fillText(lx, toCanvasX(lx), zeroY + 14 * dpr);
+    }
+    ctx.textAlign = 'right';
+    for (var ly = Math.ceil(yMin / yStep) * yStep; ly <= yMax; ly += yStep) {
+      if (Math.abs(ly) < 0.01) continue;
+      var rounded = Math.round(ly * 100) / 100;
+      ctx.fillText(rounded, zeroX - 6 * dpr, toCanvasY(ly) + 4 * dpr);
+    }
+
+    // Activation curve
+    ctx.strokeStyle = '#1e3a5f';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var fn = activations[activationFn];
+    var steps = 200;
+    for (var s = 0; s <= steps; s++) {
+      var xVal = xMin + (xMax - xMin) * s / steps;
+      var yVal = fn(xVal);
+      var px = toCanvasX(xVal);
+      var py = toCanvasY(yVal);
+      if (s === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Operating point
+    var clampedZ = Math.max(xMin, Math.min(xMax, z));
+    var output = fn(clampedZ);
+    var dotX = toCanvasX(clampedZ);
+    var dotY = toCanvasY(output);
+
+    // Dashed lines to axes
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(dotX, dotY); ctx.lineTo(dotX, zeroY);
+    ctx.moveTo(dotX, dotY); ctx.lineTo(zeroX, dotY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Red dot
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // === Main update ===
+  function update() {
+    var x = [], w = [];
+    for (var i = 0; i < 3; i++) {
+      x[i] = parseFloat(sliders.x[i].value);
+      w[i] = parseFloat(sliders.w[i].value);
+    }
+    var b = parseFloat(sliders.b.value);
+
+    // Update slider value displays
+    for (var i = 0; i < 3; i++) {
+      valDisplays.x[i].textContent = fmt(x[i], 1);
+      valDisplays.w[i].textContent = fmt(w[i], 1);
+    }
+    valDisplays.b.textContent = fmt(b, 1);
+
+    // Products
+    var products = [];
+    for (var i = 0; i < 3; i++) {
+      products[i] = x[i] * w[i];
+      prodFormulas[i].innerHTML = fmt(x[i], 1) + ' &times; ' + fmt(w[i], 1);
+      prodValues[i].textContent = '= ' + fmt(products[i]);
+      prodValues[i].className = 'product-value ' + productColorClass(products[i]);
+    }
+
+    // Weighted sum
+    var z = products[0] + products[1] + products[2] + b;
+
+    // Update formula block terms
+    for (var i = 0; i < 3; i++) {
+      var wStr = w[i] < 0 ? '(' + fmt(w[i], 1) + ')' : fmt(w[i], 1);
+      terms[i].textContent = wStr + '\u00B7' + fmt(x[i], 1);
+    }
+    termBias.textContent = (b >= 0 ? '+ ' : '\u2212 ') + fmt(Math.abs(b), 1);
+    weightedSumEl.textContent = fmt(z);
+
+    // Activation
+    var fn = activations[activationFn];
+    var output = fn(z);
+
+    // Output display
+    outputValueEl.textContent = fmt(output, 4);
+
+    // Signal bar
+    var maxBar;
+    if (activationFn === 'sigmoid') maxBar = 1;
+    else if (activationFn === 'tanh') maxBar = 1;
+    else maxBar = 5; // ReLU can go higher
+    var barPct = Math.min(Math.abs(output) / maxBar * 100, 100);
+    signalBar.style.width = barPct + '%';
+    if (Math.abs(output) < 0.005) signalBar.style.background = '#94a3b8';
+    else if (output > 0) signalBar.style.background = '#16a34a';
+    else signalBar.style.background = '#dc2626';
+
+    // Update SVG
+    for (var i = 0; i < 3; i++) {
+      // Line thickness and color
+      var absW = Math.abs(w[i]);
+      var thickness = Math.max(1, Math.min(6, absW * 3));
+      lines[i].setAttribute('stroke-width', thickness);
+      lines[i].setAttribute('stroke', weightColor(w[i]));
+
+      // Weight labels
+      wLabels[i].textContent = fmt(w[i], 1);
+      wLabels[i].setAttribute('fill', weightColor(w[i]));
+
+      // Input value displays
+      xDisps[i].textContent = fmt(x[i], 1);
+    }
+
+    // Neuron glow
+    var glowIntensity = Math.min(Math.abs(output) * 0.3, 0.4);
+    neuronGlow.setAttribute('fill', 'rgba(30,58,95,' + glowIntensity.toFixed(2) + ')');
+    var glowRadius = 40 + Math.min(Math.abs(output) * 8, 20);
+    neuronGlow.setAttribute('r', glowRadius);
+
+    // Neuron symbol
+    neuronSymbol.textContent = activationSymbols[activationFn];
+
+    // Output display in SVG
+    outDisp.textContent = fmt(output, 2);
+
+    // Formula label
+    formulaLabel.textContent = activationFormulas[activationFn];
+
+    // Draw graph
+    drawGraph(z);
+  }
+
+  // === Canvas DPR setup ===
+  function setupCanvas() {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    // Use the CSS-displayed size to set the canvas resolution
+    var displayW = rect.width || 220;
+    var displayH = rect.height || 150;
+    canvas.width = displayW * dpr;
+    canvas.height = displayH * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  // === Init ===
+  function init() {
+    setupCanvas();
+    attachSliderListeners();
+    update();
+  }
+
+  // Handle resize
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      setupCanvas();
+      update();
+    }, 100);
+  });
+
+  // Start
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>
