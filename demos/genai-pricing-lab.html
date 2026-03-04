@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenAI Pricing Lab — barcik.training</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8; color: #1a202c; min-height: 100vh; line-height: 1.5;
+}
+header { background: #1e3a5f; color: #fff; padding: 1.4rem 2rem; text-align: center; }
+header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
+header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
+
+.intro { max-width: 880px; margin: 1.5rem auto 0; padding: 0 1.25rem; text-align: center; }
+.intro p { font-size: 0.95rem; color: #4a5568; max-width: 700px; margin: 0 auto; line-height: 1.65; }
+
+/* Progress bar */
+.progress-bar { max-width: 880px; margin: 1.5rem auto 0; padding: 0 1.25rem; }
+.progress-track { display: flex; gap: 0.5rem; }
+.progress-step {
+  flex: 1; height: 6px; border-radius: 3px; background: #e2e8f0; transition: background 0.3s;
+}
+.progress-step.active { background: #1e3a5f; }
+.progress-step.done { background: #27ae60; }
+.progress-labels { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+.progress-labels span { flex: 1; text-align: center; font-size: 0.7rem; color: #94a3b8; font-weight: 600; }
+.progress-labels span.active { color: #1e3a5f; }
+
+/* Steps */
+.step { display: none; max-width: 880px; margin: 1.5rem auto; padding: 0 1.25rem; }
+.step.active { display: block; }
+.panel { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 1.25rem; }
+.panel-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 1rem; font-weight: 600; }
+
+/* Form elements */
+.form-group { margin-bottom: 1rem; }
+.form-group:last-child { margin-bottom: 0; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.4rem; }
+.form-group input[type="text"], .form-group textarea, .form-group select {
+  width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;
+  font-size: 0.9rem; font-family: inherit; color: #1a202c;
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #1e3a5f; }
+.form-group .hint { font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem; }
+
+.toggle-row { display: flex; align-items: center; gap: 0.75rem; }
+.toggle { position: relative; width: 44px; height: 24px; cursor: pointer; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #e2e8f0; border-radius: 12px; transition: 0.2s; }
+.toggle .slider::before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+.toggle input:checked + .slider { background: #1e3a5f; }
+.toggle input:checked + .slider::before { transform: translateX(20px); }
+
+.slider-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.4rem; }
+.slider-row { display: flex; align-items: center; gap: 0.75rem; }
+.slider-row input[type="range"] { flex: 1; accent-color: #1e3a5f; }
+.slider-row .val { min-width: 4.5rem; text-align: right; font-weight: 700; font-size: 0.95rem; color: #1e3a5f; }
+
+.cost-row { display: flex; align-items: center; gap: 0.5rem; }
+.cost-row input[type="number"] {
+  width: 6rem; padding: 0.4rem 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px;
+  font-size: 0.95rem; font-weight: 700; color: #1e3a5f; text-align: right;
+}
+.cost-row input[type="number"]:focus { outline: none; border-color: #1e3a5f; }
+.cost-row span { font-size: 0.85rem; color: #4a5568; }
+
+/* Dashboard grid */
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+
+/* ChatGPT Tax bar */
+.tax-bar-container { padding: 0.5rem 0; }
+.tax-bar-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; margin-bottom: 0.4rem; }
+.tax-bar { height: 32px; background: #e2e8f0; border-radius: 8px; position: relative; overflow: visible; }
+.tax-fill { height: 100%; border-radius: 8px 0 0 8px; transition: width 0.4s; }
+.tax-marker { position: absolute; top: -6px; bottom: -6px; width: 3px; background: #e74c3c; border-radius: 2px; }
+.tax-marker-label { position: absolute; top: -22px; font-size: 0.7rem; font-weight: 700; color: #e74c3c; white-space: nowrap; transform: translateX(-50%); }
+.justification-zone { position: absolute; top: 0; bottom: 0; background: rgba(39,174,96,0.15); border-left: 2px dashed #27ae60; border-right: 2px dashed #27ae60; }
+.justification-label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; color: #27ae60; font-weight: 600; white-space: nowrap; }
+
+/* Build vs Buy columns */
+.bvb-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
+.bvb-col { background: #f0f4f8; border-radius: 8px; padding: 1rem; text-align: center; }
+.bvb-col h4 { font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+.bvb-val { font-size: 1.3rem; font-weight: 800; color: #1e3a5f; }
+.bvb-sub { font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem; }
+.bvb-markup-row { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.5rem; }
+.bvb-markup { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.72rem; font-weight: 600; background: #e2e8f0; color: #4a5568; }
+.bvb-markup.best { background: #27ae60; color: #fff; }
+
+/* Pricing tiers */
+.tier-cards { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
+.tier-card { flex: 1; background: #f0f4f8; border-radius: 8px; padding: 0.75rem; text-align: center; border: 2px solid transparent; }
+.tier-card.featured { border-color: #1e3a5f; background: #fff; }
+.tier-name { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; }
+.tier-price { font-size: 1.2rem; font-weight: 800; color: #1e3a5f; margin: 0.3rem 0; }
+.tier-desc { font-size: 0.72rem; color: #94a3b8; }
+.tier-margin { font-size: 0.72rem; color: #27ae60; font-weight: 600; margin-top: 0.3rem; }
+
+/* Per-seat vs per-outcome */
+.model-toggle { display: flex; justify-content: center; gap: 0.5rem; margin: 0.75rem 0; }
+.model-btn { padding: 0.4rem 1rem; border: 2px solid #e2e8f0; background: #fff; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: #4a5568; transition: all 0.15s; }
+.model-btn.active { border-color: #1e3a5f; background: #1e3a5f; color: #fff; }
+.revenue-table { width: 100%; margin-top: 0.5rem; border-collapse: collapse; font-size: 0.82rem; }
+.revenue-table th { text-align: left; color: #64748b; font-weight: 600; padding: 0.4rem 0.5rem; border-bottom: 1px solid #e2e8f0; font-size: 0.72rem; text-transform: uppercase; }
+.revenue-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #f0f4f8; }
+.revenue-table .winner { background: #f0fdf4; font-weight: 700; color: #27ae60; }
+
+/* Navigation */
+.nav-bar { max-width: 880px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; }
+.nav-btn { padding: 0.6rem 1.5rem; border: 2px solid #1e3a5f; background: #fff; color: #1e3a5f; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.nav-btn:hover { background: #1e3a5f; color: #fff; }
+.nav-btn.primary { background: #1e3a5f; color: #fff; }
+.nav-btn.primary:hover { background: #2a4a73; }
+.nav-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* Summary */
+.summary-section { margin-bottom: 1rem; }
+.summary-section h3 { font-size: 0.95rem; font-weight: 700; color: #1e3a5f; margin-bottom: 0.5rem; }
+.summary-row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid #f0f4f8; font-size: 0.88rem; }
+.summary-row .sr-label { color: #4a5568; }
+.summary-row .sr-value { font-weight: 700; color: #1e3a5f; }
+.recommendation { background: #f0f4f8; border-radius: 8px; padding: 1rem; margin-top: 1rem; border-left: 4px solid #e67e22; }
+.recommendation h4 { font-size: 0.85rem; color: #e67e22; margin-bottom: 0.4rem; }
+.recommendation p { font-size: 0.85rem; color: #4a5568; }
+
+/* Export */
+.export-bar { display: flex; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 880px; padding: 0 1.25rem; }
+.export-btn { padding: 0.6rem 1.5rem; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.export-btn.primary { background: #1e3a5f; color: #fff; }
+.export-btn.primary:hover { background: #2a4a73; }
+.export-btn.secondary { background: #e2e8f0; color: #1e3a5f; }
+.export-btn.secondary:hover { background: #cbd5e0; }
+
+.copy-toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e3a5f; color: #fff; padding: 0.6rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; opacity: 0; transition: all 0.3s; z-index: 100; }
+.copy-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
+
+@media print {
+  body { background: #fff; }
+  header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .progress-bar, .nav-bar, .export-bar, footer { display: none; }
+  .step { display: block !important; page-break-inside: avoid; }
+  .panel { box-shadow: none; border: 1px solid #e2e8f0; }
+}
+
+@media (max-width: 740px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .bvb-columns { grid-template-columns: 1fr; }
+  .tier-cards { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>GenAI Pricing Lab</h1>
+  <div class="brand">barcik.training</div>
+</header>
+
+<div class="intro">
+  <p>A strategic pricing calculator for GenAI products. Navigate the ChatGPT Tax, compare Build vs Buy economics, and generate data-driven pricing tiers.</p>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-track">
+    <div class="progress-step active" id="ps1"></div>
+    <div class="progress-step" id="ps2"></div>
+    <div class="progress-step" id="ps3"></div>
+    <div class="progress-step" id="ps4"></div>
+  </div>
+  <div class="progress-labels">
+    <span class="active" id="pl1">Context</span>
+    <span id="pl2">Costs</span>
+    <span id="pl3">Dashboard</span>
+    <span id="pl4">Summary</span>
+  </div>
+</div>
+
+<!-- Step 1: Context -->
+<div class="step active" id="step1">
+  <div class="panel">
+    <div class="panel-title">Product Context</div>
+    <div class="form-group">
+      <label>Product / Feature Description</label>
+      <textarea id="productDesc" placeholder="e.g. AI-powered contract review tool for legal teams..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Industry</label>
+      <select id="industry">
+        <option value="technology">Technology</option>
+        <option value="finance">Finance &amp; Banking</option>
+        <option value="healthcare">Healthcare</option>
+        <option value="legal">Legal</option>
+        <option value="manufacturing">Manufacturing</option>
+        <option value="retail">Retail &amp; E-commerce</option>
+        <option value="education">Education</option>
+        <option value="government">Government</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Regulated industry?</label>
+      <div class="toggle-row">
+        <label class="toggle">
+          <input type="checkbox" id="regulated">
+          <span class="slider"></span>
+        </label>
+        <span style="font-size: 0.85rem; color: #4a5568;">Subject to compliance / data sovereignty requirements</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2: Costs -->
+<div class="step" id="step2">
+  <div class="panel">
+    <div class="panel-title">Cost Inputs</div>
+    <div class="form-group">
+      <label>API cost per unit (inference call)</label>
+      <div class="cost-row">
+        <span>&euro;</span>
+        <input type="number" id="apiCost" value="0.006" step="0.001" min="0.001">
+        <span>per unit</span>
+      </div>
+      <div class="hint">Typical: &euro;0.002 (GPT-4o-mini) to &euro;0.06 (Claude Opus)</div>
+    </div>
+    <div class="slider-group form-group">
+      <label>Units per month per customer</label>
+      <div class="slider-row">
+        <input type="range" id="unitsMonth" min="100" max="100000" value="5000" step="100" oninput="updateUnitsLabel()">
+        <span class="val" id="unitsVal">5,000</span>
+      </div>
+    </div>
+    <div class="slider-group form-group">
+      <label>Developer months to build (self-build)</label>
+      <div class="slider-row">
+        <input type="range" id="devMonths" min="1" max="24" value="6" oninput="updateDevLabel()">
+        <span class="val" id="devMonthsVal">6</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Developer monthly cost (fully loaded)</label>
+      <div class="cost-row">
+        <span>&euro;</span>
+        <input type="number" id="devCost" value="6000" step="500" min="1000">
+        <span>/ month</span>
+      </div>
+    </div>
+    <div class="slider-group form-group">
+      <label>Annual maintenance (% of build cost)</label>
+      <div class="slider-row">
+        <input type="range" id="maintPct" min="5" max="50" value="20" oninput="updateMaintLabel()">
+        <span class="val" id="maintVal">20%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: Dashboard -->
+<div class="step" id="step3">
+  <div class="dashboard-grid">
+    <!-- ChatGPT Tax Threshold -->
+    <div class="panel">
+      <div class="panel-title">ChatGPT Tax Threshold</div>
+      <p style="font-size: 0.82rem; color: #4a5568; margin-bottom: 0.75rem;">Your price must justify the gap above &euro;20/mo ChatGPT Plus. The larger the gap, the stronger your differentiation must be.</p>
+      <div class="tax-bar-container">
+        <div class="tax-bar" id="taxBar">
+          <div class="tax-marker" id="taxMarkerChatGPT" style="left: 0%">
+            <div class="tax-marker-label">&euro;20 ChatGPT+</div>
+          </div>
+          <div class="justification-zone" id="justZone"></div>
+          <div class="tax-marker" id="taxMarkerYou" style="left: 50%">
+            <div class="tax-marker-label" id="taxMarkerYouLabel">&euro;0 Your Price</div>
+          </div>
+        </div>
+      </div>
+      <div id="taxVerdict" style="margin-top: 1.5rem; font-size: 0.82rem; color: #4a5568; text-align: center;"></div>
+    </div>
+
+    <!-- Build vs Buy -->
+    <div class="panel">
+      <div class="panel-title">Build vs Buy (12-month view)</div>
+      <div class="bvb-columns">
+        <div class="bvb-col">
+          <h4>Self-Build</h4>
+          <div class="bvb-val" id="bvbBuild12">&euro;0</div>
+          <div class="bvb-sub">12-month total</div>
+          <div class="bvb-val" id="bvbBuild24" style="font-size: 1rem; margin-top: 0.5rem;">&euro;0</div>
+          <div class="bvb-sub">24-month total</div>
+        </div>
+        <div class="bvb-col">
+          <h4>Buy (API + Markup)</h4>
+          <div class="bvb-val" id="bvbBuy12">&euro;0</div>
+          <div class="bvb-sub">12-month at best markup</div>
+          <div class="bvb-markup-row" id="bvbMarkups"></div>
+        </div>
+      </div>
+      <div id="bvbVerdict" style="margin-top: 0.75rem; font-size: 0.82rem; color: #4a5568; text-align: center;"></div>
+    </div>
+
+    <!-- Pricing Tier Generator -->
+    <div class="panel">
+      <div class="panel-title">Pricing Tier Generator</div>
+      <p style="font-size: 0.82rem; color: #4a5568; margin-bottom: 0.5rem;">Auto-generated tiers based on your API cost and typical markups.</p>
+      <div class="tier-cards" id="tierCards"></div>
+    </div>
+
+    <!-- Per-Seat vs Per-Outcome -->
+    <div class="panel">
+      <div class="panel-title">Per-Seat vs Per-Outcome Revenue</div>
+      <div class="model-toggle">
+        <button class="model-btn active" onclick="showRevenueModel('seat')">Per-Seat</button>
+        <button class="model-btn" onclick="showRevenueModel('outcome')">Per-Outcome</button>
+      </div>
+      <table class="revenue-table" id="revenueTable"></table>
+      <div id="revenueVerdict" style="margin-top: 0.75rem; font-size: 0.82rem; color: #4a5568; text-align: center;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4: Summary -->
+<div class="step" id="step4">
+  <div class="panel">
+    <div class="panel-title">Pricing Strategy Summary</div>
+    <div class="summary-section">
+      <h3>Product Context</h3>
+      <div class="summary-row"><span class="sr-label">Product</span><span class="sr-value" id="sumProduct">—</span></div>
+      <div class="summary-row"><span class="sr-label">Industry</span><span class="sr-value" id="sumIndustry">—</span></div>
+      <div class="summary-row"><span class="sr-label">Regulated</span><span class="sr-value" id="sumRegulated">—</span></div>
+    </div>
+    <div class="summary-section">
+      <h3>Unit Economics</h3>
+      <div class="summary-row"><span class="sr-label">API cost / unit</span><span class="sr-value" id="sumApiCost">—</span></div>
+      <div class="summary-row"><span class="sr-label">Units / month / customer</span><span class="sr-value" id="sumUnits">—</span></div>
+      <div class="summary-row"><span class="sr-label">Monthly API cost / customer</span><span class="sr-value" id="sumMonthlyCost">—</span></div>
+    </div>
+    <div class="summary-section">
+      <h3>Recommended Pricing Tiers</h3>
+      <div class="summary-row"><span class="sr-label">Starter</span><span class="sr-value" id="sumStarter">—</span></div>
+      <div class="summary-row"><span class="sr-label">Professional</span><span class="sr-value" id="sumPro">—</span></div>
+      <div class="summary-row"><span class="sr-label">Enterprise</span><span class="sr-value" id="sumEnterprise">—</span></div>
+    </div>
+    <div class="summary-section">
+      <h3>Build vs Buy</h3>
+      <div class="summary-row"><span class="sr-label">Self-build (12-month)</span><span class="sr-value" id="sumBuild">—</span></div>
+      <div class="summary-row"><span class="sr-label">Buy/API (12-month)</span><span class="sr-value" id="sumBuy">—</span></div>
+      <div class="summary-row"><span class="sr-label">Verdict</span><span class="sr-value" id="sumBvbVerdict">—</span></div>
+    </div>
+    <div class="recommendation" id="summaryRec"></div>
+  </div>
+</div>
+
+<!-- Navigation -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>&larr; Back</button>
+  <button class="nav-btn primary" id="nextBtn" onclick="navigate(1)">Next &rarr;</button>
+</div>
+
+<div class="export-bar">
+  <button class="export-btn primary" onclick="window.print()">&#128424; Save as PDF</button>
+  <button class="export-btn secondary" onclick="copyResults()">&#128203; Copy to Clipboard</button>
+</div>
+
+<div class="copy-toast" id="copyToast">Copied to clipboard!</div>
+<footer>&copy; 2026 barcik.training</footer>
+
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+
+function navigate(dir) {
+  const next = currentStep + dir;
+  if (next < 1 || next > totalSteps) return;
+  document.getElementById('step' + currentStep).classList.remove('active');
+  currentStep = next;
+  document.getElementById('step' + currentStep).classList.add('active');
+  updateProgressBar();
+  if (currentStep === 3) updateDashboard();
+  if (currentStep === 4) updateSummary();
+  document.getElementById('prevBtn').disabled = currentStep === 1;
+  document.getElementById('nextBtn').textContent = currentStep === totalSteps ? 'Done ✓' : 'Next →';
+  if (currentStep === totalSteps) document.getElementById('nextBtn').disabled = true;
+  else document.getElementById('nextBtn').disabled = false;
+}
+
+function updateProgressBar() {
+  for (let i = 1; i <= totalSteps; i++) {
+    const ps = document.getElementById('ps' + i);
+    const pl = document.getElementById('pl' + i);
+    ps.className = 'progress-step';
+    pl.className = '';
+    if (i < currentStep) ps.classList.add('done');
+    else if (i === currentStep) { ps.classList.add('active'); pl.classList.add('active'); }
+  }
+}
+
+function updateUnitsLabel() {
+  const v = +document.getElementById('unitsMonth').value;
+  document.getElementById('unitsVal').textContent = v.toLocaleString();
+}
+function updateDevLabel() {
+  document.getElementById('devMonthsVal').textContent = document.getElementById('devMonths').value;
+}
+function updateMaintLabel() {
+  document.getElementById('maintVal').textContent = document.getElementById('maintPct').value + '%';
+}
+
+function fmtEur(n) {
+  if (n >= 1000000) return '€' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '€' + (n / 1000).toFixed(1) + 'K';
+  return '€' + Math.round(n);
+}
+
+function getInputs() {
+  return {
+    apiCost: +document.getElementById('apiCost').value || 0.006,
+    units: +document.getElementById('unitsMonth').value,
+    devMonths: +document.getElementById('devMonths').value,
+    devCost: +document.getElementById('devCost').value || 6000,
+    maintPct: +document.getElementById('maintPct').value / 100,
+    industry: document.getElementById('industry').value,
+    regulated: document.getElementById('regulated').checked,
+    productDesc: document.getElementById('productDesc').value
+  };
+}
+
+function updateDashboard() {
+  const d = getInputs();
+  const monthlyApiPerCustomer = d.apiCost * d.units;
+
+  // ChatGPT Tax
+  const chatgptPrice = 20;
+  const starterPrice = monthlyApiPerCustomer * 4;
+  const maxBar = Math.max(starterPrice * 1.5, 200);
+  const chatgptPct = Math.min(95, (chatgptPrice / maxBar) * 100);
+  const yourPct = Math.min(95, (starterPrice / maxBar) * 100);
+
+  document.getElementById('taxMarkerChatGPT').style.left = chatgptPct + '%';
+  document.getElementById('taxMarkerYou').style.left = yourPct + '%';
+  document.getElementById('taxMarkerYouLabel').textContent = fmtEur(starterPrice) + ' Your Price';
+
+  const zone = document.getElementById('justZone');
+  zone.style.left = chatgptPct + '%';
+  zone.style.width = Math.max(0, yourPct - chatgptPct) + '%';
+
+  let verdict = '';
+  if (starterPrice <= chatgptPrice) verdict = '⚠️ Below ChatGPT Plus — you\'re subsidizing AI. Consider value-based pricing.';
+  else if (starterPrice <= chatgptPrice * 2) verdict = '✅ Reasonable premium over ChatGPT. Clear differentiation needed.';
+  else if (starterPrice <= chatgptPrice * 5) verdict = '💪 Strong premium. Ensure your value prop is specific and defensible.';
+  else verdict = '🏷️ High premium tier. Must demonstrate clear ROI to justify.';
+  document.getElementById('taxVerdict').textContent = verdict;
+
+  // Build vs Buy
+  const buildCost = d.devMonths * d.devCost;
+  const annualMaint = buildCost * d.maintPct;
+  const build12 = buildCost + annualMaint;
+  const build24 = buildCost + annualMaint * 2;
+
+  const markups = [3, 5, 10];
+  const buy12_best = monthlyApiPerCustomer * markups[0] * 12;
+
+  document.getElementById('bvbBuild12').textContent = fmtEur(build12);
+  document.getElementById('bvbBuild24').textContent = fmtEur(build24);
+  document.getElementById('bvbBuy12').textContent = fmtEur(buy12_best);
+
+  const markupHtml = markups.map(m => {
+    const cost = monthlyApiPerCustomer * m * 12;
+    const isBest = cost <= build12;
+    return `<span class="bvb-markup${isBest ? ' best' : ''}">${m}× = ${fmtEur(cost)}/yr</span>`;
+  }).join('');
+  document.getElementById('bvbMarkups').innerHTML = markupHtml;
+
+  const bvbV = buy12_best < build12 ? 'Buy wins at 12 months — self-build ROI is negative.' : 'Self-build may pay off if you scale beyond a single customer.';
+  document.getElementById('bvbVerdict').textContent = bvbV;
+
+  // Pricing Tiers
+  const starter = monthlyApiPerCustomer * 4;
+  const pro = starter * 3;
+  const enterprise = pro * 1.75;
+
+  const tierHtml = [
+    { name: 'Starter', price: starter, desc: 'Self-service, basic features', margin: '~75% margin', featured: false },
+    { name: 'Professional', price: pro, desc: 'Human-in-the-loop, priority support', margin: '~92% margin', featured: true },
+    { name: 'Enterprise', price: enterprise, desc: 'Compliance, SLA, custom integrations', margin: '~95% margin', featured: false }
+  ].map(t => `
+    <div class="tier-card${t.featured ? ' featured' : ''}">
+      <div class="tier-name">${t.name}</div>
+      <div class="tier-price">${fmtEur(t.price)}<span style="font-size:0.6em;font-weight:400">/mo</span></div>
+      <div class="tier-desc">${t.desc}</div>
+      <div class="tier-margin">${t.margin}</div>
+    </div>
+  `).join('');
+  document.getElementById('tierCards').innerHTML = tierHtml;
+
+  // Revenue comparison
+  updateRevenueTable(starter, monthlyApiPerCustomer);
+}
+
+let currentModel = 'seat';
+function showRevenueModel(model) {
+  currentModel = model;
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(model)));
+  const d = getInputs();
+  const monthlyApi = d.apiCost * d.units;
+  const starter = monthlyApi * 4;
+  updateRevenueTable(starter, monthlyApi);
+}
+
+function updateRevenueTable(seatPrice, apiCost) {
+  const seats = [10, 50, 100];
+  const table = document.getElementById('revenueTable');
+
+  const seatRevenues = seats.map(s => s * seatPrice);
+  const outcomeRevenues = seats.map(s => s * apiCost * 8); // 8× markup on volume
+
+  let html = '<tr><th>Customers</th><th>Per-Seat Revenue</th><th>Per-Outcome Revenue</th></tr>';
+  let seatTotal = 0, outcomeTotal = 0;
+  seats.forEach((s, i) => {
+    const sW = seatRevenues[i] >= outcomeRevenues[i];
+    const oW = outcomeRevenues[i] > seatRevenues[i];
+    seatTotal += seatRevenues[i];
+    outcomeTotal += outcomeRevenues[i];
+    html += `<tr>
+      <td>${s}</td>
+      <td class="${sW ? 'winner' : ''}">${fmtEur(seatRevenues[i])}/mo</td>
+      <td class="${oW ? 'winner' : ''}">${fmtEur(outcomeRevenues[i])}/mo</td>
+    </tr>`;
+  });
+
+  const winner = seatTotal >= outcomeTotal ? 'Per-Seat' : 'Per-Outcome';
+  document.getElementById('revenueVerdict').textContent = `${winner} pricing generates higher revenue across these volumes.`;
+  table.innerHTML = html;
+}
+
+function updateSummary() {
+  const d = getInputs();
+  const monthlyApi = d.apiCost * d.units;
+  const starter = monthlyApi * 4;
+  const pro = starter * 3;
+  const enterprise = pro * 1.75;
+  const buildCost = d.devMonths * d.devCost;
+  const build12 = buildCost + buildCost * d.maintPct;
+  const buy12 = monthlyApi * 3 * 12;
+
+  document.getElementById('sumProduct').textContent = d.productDesc || '(not specified)';
+  document.getElementById('sumIndustry').textContent = document.getElementById('industry').options[document.getElementById('industry').selectedIndex].text;
+  document.getElementById('sumRegulated').textContent = d.regulated ? 'Yes' : 'No';
+  document.getElementById('sumApiCost').textContent = '€' + d.apiCost;
+  document.getElementById('sumUnits').textContent = d.units.toLocaleString();
+  document.getElementById('sumMonthlyCost').textContent = fmtEur(monthlyApi);
+  document.getElementById('sumStarter').textContent = fmtEur(starter) + '/mo';
+  document.getElementById('sumPro').textContent = fmtEur(pro) + '/mo';
+  document.getElementById('sumEnterprise').textContent = fmtEur(enterprise) + '/mo';
+  document.getElementById('sumBuild').textContent = fmtEur(build12);
+  document.getElementById('sumBuy').textContent = fmtEur(buy12);
+  document.getElementById('sumBvbVerdict').textContent = buy12 < build12 ? 'Buy (API)' : 'Build may be viable';
+
+  // Contextual recommendation
+  let rec = '';
+  if (d.regulated && (d.industry === 'healthcare' || d.industry === 'finance' || d.industry === 'legal')) {
+    rec = `<h4>Compliance Premium Opportunity</h4><p>In regulated ${d.industry}, compliance features (audit trails, data residency, BAA) justify a 30–50% premium. Lead with Enterprise tier and work down.</p>`;
+  } else if (monthlyApi < 5) {
+    rec = `<h4>Low Unit Cost — Value-Based Pricing Critical</h4><p>Your API costs are very low (${fmtEur(monthlyApi)}/customer/mo). Don't anchor to cost — price on the value delivered and the pain eliminated.</p>`;
+  } else if (d.devMonths > 12) {
+    rec = `<h4>Complex Build — Start with API</h4><p>With ${d.devMonths} months of development, start by validating demand with an API-first approach before committing to self-build.</p>`;
+  } else {
+    rec = `<h4>Standard Approach</h4><p>Your economics support a healthy SaaS model. Focus on demonstrating clear ROI vs. ChatGPT Plus and building switching costs through workflow integration.</p>`;
+  }
+  document.getElementById('summaryRec').innerHTML = rec;
+}
+
+function copyResults() {
+  const d = getInputs();
+  const monthlyApi = d.apiCost * d.units;
+  const starter = monthlyApi * 4;
+  const pro = starter * 3;
+  const enterprise = pro * 1.75;
+
+  let text = `GENAI PRICING LAB — Strategy Summary\n`;
+  text += `=====================================\n\n`;
+  text += `PRODUCT: ${d.productDesc || '(not specified)'}\n`;
+  text += `INDUSTRY: ${document.getElementById('industry').options[document.getElementById('industry').selectedIndex].text}\n`;
+  text += `REGULATED: ${d.regulated ? 'Yes' : 'No'}\n\n`;
+  text += `UNIT ECONOMICS\n`;
+  text += `API cost/unit: €${d.apiCost}\n`;
+  text += `Units/mo/customer: ${d.units.toLocaleString()}\n`;
+  text += `Monthly API cost/customer: ${fmtEur(monthlyApi)}\n\n`;
+  text += `RECOMMENDED TIERS\n`;
+  text += `Starter: ${fmtEur(starter)}/mo\n`;
+  text += `Professional: ${fmtEur(pro)}/mo\n`;
+  text += `Enterprise: ${fmtEur(enterprise)}/mo\n\n`;
+  text += `— Generated by barcik.training GenAI Pricing Lab`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('copyToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+</script>
+</body>
+</html>
