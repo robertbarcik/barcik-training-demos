@@ -335,6 +335,7 @@ let scenarioIdx = 0;
 let currentStep = -1;
 let maxRevealed = -1;
 let autoPlay = false;
+let reviewMode = false;
 let showSchema = false;
 let typewriterInterval = null;
 let animationTimeouts = [];
@@ -465,6 +466,47 @@ function renderStepContent(stepIdx) {
   const s = scenario();
   const stepId = getSteps()[stepIdx].id;
 
+  // In review mode, show content instantly without animations
+  if (reviewMode) {
+    switch (stepId) {
+      case 'user':
+        contentEl.innerHTML = `<div class="user-text">${escapeHtml(s.userMessage)}</div>`;
+        break;
+      case 'thinking':
+        contentEl.innerHTML = s.thinking.map(t => `<div class="thought visible">${escapeHtml(t)}</div>`).join('');
+        break;
+      case 'clarify':
+        contentEl.innerHTML = `<div class="final-text" style="white-space:pre-line;">${escapeHtml(s.clarificationMessage)}</div>
+          <div class="insight" style="margin-top:12px;">💡 <strong>Key insight:</strong> Instead of guessing the recipient or making up details, the model recognizes it lacks required parameters and asks the user. This is a sign of a well-designed function calling system.</div>`;
+        break;
+      case 'user2':
+        contentEl.innerHTML = `<div class="user-text">${escapeHtml(s.userClarification)}</div>`;
+        break;
+      case 'thinking2':
+        contentEl.innerHTML = s.thinkingAfterClarification.map(t => `<div class="thought visible">${escapeHtml(t)}</div>`).join('');
+        break;
+      case 'toolcall':
+        contentEl.innerHTML = `
+          <div class="toolcall-hint">The model outputs a structured function call — YOUR app receives this:</div>
+          ${codeBlock('Function Call (JSON)', JSON.stringify({ name: s.functionName, arguments: s.args }, null, 2))}
+          <div class="insight">💡 <strong>Key insight:</strong> The model doesn't execute anything. It just says <em>"I want to call this function with these arguments."</em> Your code does the rest.</div>`;
+        break;
+      case 'execution':
+        contentEl.innerHTML = `<div class="exec-title">🖥️ This runs on YOUR server / YOUR code:</div>` +
+          s.executionSteps.map(st => `<div class="exec-step visible"><span class="exec-dot"></span>${escapeHtml(st)}</div>`).join('');
+        break;
+      case 'result':
+        contentEl.innerHTML = `
+          <div class="result-hint">You send the result back to the model in the next API call:</div>
+          ${codeBlock('function_call_output', s.result)}`;
+        break;
+      case 'response':
+        contentEl.innerHTML = `<div class="final-text">${escapeHtml(s.finalResponse)}</div>`;
+        break;
+    }
+    return;
+  }
+
   switch (stepId) {
     case 'user':
       contentEl.innerHTML = `<div class="user-text"><span id="tw-user"></span><span class="cursor" id="cursor-user">▋</span></div>`;
@@ -590,6 +632,7 @@ function onStepAnimComplete() {
 
 function advance() {
   clearAllTimers();
+  reviewMode = false;
   if (currentStep < getSteps().length - 1) {
     currentStep++;
     maxRevealed = Math.max(maxRevealed, currentStep);
@@ -606,6 +649,8 @@ function advance() {
 function goToStep(i) {
   if (i > maxRevealed) return;
   clearAllTimers();
+  autoPlay = false;
+  reviewMode = true;
   currentStep = i;
   render();
 }

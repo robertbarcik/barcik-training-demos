@@ -363,9 +363,9 @@
     color: white;
     flex-shrink: 0;
   }
-  .skill-item:nth-child(1) .skill-num { background: var(--query); }
-  .skill-item:nth-child(2) .skill-num { background: var(--key); }
-  .skill-item:nth-child(3) .skill-num { background: var(--value); }
+  .skill-item[data-skill="1"] .skill-num { background: var(--query); }
+  .skill-item[data-skill="2"] .skill-num { background: var(--key); }
+  .skill-item[data-skill="3"] .skill-num { background: var(--value); }
   .skill-title { font-weight: 600; font-size: 0.9rem; }
   .skill-produces { font-size: 0.8rem; color: var(--text-muted); }
 
@@ -674,7 +674,7 @@
   }
   .toggle-btn.active-toggle {
     background: var(--highlight);
-    color: var(--bg-dark);
+    color: #fff;
   }
 </style>
 </head>
@@ -1088,10 +1088,19 @@ renderSentence(defaultSentence);
 const demoWords = ['The', 'cat', 'sat', 'on', 'the', 'couch'];
 let modelMode = 'untrained';
 
-function renderDemo() {
+function initDemo() {
   const container = document.getElementById('demo-sentence-2');
   container.innerHTML = '';
+  demoWords.forEach((word, i) => {
+    const el = document.createElement('div');
+    el.className = 'demo-word';
+    el.textContent = word;
+    el.id = 'demo-w-' + i;
+    container.appendChild(el);
+  });
+}
 
+function renderDemo() {
   // For "sat" (index 2) as the reference word
   const trainedWeights = [0.05, 0.85, 0, 0.05, 0.03, 0.75];
   const randomWeights = demoWords.map(() => 0.2 + Math.random() * 0.8);
@@ -1101,15 +1110,15 @@ function renderDemo() {
   const max = Math.max(...weights);
 
   demoWords.forEach((word, i) => {
-    const el = document.createElement('div');
-    el.className = 'demo-word';
-    el.textContent = word;
+    const el = document.getElementById('demo-w-' + i);
+    if (!el) return;
 
     const norm = max > 0 ? weights[i] / max : 0;
     if (i === 2) {
       el.style.background = 'var(--highlight)';
-      el.style.color = 'var(--bg-dark)';
+      el.style.color = 'var(--text-light)';
       el.style.fontWeight = '700';
+      el.style.transform = 'none';
     } else if (norm > 0.6) {
       const opacity = 0.6 + norm * 0.4;
       el.style.background = `rgba(72, 169, 166, ${opacity})`;
@@ -1122,8 +1131,6 @@ function renderDemo() {
       el.style.color = `rgba(248,245,239, ${0.2 + norm * 0.3})`;
       el.style.transform = `scale(${0.85 + norm * 0.1})`;
     }
-
-    container.appendChild(el);
   });
 
   const label = document.getElementById('demo-label');
@@ -1140,14 +1147,17 @@ function setModelMode(mode) {
   modelMode = mode;
   document.getElementById('toggle-untrained').classList.toggle('active-toggle', mode === 'untrained');
   document.getElementById('toggle-trained').classList.toggle('active-toggle', mode === 'trained');
+  document.getElementById('untrained-card').style.transform = mode === 'untrained' ? 'translateX(4px)' : 'none';
+  document.getElementById('trained-card').style.transform = mode === 'trained' ? 'translateX(4px)' : 'none';
   renderDemo();
 }
 
-// Auto-refresh untrained to show randomness
+// Auto-refresh untrained to show randomness (smooth transitions on existing elements)
 setInterval(() => {
   if (modelMode === 'untrained') renderDemo();
-}, 1200);
+}, 2500);
 
+initDemo();
 renderDemo();
 
 // Skill item hover
