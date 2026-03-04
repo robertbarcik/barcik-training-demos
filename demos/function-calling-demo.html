@@ -276,17 +276,60 @@ const SCENARIOS = [
     ],
     result: JSON.stringify({ call_1: { temp: 8, condition: "Rainy" }, call_2: { temp: 14, condition: "Sunny" }, call_3: { status: "sent" } }, null, 2),
     finalResponse: "Here's the weather: Berlin is 8°C and rainy — bring an umbrella! Paris is a pleasant 14°C and sunny. I've emailed both forecasts to bob@test.com."
+  },
+  {
+    id: "clarify", label: "Clarification",
+    userMessage: "Send an email about the project deadline.",
+    thinking: [
+      "The user wants to send an email...",
+      "I have the send_email tool available.",
+      "But wait — who should I send it to? And what's the deadline?",
+      "I need to ask the user for the missing details before I can call the function."
+    ],
+    functionName: "send_email",
+    functionSchema: { name: "send_email", description: "Send an email to a recipient", parameters: { to: "string", subject: "string", body: "string" } },
+    needsClarification: true,
+    clarificationMessage: "I'd like to send that email for you! Could you tell me:\n\n1. Who should I send it to?\n2. What is the project deadline date?",
+    userClarification: "Send it to the whole team at team@company.com. The deadline is March 15th.",
+    thinkingAfterClarification: [
+      "Now I have all the details I need.",
+      "Recipient: team@company.com",
+      "I can compose a clear email about the March 15th deadline."
+    ],
+    args: { to: "team@company.com", subject: "Project Deadline Reminder", body: "Hi team, just a reminder that our project deadline is March 15th. Please make sure all deliverables are ready. Thanks!" },
+    executionSteps: [
+      "Connecting to email service...",
+      "Composing email with provided arguments...",
+      "Email sent successfully. Returning: {\"status\": \"sent\", \"message_id\": \"msg_4472\"}"
+    ],
+    result: JSON.stringify({ status: "sent", message_id: "msg_4472" }, null, 2),
+    finalResponse: "Done! I've sent an email to team@company.com with the subject \"Project Deadline Reminder\" letting the team know about the March 15th deadline."
   }
 ];
 
-const STEPS = [
-  { id: "user", label: "User Request", icon: "👤", color: "#1e3a5f", borderColor: "#BFDBFE" },
-  { id: "thinking", label: "Model Reasoning", icon: "🧠", color: "#8B5CF6", borderColor: "#DDD6FE" },
-  { id: "toolcall", label: "Function Call", icon: "📡", color: "#F59E0B", borderColor: "#FDE68A" },
-  { id: "execution", label: "Your Code Runs", icon: "⚙️", color: "#10B981", borderColor: "#A7F3D0" },
-  { id: "result", label: "Result → Model", icon: "📦", color: "#EC4899", borderColor: "#FBCFE8" },
-  { id: "response", label: "Final Response", icon: "✨", color: "#06B6D4", borderColor: "#A5F3FC" }
-];
+function getSteps() {
+  const base = [
+    { id: "user", label: "User Request", icon: "👤", color: "#1e3a5f", borderColor: "#BFDBFE" },
+    { id: "thinking", label: "Model Reasoning", icon: "🧠", color: "#8B5CF6", borderColor: "#DDD6FE" },
+  ];
+
+  if (scenario().needsClarification) {
+    base.push(
+      { id: "clarify", label: "Clarification", icon: "❓", color: "#D97706", borderColor: "#FDE68A" },
+      { id: "user2", label: "User Response", icon: "👤", color: "#1e3a5f", borderColor: "#BFDBFE" },
+      { id: "thinking2", label: "Model Reasoning", icon: "🧠", color: "#8B5CF6", borderColor: "#DDD6FE" }
+    );
+  }
+
+  base.push(
+    { id: "toolcall", label: "Function Call", icon: "📡", color: "#F59E0B", borderColor: "#FDE68A" },
+    { id: "execution", label: "Your Code Runs", icon: "⚙️", color: "#10B981", borderColor: "#A7F3D0" },
+    { id: "result", label: "Result → Model", icon: "📦", color: "#EC4899", borderColor: "#FBCFE8" },
+    { id: "response", label: "Final Response", icon: "✨", color: "#06B6D4", borderColor: "#A5F3FC" }
+  );
+
+  return base;
+}
 
 let scenarioIdx = 0;
 let currentStep = -1;
@@ -335,7 +378,7 @@ function renderProgress() {
   const el = document.getElementById('progress');
   if (currentStep < 0) { el.style.display = 'none'; return; }
   el.style.display = 'flex';
-  el.innerHTML = STEPS.map((s, i) =>
+  el.innerHTML = getSteps().map((s, i) =>
     `<div class="progress-seg" style="background:${i <= currentStep ? s.color : '#E2E8F0'}"></div>`
   ).join('');
 }
@@ -343,7 +386,7 @@ function renderProgress() {
 function renderControls() {
   const el = document.getElementById('controls');
   let html = '';
-  if (currentStep < STEPS.length - 1) {
+  if (currentStep < getSteps().length - 1) {
     const label = currentStep === -1 ? '▶  Start the Flow' : 'Next Step →';
     html += `<button class="btn-primary" onclick="advance()">${label}</button>`;
   }
@@ -358,7 +401,7 @@ function renderControls() {
 
 function renderTakeaways() {
   const el = document.getElementById('takeaways');
-  if (currentStep !== STEPS.length - 1) { el.innerHTML = ''; return; }
+  if (currentStep !== getSteps().length - 1) { el.innerHTML = ''; return; }
   el.innerHTML = `
     <div class="takeaways">
       <h3>Key Takeaways</h3>
@@ -366,6 +409,7 @@ function renderTakeaways() {
       <div class="takeaway"><span class="takeaway-icon">🔧</span><span><strong>Your code does the real work.</strong> You receive the function call, run your logic (API calls, DB queries, etc.), and return the result.</span></div>
       <div class="takeaway"><span class="takeaway-icon">🔁</span><span><strong>It's a conversation loop.</strong> Request → model decides → you execute → model reads result → model responds. Multiple round-trips are possible.</span></div>
       <div class="takeaway"><span class="takeaway-icon">📋</span><span><strong>Schema is everything.</strong> Clear function names, descriptions, and parameter types help the model make accurate tool calls.</span></div>
+      ${scenario().needsClarification ? '<div class="takeaway"><span class="takeaway-icon">💬</span><span><strong>Models can ask for clarification.</strong> When critical parameters are missing, a well-designed system lets the model request more info rather than guessing — leading to more accurate results.</span></div>' : ''}
     </div>`;
 }
 
@@ -377,7 +421,7 @@ function renderSteps() {
   const existingCards = el.querySelectorAll('.step-card');
   
   for (let i = 0; i <= maxRevealed; i++) {
-    const step = STEPS[i];
+    const step = getSteps()[i];
     let card = el.querySelector(`[data-step="${i}"]`);
 
     if (!card) {
@@ -419,7 +463,7 @@ function renderStepContent(stepIdx) {
   const contentEl = document.getElementById(`step-content-${stepIdx}`);
   if (!contentEl) return;
   const s = scenario();
-  const stepId = STEPS[stepIdx].id;
+  const stepId = getSteps()[stepIdx].id;
 
   switch (stepId) {
     case 'user':
@@ -437,6 +481,38 @@ function renderStepContent(stepIdx) {
           const el = document.getElementById(`thought-${i}`);
           if (el) el.classList.add('visible');
           if (i === s.thinking.length - 1) {
+            const tid2 = setTimeout(onStepAnimComplete, 600);
+            animationTimeouts.push(tid2);
+          }
+        }, (i + 1) * 900);
+        animationTimeouts.push(tid);
+      });
+      break;
+
+    case 'clarify':
+      contentEl.innerHTML = `<div class="final-text"><span id="tw-clarify"></span><span class="cursor" id="cursor-clarify">▋</span></div>`;
+      typewrite('tw-clarify', s.clarificationMessage, 25, () => {
+        document.getElementById('cursor-clarify')?.classList.add('done');
+        contentEl.insertAdjacentHTML('beforeend', `<div class="insight" style="margin-top:12px;">💡 <strong>Key insight:</strong> Instead of guessing the recipient or making up details, the model recognizes it lacks required parameters and asks the user. This is a sign of a well-designed function calling system.</div>`);
+        onStepAnimComplete();
+      });
+      break;
+
+    case 'user2':
+      contentEl.innerHTML = `<div class="user-text"><span id="tw-user2"></span><span class="cursor" id="cursor-user2">▋</span></div>`;
+      typewrite('tw-user2', s.userClarification, 30, () => {
+        document.getElementById('cursor-user2')?.classList.add('done');
+        onStepAnimComplete();
+      });
+      break;
+
+    case 'thinking2':
+      contentEl.innerHTML = s.thinkingAfterClarification.map((t, i) => `<div class="thought" id="thought2-${i}">${escapeHtml(t)}</div>`).join('');
+      s.thinkingAfterClarification.forEach((_, i) => {
+        const tid = setTimeout(() => {
+          const el = document.getElementById(`thought2-${i}`);
+          if (el) el.classList.add('visible');
+          if (i === s.thinkingAfterClarification.length - 1) {
             const tid2 = setTimeout(onStepAnimComplete, 600);
             animationTimeouts.push(tid2);
           }
@@ -506,7 +582,7 @@ function typewrite(elId, text, speed, onComplete) {
 }
 
 function onStepAnimComplete() {
-  if (autoPlay && currentStep < STEPS.length - 1) {
+  if (autoPlay && currentStep < getSteps().length - 1) {
     const tid = setTimeout(advance, 700);
     animationTimeouts.push(tid);
   }
@@ -514,7 +590,7 @@ function onStepAnimComplete() {
 
 function advance() {
   clearAllTimers();
-  if (currentStep < STEPS.length - 1) {
+  if (currentStep < getSteps().length - 1) {
     currentStep++;
     maxRevealed = Math.max(maxRevealed, currentStep);
     render();

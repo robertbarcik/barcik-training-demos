@@ -467,8 +467,7 @@ canvas { display: block; margin: 0 auto; }
     <div class="nav-tab active" data-tab="big-picture" role="tab" tabindex="0">The Big Picture</div>
     <div class="nav-tab" data-tab="inside-neuron" role="tab" tabindex="0">Inside a Neuron</div>
     <div class="nav-tab" data-tab="lora" role="tab" tabindex="0">LoRA Magic</div>
-    <div class="nav-tab" data-tab="methods" role="tab" tabindex="0">4 Methods</div>
-    <div class="nav-tab" data-tab="data" role="tab" tabindex="0">Training Data</div>
+    <div class="nav-tab" data-tab="methods" role="tab" tabindex="0">Methods & Data</div>
   </div>
 
   <!-- ===================== SECTION 1: BIG PICTURE ===================== -->
@@ -713,8 +712,8 @@ canvas { display: block; margin: 0 auto; }
 
   <!-- ===================== SECTION 4: METHODS ===================== -->
   <div class="section" id="methods">
-    <h2 class="section-title">Fine-Tuning Methods</h2>
-    <p class="section-sub">Four different approaches for four different needs. Click each to explore.</p>
+    <h2 class="section-title">Fine-Tuning Methods & Training Data</h2>
+    <p class="section-sub">Four approaches — click each to see how it works and what training data looks like.</p>
 
     <div class="data-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
       <div class="card method-card" onclick="showMethod('sft')" style="cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
@@ -741,6 +740,55 @@ canvas { display: block; margin: 0 auto; }
 
     <div id="method-detail" style="display:none;">
       <!-- Filled by JS -->
+    </div>
+
+    <h3 style="margin-top:32px; font-size:1.2rem; color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:8px;">Training Data Examples</h3>
+    <p style="color:var(--text-dim); margin-bottom:16px; font-size:0.9rem;">Real-ish examples of JSONL training data for each method.</p>
+
+    <div class="card data-card-highlight" id="data-sft" style="border-left: 4px solid transparent; transition: border-left-color 0.3s, background 0.3s;">
+      <div class="card-label">Supervised Fine-Tuning (SFT)</div>
+      <p style="color:var(--text-dim); margin-bottom:16px;">Each example is a conversation with the "correct" assistant response. The model learns to imitate these outputs.</p>
+      <div class="training-example">
+        <div><span class="tag tag-system">system</span> You are a medical triage assistant. Always respond with a JSON object containing "urgency" (1-5), "likely_category", and "next_step".</div>
+        <div style="margin-top:8px;"><span class="tag tag-user">user</span> I've had a persistent headache for 3 days. No fever. Vision is fine.</div>
+        <div style="margin-top:8px;"><span class="tag tag-assistant">assistant</span> {"urgency": 2, "likely_category": "neurology", "next_step": "Schedule appointment within 48hrs. Take OTC pain relief."}</div>
+      </div>
+      <div class="training-example">
+        <div><span class="tag tag-system">system</span> You are a medical triage assistant...</div>
+        <div style="margin-top:8px;"><span class="tag tag-user">user</span> Severe chest pain radiating to left arm. Sweating profusely.</div>
+        <div style="margin-top:8px;"><span class="tag tag-assistant">assistant</span> {"urgency": 5, "likely_category": "cardiology", "next_step": "Call emergency services (911) immediately."}</div>
+      </div>
+      <p class="small-note">The model learns the format (JSON), the classification behavior, and the tone — all from examples like these.</p>
+    </div>
+
+    <div class="card data-card-highlight" id="data-dpo" style="border-left: 4px solid transparent; transition: border-left-color 0.3s, background 0.3s;">
+      <div class="card-label">Direct Preference Optimization (DPO)</div>
+      <p style="color:var(--text-dim); margin-bottom:16px;">Each example shows two possible responses — one preferred ("chosen") and one rejected. The model learns to prefer the better style.</p>
+      <div class="training-example">
+        <div><span class="tag tag-user">user</span> Summarize this earnings report for our investors.</div>
+        <div style="margin-top:12px;"><span class="tag tag-chosen">chosen</span> Q3 revenue grew 12% YoY to $847M, driven by enterprise expansion. Operating margin improved 200bps. We're raising FY guidance to $3.2-3.4B.</div>
+        <div style="margin-top:8px;"><span class="tag tag-rejected">rejected</span> So basically the company made more money this quarter. Revenue was up which is good. They think they'll make even more money next year. Overall pretty solid performance with some improvements in how efficiently they operate.</div>
+      </div>
+      <p class="small-note">Same content, different quality. The model learns to prefer concise, data-rich, professional communication over vague summaries.</p>
+    </div>
+
+    <div class="card data-card-highlight" id="data-rft" style="border-left: 4px solid transparent; transition: border-left-color 0.3s, background 0.3s;">
+      <div class="card-label">Reinforcement Fine-Tuning (RFT)</div>
+      <p style="color:var(--text-dim); margin-bottom:16px;">The model generates its own response, then an expert grader scores it. High-scoring reasoning chains get reinforced.</p>
+      <div class="training-example">
+        <div><span class="tag tag-user">user</span> Patient: 67M, diabetic, presenting with acute kidney injury. Creatinine 4.2 (baseline 1.1). Currently on metformin, lisinopril, ibuprofen. What medication changes do you recommend?</div>
+        <div style="margin-top:12px;"><span class="tag tag-assistant">model generates</span> Step 1: Identify nephrotoxic agents → ibuprofen (NSAID) is nephrotoxic. Step 2: Metformin risk → contraindicated in AKI (lactic acidosis risk). Step 3: ACE inhibitor → lisinopril may worsen AKI. Recommendation: Discontinue ibuprofen and metformin immediately. Hold lisinopril. Switch to acetaminophen for pain. Monitor creatinine daily.</div>
+        <div style="margin-top:8px;"><span class="tag tag-grade">expert grade: 9/10</span> Correct identification of all three problematic medications. Good reasoning chain. Minor: should also mention fluid resuscitation.</div>
+      </div>
+      <p class="small-note">Unlike SFT, we don't provide the answer — the model reasons through it, and experts score the quality. High-scoring chains strengthen the model's reasoning paths.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-label">The JSONL Format</div>
+      <p style="color:var(--text-dim); margin-bottom:12px;">All training data is uploaded as <strong>.jsonl</strong> files — one JSON object per line:</p>
+      <div class="training-example" style="white-space:pre-wrap; word-break:break-all;">{"messages": [{"role": "system", "content": "You are a triage bot..."}, {"role": "user", "content": "Chest pain..."}, {"role": "assistant", "content": "{\"urgency\": 5, ...}"}]}
+{"messages": [{"role": "system", "content": "You are a triage bot..."}, {"role": "user", "content": "Mild headache..."}, {"role": "assistant", "content": "{\"urgency\": 2, ...}"}]}</div>
+      <p class="small-note">Each line is one training example. Typically you need hundreds to thousands of examples for good results.</p>
     </div>
 
     <div class="card" style="margin-top:24px;">
@@ -779,58 +827,6 @@ canvas { display: block; margin: 0 auto; }
           </tr>
         </table>
       </div>
-    </div>
-  </div>
-
-  <!-- ===================== SECTION 5: TRAINING DATA ===================== -->
-  <div class="section" id="data">
-    <h2 class="section-title">What Training Data Looks Like</h2>
-    <p class="section-sub">Real-ish examples of JSONL training data for each method.</p>
-
-    <div class="card">
-      <div class="card-label">Supervised Fine-Tuning (SFT)</div>
-      <p style="color:var(--text-dim); margin-bottom:16px;">Each example is a conversation with the "correct" assistant response. The model learns to imitate these outputs.</p>
-      <div class="training-example">
-        <div><span class="tag tag-system">system</span> You are a medical triage assistant. Always respond with a JSON object containing "urgency" (1-5), "likely_category", and "next_step".</div>
-        <div style="margin-top:8px;"><span class="tag tag-user">user</span> I've had a persistent headache for 3 days. No fever. Vision is fine.</div>
-        <div style="margin-top:8px;"><span class="tag tag-assistant">assistant</span> {"urgency": 2, "likely_category": "neurology", "next_step": "Schedule appointment within 48hrs. Take OTC pain relief."}</div>
-      </div>
-      <div class="training-example">
-        <div><span class="tag tag-system">system</span> You are a medical triage assistant...</div>
-        <div style="margin-top:8px;"><span class="tag tag-user">user</span> Severe chest pain radiating to left arm. Sweating profusely.</div>
-        <div style="margin-top:8px;"><span class="tag tag-assistant">assistant</span> {"urgency": 5, "likely_category": "cardiology", "next_step": "Call emergency services (911) immediately."}</div>
-      </div>
-      <p class="small-note">💡 The model learns the format (JSON), the classification behavior, and the tone — all from examples like these.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-label">Direct Preference Optimization (DPO)</div>
-      <p style="color:var(--text-dim); margin-bottom:16px;">Each example shows two possible responses — one preferred ("chosen") and one rejected. The model learns to prefer the better style.</p>
-      <div class="training-example">
-        <div><span class="tag tag-user">user</span> Summarize this earnings report for our investors.</div>
-        <div style="margin-top:12px;"><span class="tag tag-chosen">✅ chosen</span> Q3 revenue grew 12% YoY to $847M, driven by enterprise expansion. Operating margin improved 200bps. We're raising FY guidance to $3.2-3.4B.</div>
-        <div style="margin-top:8px;"><span class="tag tag-rejected">❌ rejected</span> So basically the company made more money this quarter. Revenue was up which is good. They think they'll make even more money next year. Overall pretty solid performance with some improvements in how efficiently they operate.</div>
-      </div>
-      <p class="small-note">💡 Same content, different quality. The model learns to prefer concise, data-rich, professional communication over vague summaries.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-label">Reinforcement Fine-Tuning (RFT)</div>
-      <p style="color:var(--text-dim); margin-bottom:16px;">The model generates its own response, then an expert grader scores it. High-scoring reasoning chains get reinforced.</p>
-      <div class="training-example">
-        <div><span class="tag tag-user">user</span> Patient: 67M, diabetic, presenting with acute kidney injury. Creatinine 4.2 (baseline 1.1). Currently on metformin, lisinopril, ibuprofen. What medication changes do you recommend?</div>
-        <div style="margin-top:12px;"><span class="tag tag-assistant">model generates</span> Step 1: Identify nephrotoxic agents → ibuprofen (NSAID) is nephrotoxic. Step 2: Metformin risk → contraindicated in AKI (lactic acidosis risk). Step 3: ACE inhibitor → lisinopril may worsen AKI. Recommendation: Discontinue ibuprofen and metformin immediately. Hold lisinopril. Switch to acetaminophen for pain. Monitor creatinine daily.</div>
-        <div style="margin-top:8px;"><span class="tag tag-grade">⭐ expert grade: 9/10</span> Correct identification of all three problematic medications. Good reasoning chain. Minor: should also mention fluid resuscitation.</div>
-      </div>
-      <p class="small-note">💡 Unlike SFT, we don't provide the answer — the model reasons through it, and experts score the quality. High-scoring chains strengthen the model's reasoning paths.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-label">The JSONL Format</div>
-      <p style="color:var(--text-dim); margin-bottom:12px;">All training data is uploaded as <strong>.jsonl</strong> files — one JSON object per line:</p>
-      <div class="training-example" style="white-space:pre-wrap; word-break:break-all;">{"messages": [{"role": "system", "content": "You are a triage bot..."}, {"role": "user", "content": "Chest pain..."}, {"role": "assistant", "content": "{\"urgency\": 5, ...}"}]}
-{"messages": [{"role": "system", "content": "You are a triage bot..."}, {"role": "user", "content": "Mild headache..."}, {"role": "assistant", "content": "{\"urgency\": 2, ...}"}]}</div>
-      <p class="small-note">Each line is one training example. Typically you need hundreds to thousands of examples for good results.</p>
     </div>
   </div>
 
@@ -1034,6 +1030,18 @@ function showMethod(key) {
     </div>
   `;
   detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Highlight corresponding training data card
+  document.querySelectorAll('.data-card-highlight').forEach(c => {
+    c.style.borderLeftColor = 'transparent';
+    c.style.background = 'var(--surface)';
+  });
+  const dataCard = document.getElementById('data-' + key);
+  if (dataCard) {
+    dataCard.style.borderLeftColor = m.color;
+    dataCard.style.background = 'rgba(30,58,95,0.03)';
+    dataCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 // Keyboard accessibility: Enter/Space triggers onclick for tabs and switches
