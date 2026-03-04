@@ -92,9 +92,9 @@
 
   .time-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0.6rem;
-    max-width: 480px;
+    max-width: 400px;
   }
 
   .time-btn {
@@ -330,13 +330,21 @@
   .next-up-display {
     position: fixed;
     bottom: 5rem;
-    font-size: 1.1rem;
-    font-weight: 200;
-    color: var(--text-dim);
-    letter-spacing: 0.08em;
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: 0.06em;
     z-index: 2;
     opacity: 0;
     animation: fadeIn 0.6s ease 0.3s forwards;
+    background: rgba(78, 205, 196, 0.08);
+    border: 1px solid rgba(78, 205, 196, 0.2);
+    padding: 0.7rem 2rem;
+    border-radius: 12px;
+  }
+  .next-up-display .next-up-prefix {
+    color: var(--accent);
+    font-weight: 400;
   }
   .next-up-display span {
     color: var(--text);
@@ -447,7 +455,7 @@
     <div class="dot-indicators" id="dot-indicators"></div>
 
     <div class="next-up-display" id="next-up-display" style="display:none;">
-      Next up: <span id="next-up-text"></span>
+      <span class="next-up-prefix">Next up:</span> <span id="next-up-text"></span>
     </div>
 
     <div class="timer-controls">
@@ -458,7 +466,7 @@
   </div>
 </div>
 
-<div class="hint">F11 fullscreen · Space pause · Esc reset</div>
+<div class="hint">···</div>
 
 <script>
 // ══════════════════════════════════════════
@@ -588,7 +596,7 @@ document.addEventListener('click', ensureAudio, { once: false });
 // ══════════════════════════════════════════
 // SETUP
 // ══════════════════════════════════════════
-const presets = [1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30, 45];
+const presets = [5, 6, 7, 8, 9, 10, 12, 15, 60];
 const popular = [5, 10, 15];
 const grid = document.getElementById('time-grid');
 
