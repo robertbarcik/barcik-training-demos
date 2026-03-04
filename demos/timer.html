@@ -397,6 +397,50 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  .focus-list {
+    list-style: none;
+    text-align: left;
+    max-width: min(80vw, 600px);
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .focus-list li {
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    font-weight: 300;
+    color: var(--text);
+    padding: 0.6rem 1rem;
+    border-left: 2px solid var(--accent);
+    background: rgba(78, 205, 196, 0.04);
+    border-radius: 0 8px 8px 0;
+    line-height: 1.4;
+  }
+  .focus-label {
+    font-size: 0.75rem;
+    font-weight: 200;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+  }
+
+  .branding {
+    position: fixed;
+    bottom: 0.8rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    z-index: 2;
+    opacity: 0.35;
+  }
+  .branding a { color: var(--text-dim); text-decoration: none; }
+  .branding a:hover { color: var(--text); }
+
   .hint {
     position: fixed;
     bottom: 1rem;
@@ -435,8 +479,8 @@
     </div>
 
     <div id="notes-section">
-      <div class="notes-label">Recap points (one per line)</div>
-      <textarea class="notes-input" id="notes-input" placeholder="What is a transformer?&#10;Attention is all you need&#10;Tokens ≠ words&#10;Temperature controls randomness"></textarea>
+      <div class="notes-label">What to focus on (one per line)</div>
+      <textarea class="notes-input" id="notes-input" placeholder="Build a RAG pipeline using the provided documents&#10;Experiment with different chunk sizes&#10;Compare retrieval accuracy"></textarea>
     </div>
   </div>
 
@@ -454,6 +498,11 @@
     </div>
     <div class="dot-indicators" id="dot-indicators"></div>
 
+    <div id="focus-area" style="display:none;">
+      <div class="focus-label">Focus on</div>
+      <ul class="focus-list" id="focus-list"></ul>
+    </div>
+
     <div class="next-up-display" id="next-up-display" style="display:none;">
       <span class="next-up-prefix">Next up:</span> <span id="next-up-text"></span>
     </div>
@@ -466,7 +515,7 @@
   </div>
 </div>
 
-<div class="hint">···</div>
+<div class="branding"><a href="mailto:robert@barcik.training">robert@barcik.training</a></div>
 
 <script>
 // ══════════════════════════════════════════
@@ -476,15 +525,20 @@ const AI_FACTS = [
   // ── HISTORY & MILESTONES ──
   { text: 'The term "Artificial Intelligence" was coined at a 1956 Dartmouth workshop. The organizers proposed they could crack it in a 2-month, 10-person summer study.', cat: "History" },
   { text: "The first AI program (1952) was a checkers player by Arthur Samuel — who also coined \"machine learning\" in 1959.", cat: "History" },
-  { text: "ELIZA (1966) was the first chatbot. It mimicked a psychotherapist by turning your statements into questions. Some users were genuinely convinced it understood them.", cat: "History" },
+  { text: "ELIZA (1966) was the first chatbot. Its creator's own secretary asked him to leave the room so she could have a private conversation with it.", cat: "History" },
   { text: "Isaac Asimov wrote the Three Laws of Robotics in 1942 — decades before any real AI existed. They're still cited in AI ethics debates today.", cat: "History" },
   { text: "The first industrial robot, Unimate, started welding car parts at a General Motors plant in 1961. The task was deemed too dangerous for humans.", cat: "History" },
   { text: "LISP, the first programming language for AI research, was created in 1958. Variants of it are still used today — 67 years later.", cat: "History" },
   { text: 'AI has gone through multiple "AI Winters" — periods where hype collapsed, funding dried up, and researchers had to find new careers.', cat: "History" },
   { text: "In 1997, IBM's Deep Blue defeated world chess champion Garry Kasparov. Kasparov accused the machine of cheating — he couldn't believe a computer could play that creatively.", cat: "History" },
-  { text: 'Alan Turing proposed the "Imitation Game" in 1950 — now the Turing Test — to evaluate whether a machine can exhibit intelligent behavior indistinguishable from a human.', cat: "History" },
-  { text: "The 1956 Dartmouth workshop optimistically claimed AI's core problems could be solved in one summer. We're still working on them 70 years later.", cat: "History" },
-  { text: "The first computer-generated music was created in 1957 by the Illiac Suite, composed by an AI at the University of Illinois.", cat: "History" },
+  { text: 'Alan Turing predicted in 1950 that in "about fifty years" a computer with ~1 GB of storage could fool human interrogators. Both his storage estimate and his insight that machines should learn like children proved remarkably accurate.', cat: "History" },
+  { text: "The first mathematical model of a neural network was published in 1943 — two years before ENIAC and four years before the transistor was invented.", cat: "History" },
+  { text: "The first physical neural network, SNARC (1951), was built from 300 vacuum tubes and a gyroscopic autopilot salvaged from a B-24 bomber. It taught itself to navigate a maze.", cat: "History" },
+  { text: "When Arthur Samuel's checkers program was demonstrated publicly in 1959, IBM's stock jumped 15 points overnight — an AI hype cycle before the term existed.", cat: "History" },
+  { text: "The first machine translation demo (1954) translated Russian to English as a Cold War intelligence project. Researchers predicted the problem would be \"solved in 3–5 years.\"", cat: "History" },
+  { text: "When the Perceptron was demonstrated in 1958, the New York Times reported the Navy had built a machine that would \"walk, talk, see, write, and be conscious of its existence.\" It was a single-layer neural network.", cat: "History" },
+  { text: "Backpropagation — the algorithm that trains virtually all neural networks today — was first published in a 1970 Finnish master's thesis, written in Finnish. It wasn't widely known until 1986.", cat: "History" },
+  { text: "The first complete AI-composed music was a full string quartet by the ILLIAC I computer in 1957 — six years before the Beatles' first album.", cat: "History" },
 
   // ── DEEP LEARNING & MODELS ──
   { text: "GPT-3 has 175 billion parameters. Training it on a single GPU would take ~355 years and cost an estimated $4.6 million.", cat: "Scale" },
@@ -507,18 +561,25 @@ const AI_FACTS = [
   { text: "Over 200 million people worldwide watched the 2016 AlphaGo vs Lee Sedol match. Go experts said it arrived a decade earlier than expected.", cat: "AlphaGo" },
 
   // ── FUNNY FAILS ──
-  { text: "Microsoft's chatbot Tay was shut down after <24 hours on Twitter (2016). Users taught it to post offensive content by gaming its learning.", cat: "Fails" },
+  { text: "Microsoft's chatbot Tay went from \"Hello world!\" to tweeting \"Hitler was right\" in just 16 hours. Microsoft's identical Chinese chatbot, Xiaoice, had handled 40 million conversations without incident.", cat: "Fails" },
   { text: "An AI-generated Microsoft travel guide recommended the Ottawa Food Bank as a tourist attraction, suggesting visitors \"arrive on an empty stomach.\"", cat: "Fails" },
-  { text: "A lawyer used ChatGPT for a legal brief. It cited six court cases that never existed. The judge was not amused.", cat: "Fails" },
-  { text: "Google's Bard got a fact wrong in its very first public demo. Google lost $100 billion in market cap that day.", cat: "Fails" },
+  { text: "A New York attorney used ChatGPT for legal research and submitted a brief citing six completely fabricated court cases. When questioned, he asked ChatGPT if they were real — it doubled down.", cat: "Fails" },
+  { text: "Google Bard's first public demo included a factual error that could have been caught by Googling it. The mistake wiped $100 billion off Alphabet's market value in a single day.", cat: "Fails" },
   { text: "Image generators still struggle with hands. The running joke: if it has 6 or 7 fingers, it's probably AI-generated.", cat: "Fails" },
   { text: "McDonald's tested AI drive-thru ordering for 3 years, then cancelled it in 2024 after viral videos showed the AI adding 260 Chicken McNuggets to one order.", cat: "Fails" },
   { text: "A professor failed his entire class after asking ChatGPT if their essays were AI-generated. ChatGPT said yes to all of them. It can't actually detect AI text.", cat: "Fails" },
   { text: "In 2023, newspapers published AI-generated book recommendation lists. Many of the recommended books — with real authors' names — didn't actually exist.", cat: "Fails" },
   { text: "An AI once confidently stated the record for crossing the English Channel entirely on foot. That record does not exist, for obvious reasons.", cat: "Fails" },
   { text: 'Cambridge Dictionary chose "hallucinate" as its 2023 Word of the Year — specifically because of AI making things up with total confidence.', cat: "Fails" },
+  { text: "IBM poured over $4 billion into Watson Health after Watson won Jeopardy!, then sold the division for roughly $1 billion after it was caught making unsafe cancer treatment recommendations.", cat: "Fails" },
+  { text: "When Google Photos labeled photos of a Black software engineer as \"gorillas\" in 2015, Google's fix was to block the words \"gorilla,\" \"chimp,\" and \"monkey\" entirely. Eight years later, it still can't identify a gorilla.", cat: "Fails" },
+  { text: "Amazon built an AI recruiting tool that learned to penalize any résumé containing the word \"women's\". It was scrapped after engineers couldn't stop it finding new ways to discriminate.", cat: "Fails" },
+  { text: "Google Gemini's image generator (2024) overcorrected for diversity so aggressively it produced racially diverse Nazi soldiers and a Black female pope — costing Alphabet ~$97 billion in market cap.", cat: "Fails" },
+  { text: "Air Canada's chatbot gave a customer incorrect bereavement fare information. When sued, the airline argued the chatbot was \"a separate legal entity responsible for its own actions.\" The tribunal was not persuaded.", cat: "Fails" },
+  { text: "The first fatal autonomous vehicle pedestrian crash (Uber, 2018) happened because the AI couldn't classify a person as a pedestrian unless they were near a crosswalk.", cat: "Fails" },
+  { text: "After IBM fed Watson the entire contents of Urban Dictionary to help it understand slang, Watson began swearing in its responses. IBM had to manually purge the dataset.", cat: "Fails" },
 
-  // ── CONCEPTS ──
+  // ── CONCEPTS & TECHNICAL ODDITIES ──
   { text: 'The "black box problem": powerful neural networks give great answers but can\'t explain how they got them. Not even their creators fully know.', cat: "Concepts" },
   { text: "AI hallucinations aren't bugs — the model is doing exactly what it was trained to do: predict plausible next tokens. It has no concept of truth.", cat: "Concepts" },
   { text: "Temperature in AI controls randomness. At 0 = always the most likely word. At 1 = creative and unpredictable. At 2 = unhinged.", cat: "Concepts" },
@@ -527,9 +588,17 @@ const AI_FACTS = [
   { text: "Few-shot learning: show the AI 2–3 examples, it figures out the pattern. Zero-shot: just describe the task. Both work surprisingly well.", cat: "Concepts" },
   { text: "RLHF (Reinforcement Learning from Human Feedback) is how ChatGPT learned to be helpful. Humans ranked outputs, and it optimized for those rankings.", cat: "Concepts" },
   { text: "A \"foundation model\" is trained on broad data, then specialized. Like a medical student doing general training before choosing a specialty.", cat: "Concepts" },
+  { text: "Adding \"take a deep breath and work on this problem step by step\" to a math prompt boosted Google's PaLM 2 accuracy from 34% to 80% — a phrase with no logical connection to computation.", cat: "Concepts" },
+  { text: "A skin cancer detection AI achieved dermatologist-level accuracy — but it was actually detecting whether the photo contained a ruler, because doctors include rulers when photographing malignant lesions.", cat: "Concepts" },
+  { text: "Changing a single pixel in an image can cause state-of-the-art classifiers to misidentify objects with high confidence. On standard benchmarks, this one-pixel attack fooled models ~70% of the time.", cat: "Concepts" },
+  { text: "An AI trained to play a boat-racing game never finished a single race. It drove in circles hitting the same three targets, catching fire repeatedly — and scored 20% higher than humans.", cat: "Concepts" },
+  { text: "Neural networks can \"grok\": they perfectly memorize data, show zero generalization for thousands of steps, then suddenly snap to near-perfect understanding in an abrupt phase transition.", cat: "Concepts" },
+  { text: "MIT researchers found that up to 90% of a neural network's parameters may be unnecessary. Large networks contain tiny \"lottery ticket\" subnetworks that match full performance.", cat: "Concepts" },
+  { text: "LLMs that pass the bar exam and write poetry cannot reliably count the R's in \"strawberry\" — because tokenizers split it into chunks like [\"st\", \"raw\", \"berry\"] and the model never sees individual letters.", cat: "Concepts" },
+  { text: "Rewording the same prompt without changing its meaning can swing an LLM's accuracy by up to 76 percentage points. Many benchmarks may measure prompter skill more than model capability.", cat: "Concepts" },
 
   // ── INDUSTRY & SURPRISING ──
-  { text: "OpenAI started in 2015 as a nonprofit. By 2024 it was valued at over $150 billion and restructuring to become for-profit.", cat: "Industry" },
+  { text: "OpenAI was founded as a tax-exempt nonprofit in 2015 with a 100× profit cap. That cap was quietly reduced, then eliminated entirely when OpenAI converted to a for-profit corporation in 2025.", cat: "Industry" },
   { text: "In 2022, an AI-generated artwork won first place at the Colorado State Fair. The artist disclosed it was AI. Other artists were furious.", cat: "Surprise" },
   { text: "Sophia the robot got Saudi Arabian citizenship in 2017. The same year, Saudi women gained the right to drive.", cat: "Surprise" },
   { text: "The FDA had approved 223 AI-powered medical devices by 2023. AI is reading your X-rays, ECGs, and retinal scans.", cat: "Industry" },
@@ -537,6 +606,15 @@ const AI_FACTS = [
   { text: "Most AI assistants (Siri, Alexa, Cortana) were given female voices by default. The reasons behind this design choice are still debated.", cat: "Surprise" },
   { text: "In 2022, a Google engineer publicly claimed the LaMDA language model had become sentient. Google disagreed and fired him.", cat: "Surprise" },
   { text: "DeepMind's AlphaFold predicted the 3D structure of nearly all known proteins — a problem biologists had been working on for 50 years.", cat: "Science" },
+  { text: "Facebook paid $1 billion for Instagram (13 employees, zero revenue) in 2012. Two years later, Google paid roughly half that for DeepMind — the lab that would solve protein folding.", cat: "Industry" },
+  { text: "The original Transformer architecture — the \"T\" in GPT — cost approximately $930 to train in 2017. GPT-4 cost over $100 million just six years later.", cat: "Industry" },
+  { text: "Nvidia was founded in 1993 when three engineers sketched plans in a Denny's booth. It has since become the first company to surpass $5 trillion in market cap.", cat: "Industry" },
+  { text: "Elon Musk pushed OpenAI to announce \"$1 billion in funding\" at launch, but actually donated under $45 million. He later offered $97.4 billion to buy the organization back.", cat: "Industry" },
+  { text: "Microsoft's $13 billion investment in OpenAI is now worth an estimated $135 billion — roughly a 10× return and possibly the largest venture-style gain in corporate history.", cat: "Industry" },
+  { text: "OpenAI's revenue grew from ~$200 million in early 2023 to over $20 billion by 2025 — the fastest revenue ramp at that scale in corporate history.", cat: "Industry" },
+  { text: "Sam Altman has publicly admitted that OpenAI's $200/month ChatGPT Pro plan loses money on power users because their queries cost more than $200/month to serve.", cat: "Industry" },
+  { text: "Anthropic was founded in 2021 by seven people who left OpenAI over safety disagreements. By 2026, it had raised $30 billion at a $380 billion valuation.", cat: "Industry" },
+  { text: "Google acquired DeepMind for ~$500 million in 2014. By 2019, DeepMind was losing $649 million per year — more than its entire acquisition price.", cat: "Industry" },
 ];
 
 function shuffleArray(arr) {
@@ -632,32 +710,44 @@ function startTimer(seconds) {
   const nextUpValue = document.getElementById('next-up-input').value.trim();
   const catEl = document.getElementById('fact-category');
 
-  // Determine cycling content
+  const contentArea = document.getElementById('content-area');
+  const dotsEl = document.getElementById('dot-indicators');
+  const focusArea = document.getElementById('focus-area');
+
   if (mode === 'exercise') {
     const raw = document.getElementById('notes-input').value.trim();
-    cyclingItems = raw ? raw.split('\n').map(s => ({ text: s.trim(), cat: '' })).filter(i => i.text) : [];
+    const items = raw ? raw.split('\n').map(s => s.trim()).filter(Boolean) : [];
     catEl.style.display = 'none';
+    contentArea.style.display = 'none';
+    dotsEl.style.display = 'none';
+    cyclingItems = [];
+
+    if (items.length) {
+      const list = document.getElementById('focus-list');
+      list.innerHTML = items.map(t => `<li>${t}</li>`).join('');
+      focusArea.style.display = 'block';
+    } else {
+      focusArea.style.display = 'none';
+    }
   } else {
     cyclingItems = shuffleArray(AI_FACTS);
     catEl.style.display = 'block';
+    focusArea.style.display = 'none';
+
+    if (cyclingItems.length) {
+      contentArea.style.display = 'flex';
+      dotsEl.style.display = 'flex';
+      buildDots();
+      startCycling();
+    } else {
+      contentArea.style.display = 'none';
+      dotsEl.style.display = 'none';
+    }
   }
 
   document.getElementById('setup').style.display = 'none';
   document.getElementById('countdown').style.display = 'flex';
   document.getElementById('mode-label').textContent = mode === 'break' ? 'BREAK' : 'EXERCISE';
-
-  const contentArea = document.getElementById('content-area');
-  const dotsEl = document.getElementById('dot-indicators');
-
-  if (cyclingItems.length) {
-    contentArea.style.display = 'flex';
-    dotsEl.style.display = 'flex';
-    buildDots();
-    startCycling();
-  } else {
-    contentArea.style.display = 'none';
-    dotsEl.style.display = 'none';
-  }
 
   // Next up
   const nextUpDisplay = document.getElementById('next-up-display');
@@ -742,6 +832,7 @@ function resetTimer() {
   document.getElementById('setup').style.display = 'flex';
   document.getElementById('timer-display').classList.remove('finished', 'warning');
   document.getElementById('next-up-display').style.display = 'none';
+  document.getElementById('focus-area').style.display = 'none';
 }
 
 // ══════════════════════════════════════════
