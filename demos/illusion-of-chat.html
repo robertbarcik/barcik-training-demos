@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Illusion of Chat — barcik.training</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root{
+    --brand:#1e3a5f;
+    --brand-light:#2a5a8f;
+    --blue-100:#e8f0fe;
+    --blue-200:#c5d9f2;
+    --blue-500:#3b82f6;
+    --blue-600:#2563eb;
+    --amber-100:#fef3c7;
+    --amber-500:#f59e0b;
+    --red-100:#fee2e2;
+    --red-500:#ef4444;
+    --green-100:#d1fae5;
+    --green-500:#10b981;
+    --gray-50:#f9fafb;
+    --gray-100:#f3f4f6;
+    --gray-200:#e5e7eb;
+    --gray-300:#d1d5db;
+    --gray-500:#6b7280;
+    --gray-700:#374151;
+    --gray-900:#111827;
+    --highlight-chat:rgba(59,130,246,0.12);
+    --highlight-token:rgba(59,130,246,0.10);
+    --radius:8px;
+    --shadow:0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.06);
+    --transition-speed:0.2s;
+  }
+
+  html{font-size:16px;-webkit-text-size-adjust:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:#f0f4f8;
+    color:var(--gray-900);
+    line-height:1.6;
+    min-height:100vh;
+  }
+
+  /* ── Header ─────────────────────────────────── */
+  .header{
+    background:var(--brand);
+    color:#fff;
+    padding:1rem 1.5rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:0.5rem;
+  }
+  .header-brand{font-size:1.1rem;font-weight:700;letter-spacing:.3px}
+  .header-title{font-size:1.25rem;font-weight:600;text-align:center;flex:1 1 auto}
+
+  /* ── Container ──────────────────────────────── */
+  .container{max-width:1280px;margin:0 auto;padding:1.25rem 1rem}
+
+  /* ── Intro ──────────────────────────────────── */
+  .intro{
+    background:#fff;
+    border-left:4px solid var(--blue-500);
+    border-radius:var(--radius);
+    padding:1rem 1.25rem;
+    margin-bottom:1.25rem;
+    box-shadow:var(--shadow);
+    font-size:0.95rem;
+    color:var(--gray-700);
+    line-height:1.7;
+  }
+
+  /* ── Tabs ────────────────────────────────────── */
+  .tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.5rem;
+    margin-bottom:1rem;
+  }
+  .tab-btn{
+    padding:0.5rem 1.1rem;
+    border:2px solid var(--blue-200);
+    border-radius:999px;
+    background:#fff;
+    color:var(--brand);
+    font-size:0.88rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:all var(--transition-speed);
+    white-space:nowrap;
+  }
+  .tab-btn:hover{background:var(--blue-100);border-color:var(--blue-500)}
+  .tab-btn.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+  /* ── View Toggle ────────────────────────────── */
+  .view-toggle{
+    display:flex;
+    gap:0.35rem;
+    margin-bottom:1rem;
+    background:var(--gray-100);
+    border-radius:var(--radius);
+    padding:0.25rem;
+    width:fit-content;
+  }
+  .view-btn{
+    padding:0.4rem 1rem;
+    border:none;
+    border-radius:6px;
+    background:transparent;
+    color:var(--gray-700);
+    font-size:0.85rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:all var(--transition-speed);
+  }
+  .view-btn:hover{background:var(--gray-200)}
+  .view-btn.active{background:#fff;color:var(--brand);box-shadow:var(--shadow)}
+
+  /* ── Panels Wrapper ─────────────────────────── */
+  .panels{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1rem;
+    margin-bottom:1.25rem;
+    transition:grid-template-columns 0.35s ease;
+  }
+  .panels.chat-only{grid-template-columns:1fr 0fr}
+  .panels.chat-only .panel-token{overflow:hidden;opacity:0;padding:0;border:none;min-width:0}
+  .panels.tokens-only{grid-template-columns:0fr 1fr}
+  .panels.tokens-only .panel-chat{overflow:hidden;opacity:0;padding:0;border:none;min-width:0}
+
+  .panel{
+    background:#fff;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    transition:opacity 0.3s ease;
+    min-width:0;
+  }
+  .panel-header{
+    background:var(--gray-50);
+    border-bottom:1px solid var(--gray-200);
+    padding:0.6rem 1rem;
+    font-weight:700;
+    font-size:0.85rem;
+    color:var(--gray-700);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  .panel-body{
+    padding:1rem;
+    overflow-y:auto;
+    flex:1;
+    min-height:260px;
+    max-height:520px;
+  }
+
+  /* ── Chat Bubbles ───────────────────────────── */
+  .chat-msg{
+    margin-bottom:0.85rem;
+    display:flex;
+    flex-direction:column;
+    transition:background 0.2s;
+    border-radius:var(--radius);
+    padding:0.2rem 0.35rem;
+  }
+  .chat-msg.highlighted{background:var(--highlight-chat)}
+  .chat-msg .role-label{
+    font-size:0.72rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    margin-bottom:0.2rem;
+    padding-left:0.25rem;
+  }
+  .chat-msg.role-user .role-label{color:var(--blue-600);text-align:right;padding-right:0.25rem;padding-left:0}
+  .chat-msg.role-assistant .role-label{color:var(--gray-500)}
+  .chat-msg.role-system .role-label{color:var(--gray-500)}
+  .chat-msg.role-tool_call .role-label{color:var(--green-500)}
+  .chat-msg.role-tool_result .role-label{color:var(--green-500)}
+
+  .bubble{
+    padding:0.65rem 0.9rem;
+    border-radius:12px;
+    font-size:0.9rem;
+    line-height:1.55;
+    max-width:88%;
+    word-break:break-word;
+    white-space:pre-wrap;
+  }
+  .role-user .bubble{
+    background:var(--blue-600);
+    color:#fff;
+    align-self:flex-end;
+    border-bottom-right-radius:4px;
+  }
+  .role-assistant .bubble{
+    background:var(--gray-100);
+    color:var(--gray-900);
+    align-self:flex-start;
+    border-bottom-left-radius:4px;
+  }
+  .role-system .bubble{
+    background:var(--gray-200);
+    color:var(--gray-700);
+    align-self:center;
+    font-style:italic;
+    font-size:0.85rem;
+    text-align:center;
+    max-width:95%;
+    border-radius:8px;
+  }
+  .role-tool_call .bubble,
+  .role-tool_result .bubble{
+    background:var(--green-100);
+    color:var(--gray-900);
+    align-self:flex-start;
+    border:1px dashed var(--green-500);
+    font-family:"SF Mono",SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;
+    font-size:0.82rem;
+    max-width:95%;
+    border-radius:8px;
+  }
+  .tool-label{
+    display:inline-block;
+    background:var(--green-500);
+    color:#fff;
+    font-size:0.7rem;
+    font-weight:700;
+    padding:0.1rem 0.45rem;
+    border-radius:4px;
+    margin-bottom:0.3rem;
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+  }
+
+  /* ── Token Stream ───────────────────────────── */
+  .token-stream{
+    font-family:"SF Mono",SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;
+    font-size:0.82rem;
+    line-height:1.75;
+    counter-reset:line;
+    white-space:pre-wrap;
+    word-break:break-all;
+  }
+  .token-line{
+    display:flex;
+    gap:0;
+    transition:background 0.2s;
+    border-radius:3px;
+    padding:0 0.3rem;
+  }
+  .token-line.highlighted{background:var(--highlight-token)}
+  .line-num{
+    flex:0 0 2.5rem;
+    text-align:right;
+    color:var(--gray-300);
+    user-select:none;
+    padding-right:0.75rem;
+    font-size:0.75rem;
+    line-height:1.75;
+  }
+  .line-content{flex:1;min-width:0}
+
+  /* Special token pills */
+  .tok{
+    display:inline;
+    padding:0.1rem 0.35rem;
+    border-radius:4px;
+    font-weight:700;
+    font-size:0.78rem;
+    white-space:nowrap;
+  }
+  .tok-role{background:var(--blue-500);color:#fff}
+  .tok-sep{background:var(--amber-500);color:#fff}
+  .tok-end{background:var(--red-500);color:#fff}
+  .tok-tool{background:var(--green-500);color:#fff}
+
+  /* token region wrapper (for cross-highlighting) */
+  .token-region{
+    transition:background 0.2s;
+    border-radius:3px;
+  }
+  .token-region.highlighted{background:var(--highlight-token)}
+
+  /* ── Legend ──────────────────────────────────── */
+  .legend{
+    background:#fff;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:0.75rem 1rem;
+    margin-bottom:1.25rem;
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.75rem 1.5rem;
+    align-items:center;
+  }
+  .legend-title{
+    font-weight:700;
+    font-size:0.82rem;
+    color:var(--gray-700);
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    margin-right:0.5rem;
+  }
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:0.4rem;
+    font-size:0.82rem;
+    color:var(--gray-700);
+  }
+  .legend-swatch{
+    display:inline-block;
+    width:0.7rem;height:0.7rem;
+    border-radius:3px;
+    flex-shrink:0;
+  }
+
+  /* ── Insight Footer ─────────────────────────── */
+  .insight{
+    background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light) 100%);
+    color:#fff;
+    border-radius:var(--radius);
+    padding:1.1rem 1.35rem;
+    box-shadow:var(--shadow-md);
+    line-height:1.7;
+    font-size:0.93rem;
+  }
+  .insight-label{
+    display:inline-block;
+    background:rgba(255,255,255,0.2);
+    font-weight:700;
+    font-size:0.75rem;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    padding:0.15rem 0.6rem;
+    border-radius:4px;
+    margin-bottom:0.55rem;
+  }
+
+  /* ── Responsive ─────────────────────────────── */
+  @media(max-width:740px){
+    .panels{grid-template-columns:1fr !important}
+    .panels.chat-only .panel-token,
+    .panels.tokens-only .panel-chat{display:none}
+    .panel-body{max-height:400px;min-height:180px}
+    .header{flex-direction:column;text-align:center}
+    .header-title{font-size:1.05rem}
+    .bubble{max-width:96%}
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ Header ══════════════════════════════════════ -->
+<header class="header">
+  <div class="header-brand">barcik.training</div>
+  <div class="header-title">The Illusion of Chat</div>
+  <div style="width:6rem"></div>
+</header>
+
+<div class="container">
+
+  <!-- ── Intro ─────────────────────────────────── -->
+  <div class="intro">
+    LLMs don't chat &mdash; they complete text. The "conversation" you see is constructed from a flat token stream with special tokens marking roles and boundaries.
+  </div>
+
+  <!-- ── Example Tabs ──────────────────────────── -->
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-example="simple">Simple Chat</button>
+    <button class="tab-btn" data-example="system">System Prompt</button>
+    <button class="tab-btn" data-example="tool">Tool Use</button>
+    <button class="tab-btn" data-example="multi">Multi-Turn</button>
+  </div>
+
+  <!-- ── View Toggle ───────────────────────────── -->
+  <div class="view-toggle" id="viewToggle">
+    <button class="view-btn active" data-view="split">Split</button>
+    <button class="view-btn" data-view="chat-only">Chat Only</button>
+    <button class="view-btn" data-view="tokens-only">Tokens Only</button>
+  </div>
+
+  <!-- ── Panels ────────────────────────────────── -->
+  <div class="panels" id="panels">
+    <div class="panel panel-chat">
+      <div class="panel-header">Chat View</div>
+      <div class="panel-body" id="chatPanel"></div>
+    </div>
+    <div class="panel panel-token">
+      <div class="panel-header">Token Stream View</div>
+      <div class="panel-body" id="tokenPanel"></div>
+    </div>
+  </div>
+
+  <!-- ── Legend ─────────────────────────────────── -->
+  <div class="legend">
+    <span class="legend-title">Token Legend</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--blue-500)"></span> Role marker &mdash; starts a new speaker turn</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--amber-500)"></span> Separator &mdash; divides role from content</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--red-500)"></span> End token &mdash; closes the current turn</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--green-500)"></span> Tool token &mdash; marks tool call/result boundaries</span>
+  </div>
+
+  <!-- ── Insight ───────────────────────────────── -->
+  <div class="insight">
+    <div class="insight-label">Key Insight</div>
+    The model has no concept of "chatting." Every conversation is converted into a single text stream with special tokens. The chat interface is just a user-friendly wrapper &mdash; underneath, it's ALL just next-token prediction on a flat string.
+  </div>
+
+</div><!-- /container -->
+
+<script>
+(function(){
+  "use strict";
+
+  /* ═══════════════════════════════════════════════
+     DATA — Pre-built examples
+     ═══════════════════════════════════════════════ */
+
+  var EXAMPLES = {
+
+    simple: {
+      messages: [
+        {id:"s1",role:"user",text:"What is the capital of France?"},
+        {id:"s2",role:"assistant",text:"The capital of France is Paris. It's the largest city in France and serves as the country's political, economic, and cultural center."}
+      ],
+      tokens: [
+        {id:"s1",parts:[
+          {type:"role",text:"<|im_start|>user"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"What is the capital of France?"},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"s2",parts:[
+          {type:"role",text:"<|im_start|>assistant"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"The capital of France is Paris. It's the largest city in France and serves as the country's political, economic, and cultural center."},
+          {type:"end",text:"<|im_end|>"}
+        ]}
+      ]
+    },
+
+    system: {
+      messages: [
+        {id:"y1",role:"system",text:"You are a helpful cooking assistant. Only answer questions about cooking and recipes."},
+        {id:"y2",role:"user",text:"How do I make pasta carbonara?"},
+        {id:"y3",role:"assistant",text:"To make pasta carbonara:\n\n1. Cook 400g spaghetti in salted water\n2. Fry 200g guanciale until crispy\n3. Mix 4 egg yolks with 100g pecorino romano\n4. Toss hot pasta with guanciale, then quickly mix in the egg mixture off heat\n5. Season with black pepper and serve immediately"}
+      ],
+      tokens: [
+        {id:"y1",parts:[
+          {type:"role",text:"<|im_start|>system"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"You are a helpful cooking assistant. Only answer questions about cooking and recipes."},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"y2",parts:[
+          {type:"role",text:"<|im_start|>user"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"How do I make pasta carbonara?"},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"y3",parts:[
+          {type:"role",text:"<|im_start|>assistant"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"To make pasta carbonara:\n\n1. Cook 400g spaghetti in salted water\n2. Fry 200g guanciale until crispy\n3. Mix 4 egg yolks with 100g pecorino romano\n4. Toss hot pasta with guanciale, then quickly mix in the egg mixture off heat\n5. Season with black pepper and serve immediately"},
+          {type:"end",text:"<|im_end|>"}
+        ]}
+      ]
+    },
+
+    tool: {
+      messages: [
+        {id:"t1",role:"user",text:"What's the weather in Berlin?"},
+        {id:"t2",role:"assistant",text:"Let me check the weather for you."},
+        {id:"t3",role:"tool_call",text:"get_weather\n{\"location\": \"Berlin\"}"},
+        {id:"t4",role:"tool_result",text:"{\"temperature\": 12, \"condition\": \"Partly cloudy\", \"humidity\": 65}"},
+        {id:"t5",role:"assistant",text:"The weather in Berlin is currently 12\u00B0C and partly cloudy with 65% humidity."}
+      ],
+      tokens: [
+        {id:"t1",parts:[
+          {type:"role",text:"<|im_start|>user"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"What's the weather in Berlin?"},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"t2",parts:[
+          {type:"role",text:"<|im_start|>assistant"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"Let me check the weather for you.\n"}
+        ]},
+        {id:"t3",parts:[
+          {type:"tool",text:"<|tool_call_start|>"},
+          {type:"plain",text:"get_weather\n{\"location\": \"Berlin\"}"},
+          {type:"tool",text:"<|tool_call_end|>"},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"t4",parts:[
+          {type:"tool",text:"<|tool_result_start|>"},
+          {type:"plain",text:"{\"temperature\": 12, \"condition\": \"Partly cloudy\", \"humidity\": 65}"},
+          {type:"tool",text:"<|tool_result_end|>"}
+        ]},
+        {id:"t5",parts:[
+          {type:"role",text:"<|im_start|>assistant"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"The weather in Berlin is currently 12\u00B0C and partly cloudy with 65% humidity."},
+          {type:"end",text:"<|im_end|>"}
+        ]}
+      ]
+    },
+
+    multi: {
+      messages: [
+        {id:"m1",role:"user",text:"Hi! Can you help me with math?"},
+        {id:"m2",role:"assistant",text:"Of course! I'd be happy to help with math. What would you like to work on?"},
+        {id:"m3",role:"user",text:"What is 15% of 240?"},
+        {id:"m4",role:"assistant",text:"15% of 240 = 36. To calculate: 240 \u00D7 0.15 = 36"},
+        {id:"m5",role:"user",text:"And what about 20%?"},
+        {id:"m6",role:"assistant",text:"20% of 240 = 48. To calculate: 240 \u00D7 0.20 = 48"}
+      ],
+      tokens: [
+        {id:"m1",parts:[
+          {type:"role",text:"<|im_start|>user"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"Hi! Can you help me with math?"},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"m2",parts:[
+          {type:"role",text:"<|im_start|>assistant"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"Of course! I'd be happy to help with math. What would you like to work on?"},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"m3",parts:[
+          {type:"role",text:"<|im_start|>user"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"What is 15% of 240?"},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"m4",parts:[
+          {type:"role",text:"<|im_start|>assistant"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"15% of 240 = 36. To calculate: 240 \u00D7 0.15 = 36"},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"m5",parts:[
+          {type:"role",text:"<|im_start|>user"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"And what about 20%?"},
+          {type:"end",text:"<|im_end|>"}
+        ]},
+        {id:"m6",parts:[
+          {type:"role",text:"<|im_start|>assistant"},
+          {type:"sep",text:"<|im_sep|>"},
+          {type:"plain",text:"20% of 240 = 48. To calculate: 240 \u00D7 0.20 = 48"},
+          {type:"end",text:"<|im_end|>"}
+        ]}
+      ]
+    }
+  };
+
+  /* ═══════════════════════════════════════════════
+     DOM refs
+     ═══════════════════════════════════════════════ */
+  var chatPanel  = document.getElementById("chatPanel");
+  var tokenPanel = document.getElementById("tokenPanel");
+  var panelsEl   = document.getElementById("panels");
+  var tabsEl     = document.getElementById("tabs");
+  var viewToggle = document.getElementById("viewToggle");
+
+  /* ═══════════════════════════════════════════════
+     Render: Chat Panel
+     ═══════════════════════════════════════════════ */
+  function renderChat(messages){
+    chatPanel.innerHTML = "";
+    messages.forEach(function(msg){
+      var wrap = document.createElement("div");
+      wrap.className = "chat-msg role-" + msg.role;
+      wrap.setAttribute("data-msg-id", msg.id);
+
+      var label = document.createElement("div");
+      label.className = "role-label";
+      var roleName = msg.role;
+      if(roleName === "tool_call")   roleName = "Tool Call";
+      else if(roleName === "tool_result") roleName = "Tool Result";
+      else roleName = roleName.charAt(0).toUpperCase() + roleName.slice(1);
+      label.textContent = roleName;
+      wrap.appendChild(label);
+
+      var bubble = document.createElement("div");
+      bubble.className = "bubble";
+
+      if(msg.role === "tool_call"){
+        var tl = document.createElement("span");
+        tl.className = "tool-label";
+        tl.textContent = "Function Call";
+        bubble.appendChild(tl);
+        bubble.appendChild(document.createTextNode("\n" + msg.text));
+      } else if(msg.role === "tool_result"){
+        var tl2 = document.createElement("span");
+        tl2.className = "tool-label";
+        tl2.textContent = "Result";
+        bubble.appendChild(tl2);
+        bubble.appendChild(document.createTextNode("\n" + msg.text));
+      } else {
+        bubble.textContent = msg.text;
+      }
+
+      wrap.appendChild(bubble);
+      chatPanel.appendChild(wrap);
+    });
+  }
+
+  /* ═══════════════════════════════════════════════
+     Render: Token Stream Panel
+     ═══════════════════════════════════════════════ */
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function renderTokens(tokenGroups){
+    tokenPanel.innerHTML = "";
+    var stream = document.createElement("div");
+    stream.className = "token-stream";
+
+    /* Build one continuous string of HTML, split into lines afterwards */
+    var fullParts = []; // {html, msgId}[]
+
+    tokenGroups.forEach(function(group){
+      group.parts.forEach(function(p){
+        var cls = "";
+        if(p.type === "role") cls = "tok tok-role";
+        else if(p.type === "sep") cls = "tok tok-sep";
+        else if(p.type === "end") cls = "tok tok-end";
+        else if(p.type === "tool") cls = "tok tok-tool";
+
+        if(cls){
+          fullParts.push({html:'<span class="'+cls+'">'+escapeHtml(p.text)+'</span>', msgId:group.id});
+        } else {
+          /* plain text — may contain newlines */
+          var segments = p.text.split("\n");
+          segments.forEach(function(seg, i){
+            if(i > 0) fullParts.push({html:"\n", msgId:group.id});
+            if(seg.length > 0) fullParts.push({html:escapeHtml(seg), msgId:group.id});
+          });
+        }
+      });
+      /* Newline between token groups for readability */
+      fullParts.push({html:"\n", msgId:group.id});
+    });
+
+    /* Now split into visual lines and wrap each in a .token-line with line number */
+    var lines = []; // each line = {htmlParts:[], msgIds:Set}
+    var current = {htmlParts:[], msgIds:new Set()};
+
+    fullParts.forEach(function(fp){
+      if(fp.html === "\n"){
+        lines.push(current);
+        current = {htmlParts:[], msgIds:new Set()};
+      } else {
+        current.htmlParts.push(fp);
+        current.msgIds.add(fp.msgId);
+      }
+    });
+    if(current.htmlParts.length > 0) lines.push(current);
+
+    /* Remove trailing empty lines */
+    while(lines.length > 0 && lines[lines.length-1].htmlParts.length === 0) lines.pop();
+
+    lines.forEach(function(line, idx){
+      var row = document.createElement("div");
+      row.className = "token-line";
+
+      /* Assign all msg ids to this line for cross-highlighting */
+      var idsArr = [];
+      line.msgIds.forEach(function(id){ idsArr.push(id); });
+      row.setAttribute("data-msg-ids", idsArr.join(","));
+
+      var numEl = document.createElement("span");
+      numEl.className = "line-num";
+      numEl.textContent = idx + 1;
+      row.appendChild(numEl);
+
+      var content = document.createElement("span");
+      content.className = "line-content";
+      var html = "";
+      line.htmlParts.forEach(function(fp){ html += fp.html; });
+      content.innerHTML = html;
+      row.appendChild(content);
+
+      stream.appendChild(row);
+    });
+
+    tokenPanel.appendChild(stream);
+  }
+
+  /* ═══════════════════════════════════════════════
+     Cross-Highlighting
+     ═══════════════════════════════════════════════ */
+  function clearHighlights(){
+    document.querySelectorAll(".highlighted").forEach(function(el){
+      el.classList.remove("highlighted");
+    });
+  }
+
+  function highlightById(msgId){
+    clearHighlights();
+    /* Highlight chat bubble */
+    var chatMsg = chatPanel.querySelector('[data-msg-id="'+msgId+'"]');
+    if(chatMsg) chatMsg.classList.add("highlighted");
+    /* Highlight token lines */
+    tokenPanel.querySelectorAll(".token-line").forEach(function(line){
+      var ids = (line.getAttribute("data-msg-ids")||"").split(",");
+      if(ids.indexOf(msgId) !== -1) line.classList.add("highlighted");
+    });
+  }
+
+  function attachCrossHighlight(){
+    /* Chat bubbles → token lines */
+    chatPanel.querySelectorAll(".chat-msg").forEach(function(el){
+      el.addEventListener("mouseenter", function(){
+        highlightById(el.getAttribute("data-msg-id"));
+      });
+      el.addEventListener("mouseleave", clearHighlights);
+    });
+    /* Token lines → chat bubbles */
+    tokenPanel.querySelectorAll(".token-line").forEach(function(el){
+      el.addEventListener("mouseenter", function(){
+        var ids = (el.getAttribute("data-msg-ids")||"").split(",");
+        clearHighlights();
+        ids.forEach(function(id){
+          if(!id) return;
+          var chatMsg = chatPanel.querySelector('[data-msg-id="'+id+'"]');
+          if(chatMsg) chatMsg.classList.add("highlighted");
+          /* Also highlight all token lines with this id */
+          tokenPanel.querySelectorAll(".token-line").forEach(function(tl){
+            var tids = (tl.getAttribute("data-msg-ids")||"").split(",");
+            if(tids.indexOf(id) !== -1) tl.classList.add("highlighted");
+          });
+        });
+      });
+      el.addEventListener("mouseleave", clearHighlights);
+    });
+  }
+
+  /* ═══════════════════════════════════════════════
+     Load Example
+     ═══════════════════════════════════════════════ */
+  function loadExample(name){
+    var ex = EXAMPLES[name];
+    if(!ex) return;
+    renderChat(ex.messages);
+    renderTokens(ex.tokens);
+    attachCrossHighlight();
+  }
+
+  /* ═══════════════════════════════════════════════
+     Tab Clicks
+     ═══════════════════════════════════════════════ */
+  tabsEl.addEventListener("click", function(e){
+    var btn = e.target.closest(".tab-btn");
+    if(!btn) return;
+    tabsEl.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+    loadExample(btn.getAttribute("data-example"));
+  });
+
+  /* ═══════════════════════════════════════════════
+     View Toggle
+     ═══════════════════════════════════════════════ */
+  viewToggle.addEventListener("click", function(e){
+    var btn = e.target.closest(".view-btn");
+    if(!btn) return;
+    viewToggle.querySelectorAll(".view-btn").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+    var view = btn.getAttribute("data-view");
+    panelsEl.className = "panels";
+    if(view === "chat-only") panelsEl.classList.add("chat-only");
+    else if(view === "tokens-only") panelsEl.classList.add("tokens-only");
+  });
+
+  /* ═══════════════════════════════════════════════
+     Init
+     ═══════════════════════════════════════════════ */
+  loadExample("simple");
+
+})();
+</script>
+</body>
+</html>
