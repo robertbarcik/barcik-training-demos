@@ -92,9 +92,9 @@
 
   .time-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.6rem;
-    max-width: 400px;
+    max-width: 320px;
   }
 
   .time-btn {
@@ -431,7 +431,7 @@
 
     <div class="next-up-row">
       <span class="next-up-label">Next up</span>
-      <input type="text" class="next-up-input" id="next-up-input" placeholder="e.g. Hands-on exercise, Attention mechanisms...">
+      <input type="text" class="next-up-input" id="next-up-input" placeholder="···">
     </div>
 
     <div id="notes-section">
@@ -596,7 +596,7 @@ document.addEventListener('click', ensureAudio, { once: false });
 // ══════════════════════════════════════════
 // SETUP
 // ══════════════════════════════════════════
-const presets = [5, 6, 7, 8, 9, 10, 12, 15, 60];
+const presets = [5, 6, 7, 8, 10, 12, 15, 60];
 const popular = [5, 10, 15];
 const grid = document.getElementById('time-grid');
 
@@ -612,6 +612,7 @@ function setMode(m) {
   mode = m;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
   document.getElementById('notes-section').classList.toggle('visible', m === 'exercise');
+  document.querySelector('.next-up-row').style.display = m === 'exercise' ? 'none' : 'flex';
 }
 
 function startCustom() {
