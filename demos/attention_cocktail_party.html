@@ -129,6 +129,24 @@
     color: var(--bg-dark);
   }
 
+  /* ===== FOCUS-VISIBLE ===== */
+  .tab:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: -2px;
+    border-radius: 4px;
+  }
+  .word-pill:focus-visible,
+  .example-pill:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  .nav-btn:focus-visible,
+  .toggle-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
   /* ===== SECTIONS ===== */
   .section {
     display: none;
@@ -669,20 +687,20 @@
   <p>An interactive guide to the Attention mechanism in LLMs</p>
 </div>
 
-<div class="tabs">
-  <div class="tab active" data-tab="1">
+<div class="tabs" role="tablist">
+  <div class="tab active" data-tab="1" role="tab" tabindex="0">
     <span class="tab-num">1</span>How Attention Works
   </div>
-  <div class="tab" data-tab="2">
+  <div class="tab" data-tab="2" role="tab" tabindex="0">
     <span class="tab-num">2</span>What's Stored in the Model
   </div>
-  <div class="tab" data-tab="3">
+  <div class="tab" data-tab="3" role="tab" tabindex="0">
     <span class="tab-num">3</span>Neurons vs Attention
   </div>
 </div>
 
 <!-- ==================== SECTION 1 ==================== -->
-<div class="section active" id="section-1">
+<div class="section active" id="section-1" role="tabpanel">
   <h2 class="section-title">The Cocktail Party</h2>
   <p class="section-subtitle">Click on any word to see how it "pays attention" to the others.</p>
 
@@ -729,7 +747,7 @@
 </div>
 
 <!-- ==================== SECTION 2 ==================== -->
-<div class="section" id="section-2">
+<div class="section" id="section-2" role="tabpanel">
   <h2 class="section-title">What Does the Model Actually Store?</h2>
   <p class="section-subtitle">Not the answers — the rules for finding them.</p>
 
@@ -803,7 +821,7 @@
 </div>
 
 <!-- ==================== SECTION 3 ==================== -->
-<div class="section" id="section-3">
+<div class="section" id="section-3" role="tabpanel">
   <h2 class="section-title">Where Does the Knowledge Live?</h2>
   <p class="section-subtitle">Two systems, one model — they work together.</p>
 
@@ -1178,6 +1196,16 @@ document.getElementById('flow-bar').addEventListener('click', () => {
     }
   }
   step();
+});
+
+// ===== KEYBOARD ACCESSIBILITY FOR TABS =====
+document.querySelectorAll('.tab[role="tab"]').forEach(tab => {
+  tab.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      tab.click();
+    }
+  });
 });
 </script>
 </body>

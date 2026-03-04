@@ -332,6 +332,7 @@
     border: 1px solid var(--border);
   }
   .btn-secondary:hover { border-color: var(--accent); }
+  .step-btn:focus-visible, .btn:focus-visible, select:focus-visible { outline: 2px solid #1e3a5f; outline-offset: 2px; }
   .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 
   /* Query input */
@@ -1181,6 +1182,7 @@ let currentStep = 0;
 
 function renderNav() {
   const nav = document.getElementById('stepNav');
+  nav.setAttribute('role', 'tablist');
   nav.innerHTML = STEPS.map((s, i) =>
     `<button class="step-btn ${i === currentStep ? 'active' : ''}" onclick="goToStep(${i})">
       <span class="step-num">${i + 1}</span>${s.label}

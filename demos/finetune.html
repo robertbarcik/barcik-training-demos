@@ -105,6 +105,11 @@ body {
   color: white;
 }
 
+.nav-tab:focus-visible, .method-card:focus-visible, .adapter-btn:focus-visible, [role="switch"]:focus-visible {
+  outline: 2px solid #1e3a5f;
+  outline-offset: 2px;
+}
+
 /* Sections */
 .section { display: none; padding: 48px 0 80px; animation: fadeUp 0.4s ease; }
 .section.active { display: block; }
@@ -458,12 +463,12 @@ canvas { display: block; margin: 0 auto; }
     <p>An interactive, intuitive guide to how we adapt large language models to specific tasks — without retraining them from scratch.</p>
   </div>
 
-  <div class="nav-tabs">
-    <div class="nav-tab active" data-tab="big-picture">The Big Picture</div>
-    <div class="nav-tab" data-tab="inside-neuron">Inside a Neuron</div>
-    <div class="nav-tab" data-tab="lora">LoRA Magic</div>
-    <div class="nav-tab" data-tab="methods">4 Methods</div>
-    <div class="nav-tab" data-tab="data">Training Data</div>
+  <div class="nav-tabs" role="tablist">
+    <div class="nav-tab active" data-tab="big-picture" role="tab" tabindex="0">The Big Picture</div>
+    <div class="nav-tab" data-tab="inside-neuron" role="tab" tabindex="0">Inside a Neuron</div>
+    <div class="nav-tab" data-tab="lora" role="tab" tabindex="0">LoRA Magic</div>
+    <div class="nav-tab" data-tab="methods" role="tab" tabindex="0">4 Methods</div>
+    <div class="nav-tab" data-tab="data" role="tab" tabindex="0">Training Data</div>
   </div>
 
   <!-- ===================== SECTION 1: BIG PICTURE ===================== -->
@@ -544,7 +549,7 @@ canvas { display: block; margin: 0 auto; }
 
       <div class="toggle-row">
         <span class="toggle-label active-label" id="lbl-full">Full Fine-Tune</span>
-        <div class="toggle" id="toggle-method" onclick="toggleMethod()">
+        <div class="toggle" id="toggle-method" onclick="toggleMethod()" role="switch" tabindex="0" aria-checked="false">
           <div class="thumb"></div>
         </div>
         <span class="toggle-label" id="lbl-lora">LoRA Adapters</span>
@@ -850,6 +855,7 @@ function toggleMethod() {
   isLora = !isLora;
   const toggle = document.getElementById('toggle-method');
   toggle.classList.toggle('on', isLora);
+  toggle.setAttribute('aria-checked', String(isLora));
   document.getElementById('lbl-full').classList.toggle('active-label', !isLora);
   document.getElementById('lbl-lora').classList.toggle('active-label', isLora);
   document.getElementById('viz-full').style.display = isLora ? 'none' : 'block';
@@ -1007,6 +1013,16 @@ function showMethod(key) {
   `;
   detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
+
+// Keyboard accessibility: Enter/Space triggers onclick for tabs and switches
+document.querySelectorAll('[role="tab"], [role="switch"]').forEach(el => {
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      el.click();
+    }
+  });
+});
 </script>
 </body>
 </html>

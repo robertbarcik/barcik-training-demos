@@ -69,6 +69,7 @@
     background: #2d5a8e;
     transform: translateY(-1px); box-shadow: 0 4px 20px rgba(30,58,95,0.35);
   }
+  .example-btn:focus-visible, .generate-btn:focus-visible { outline: 2px solid #1e3a5f; outline-offset: 2px; }
 
   /* Prompt display */
   .prompt-display {
@@ -168,7 +169,7 @@
         <span class="panel-title">Base / Foundation Model</span>
         <span class="panel-tag">pre-training only</span>
       </div>
-      <div class="panel-body" id="base-body">
+      <div class="panel-body" id="base-body" aria-live="polite">
         <span class="placeholder">Click "Generate" to see output...</span>
       </div>
       <div id="base-expl-container"></div>
@@ -181,7 +182,7 @@
         <span class="panel-title">Instruction-Tuned Model</span>
         <span class="panel-tag">SFT + RLHF</span>
       </div>
-      <div class="panel-body" id="instruct-body">
+      <div class="panel-body" id="instruct-body" aria-live="polite">
         <span class="placeholder">Click "Generate" to see output...</span>
       </div>
       <div id="instruct-expl-container"></div>
