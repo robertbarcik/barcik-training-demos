@@ -6,32 +6,138 @@
     <title>Interactive Demos — barcik.training</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; }
-        header { background: #1e3a5f; color: #fff; padding: 1.5rem 2rem; text-align: center; }
-        header h1 { font-size: 1.6rem; font-weight: 600; margin-bottom: 0.25rem; }
-        header p { font-size: 0.95rem; color: #cbd5e0; }
-        main { max-width: 720px; margin: 2.5rem auto; padding: 0 1.5rem; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0b1929; color: #1a202c; min-height: 100vh; }
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        canvas#bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+        }
+
+        /* ===== HEADER / HERO ===== */
+        .hero {
+            position: relative; z-index: 1;
+            text-align: center;
+            padding: 3rem 2rem 2.5rem;
+            background: linear-gradient(180deg, rgba(11,25,41,0.95) 0%, rgba(11,25,41,0.7) 100%);
+        }
+        .hero-name {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.2rem;
+        }
+        .hero-email {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            letter-spacing: 0.03em;
+            margin-bottom: 1rem;
+        }
+        .hero-email a {
+            color: #94a3b8;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(148,163,184,0.3);
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .hero-email a:hover {
+            color: #e2e8f0;
+            border-color: #e2e8f0;
+        }
+        .hero-divider {
+            width: 48px;
+            height: 3px;
+            background: #2563eb;
+            border-radius: 2px;
+            margin: 0 auto 1rem;
+        }
+        .hero-desc {
+            font-size: 1rem;
+            color: #cbd5e0;
+            max-width: 520px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* ===== MAIN ===== */
+        main {
+            position: relative; z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 1.5rem 2rem;
+        }
+
+        /* ===== DEMO LIST ===== */
         .demo-list { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
-        .demo-list a { text-decoration: none; color: inherit; display: block; background: #fff; border-radius: 10px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-left: 4px solid #1e3a5f; transition: transform 0.15s, box-shadow 0.15s; }
-        .demo-list a:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .demo-list a {
+            text-decoration: none; color: inherit; display: block;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 10px; padding: 1.25rem 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border-left: 4px solid #1e3a5f;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .demo-list a:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
         .demo-title { font-size: 1.15rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.3rem; }
         .demo-desc { font-size: 0.9rem; color: #4a5568; }
+
+        /* ===== DECK SECTIONS ===== */
         .deck-section { margin-bottom: 2.5rem; }
-        .deck-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 2px solid #e2e8f0; }
-        .deck-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #1e3a5f; font-weight: 700; }
-        .deck-badge { font-size: 0.7rem; background: #1e3a5f; color: #fff; padding: 0.15rem 0.5rem; border-radius: 10px; font-weight: 600; }
-        .tools-section { margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; }
-        .tools-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #a0aec0; margin-bottom: 0.75rem; }
-        .tools-section a { border-left-color: #a0aec0; }
+        .deck-header {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin-bottom: 1rem; padding-bottom: 0.6rem;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+        .deck-label {
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
+            color: #cbd5e0; font-weight: 700;
+        }
+        .deck-badge {
+            font-size: 0.7rem; background: #2563eb; color: #fff;
+            padding: 0.15rem 0.5rem; border-radius: 10px; font-weight: 600;
+        }
+
+        /* ===== TOOLS SECTION ===== */
+        .tools-section {
+            margin-top: 1rem; padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .tools-label {
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
+            color: #64748b; margin-bottom: 0.75rem;
+        }
+        .tools-section a { border-left-color: #64748b; }
         .tools-section .demo-title { color: #4a5568; font-size: 1rem; }
-        footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
+
+        /* ===== FOOTER ===== */
+        footer {
+            position: relative; z-index: 1;
+            text-align: center; padding: 2rem; font-size: 0.8rem; color: #4a5568;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .hero { padding: 2rem 1.25rem 1.5rem; }
+            .hero-name { font-size: 1.5rem; }
+            .hero-desc { font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body>
-    <header>
-        <h1>barcik.training</h1>
-        <p>Interactive AI &amp; ML Demos</p>
-    </header>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="hero">
+        <div class="hero-name">Robert Barcik</div>
+        <div class="hero-email"><a href="mailto:robert@barcik.training">robert@barcik.training</a></div>
+        <div class="hero-divider"></div>
+        <div class="hero-desc">
+            Small interactive demos that accompany my lectures on Generative AI, machine learning, and data science for corporate teams.
+        </div>
+    </div>
+
     <main>
         <!-- Deck 1: Under the Hood -->
         <div class="deck-section">
@@ -116,6 +222,93 @@
             </ul>
         </div>
     </main>
+
     <footer>&copy; 2026 barcik.training</footer>
+
+    <script>
+    /* ===== ANIMATED NEURAL NETWORK BACKGROUND ===== */
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let nodes = [];
+    let W, H;
+
+    function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        initNodes();
+    }
+
+    function initNodes() {
+        const count = Math.floor((W * H) / 22000);
+        nodes = [];
+        for (let i = 0; i < count; i++) {
+            nodes.push({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                vx: (Math.random() - 0.5) * 0.25,
+                vy: (Math.random() - 0.5) * 0.25,
+                r: Math.random() * 1.5 + 0.5,
+                pulse: Math.random() * Math.PI * 2,
+                pulseSpeed: 0.004 + Math.random() * 0.012
+            });
+        }
+    }
+
+    const connectionDist = 130;
+
+    function drawFrame(t) {
+        ctx.fillStyle = 'rgba(11, 25, 41, 0.15)';
+        ctx.fillRect(0, 0, W, H);
+
+        for (const n of nodes) {
+            n.x += n.vx; n.y += n.vy; n.pulse += n.pulseSpeed;
+            if (n.x < 0 || n.x > W) n.vx *= -1;
+            if (n.y < 0 || n.y > H) n.vy *= -1;
+        }
+
+        // Connections
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const dx = nodes[i].x - nodes[j].x;
+                const dy = nodes[i].y - nodes[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < connectionDist) {
+                    const alpha = (1 - dist / connectionDist) * 0.1;
+                    ctx.strokeStyle = `rgba(37, 99, 235, ${alpha})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i].x, nodes[i].y);
+                    ctx.lineTo(nodes[j].x, nodes[j].y);
+                    ctx.stroke();
+
+                    if (Math.sin(t * 0.001 + i * 0.1) > 0.97) {
+                        const frac = (Math.sin(t * 0.003 + j) * 0.5 + 0.5);
+                        const px = nodes[i].x + dx * -frac;
+                        const py = nodes[i].y + dy * -frac;
+                        ctx.fillStyle = `rgba(37, 99, 235, ${alpha * 3})`;
+                        ctx.beginPath();
+                        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+
+        // Nodes
+        for (const n of nodes) {
+            const glow = 0.25 + Math.sin(n.pulse) * 0.15;
+            ctx.fillStyle = `rgba(37, 99, 235, ${glow})`;
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        requestAnimationFrame(drawFrame);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(drawFrame);
+    </script>
 </body>
 </html>
