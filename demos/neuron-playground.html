@@ -242,6 +242,9 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
   font-family: 'Courier New', monospace;
   margin-top: 0.35rem;
 }
+.act-desc { font-size: 0.78rem; color: #4a5568; margin-top: 0.5rem; line-height: 1.5; padding: 0.5rem; background: #f0f4f8; border-radius: 6px; }
+.scenario-label { font-size: 0.72rem; color: #64748b; font-style: italic; margin-bottom: 0.2rem; }
+.output-interpretation { font-size: 0.82rem; font-weight: 600; text-align: center; margin-top: 0.25rem; padding: 0.3rem 0.5rem; border-radius: 6px; }
 
 /* Output display */
 .output-display {
@@ -364,6 +367,7 @@ footer {
 
     <div class="input-group" id="group-0">
       <div class="input-group-label">Input x<sub>1</sub></div>
+      <div class="scenario-label">I see steam rising</div>
       <div class="slider-row">
         <span class="slider-label">x<sub>1</sub></span>
         <input type="range" id="x0" min="-2" max="2" step="0.1" value="0">
@@ -382,6 +386,7 @@ footer {
 
     <div class="input-group" id="group-1">
       <div class="input-group-label">Input x<sub>2</sub></div>
+      <div class="scenario-label">The burner is glowing red</div>
       <div class="slider-row">
         <span class="slider-label">x<sub>2</sub></span>
         <input type="range" id="x1" min="-2" max="2" step="0.1" value="0">
@@ -400,6 +405,7 @@ footer {
 
     <div class="input-group" id="group-2">
       <div class="input-group-label">Input x<sub>3</sub></div>
+      <div class="scenario-label">Someone says it's cool</div>
       <div class="slider-row">
         <span class="slider-label">x<sub>3</sub></span>
         <input type="range" id="x2" min="-2" max="2" step="0.1" value="0">
@@ -505,6 +511,7 @@ footer {
       <div class="graph-container">
         <canvas id="act-graph" width="440" height="300"></canvas>
         <div class="formula-label" id="formula-label">ReLU(x) = max(0, x)</div>
+        <div class="act-desc" id="actDesc"></div>
       </div>
     </div>
 
@@ -512,6 +519,7 @@ footer {
       <div class="output-display">
         <div class="output-label">Neuron Output</div>
         <div class="output-value" id="output-value">0.00</div>
+        <div class="output-interpretation" id="output-interpretation"></div>
       </div>
       <div class="signal-bar-container">
         <div class="signal-bar-track">
@@ -579,6 +587,8 @@ footer {
   const ctx = canvas.getContext('2d');
 
   const formulaLabel = document.getElementById('formula-label');
+  const actDescEl = document.getElementById('actDesc');
+  const outputInterpretation = document.getElementById('output-interpretation');
   const actBtns = document.querySelectorAll('.act-btn');
 
   // === State ===
@@ -596,6 +606,11 @@ footer {
     relu: 'ReLU(x) = max(0, x)',
     sigmoid: '\u03C3(x) = 1 / (1 + e\u207B\u02E3)',
     tanh: 'tanh(x) = (e\u02E3 \u2212 e\u207B\u02E3) / (e\u02E3 + e\u207B\u02E3)'
+  };
+  const activationDescriptions = {
+    relu: 'Passes positive signals through unchanged, blocks negatives entirely. Used in most hidden layers \u2014 fast, simple, and avoids the vanishing gradient problem. Think of it as a one-way gate.',
+    sigmoid: 'Squashes any input into a 0\u20131 range \u2014 perfect for probabilities and yes/no decisions. Used in output layers for binary classification. Historically popular but can cause vanishing gradients in deep networks.',
+    tanh: 'Similar to sigmoid but outputs \u22121 to +1, centering the data around zero. This helps with learning speed. Common in RNNs and LSTMs where both positive and negative signals matter.'
   };
 
   // === Activation button handlers ===
@@ -782,6 +797,21 @@ footer {
     // Output display
     outputValueEl.textContent = fmt(output, 4);
 
+    // Output interpretation (hot pot scenario)
+    if (output > 0.5) {
+      outputInterpretation.textContent = '\u2192 DON\u2019T touch! (danger signal strong)';
+      outputInterpretation.style.color = '#dc2626';
+      outputInterpretation.style.background = '#fef2f2';
+    } else if (output > 0) {
+      outputInterpretation.textContent = '\u2192 Hmm, maybe safe... (weak signal)';
+      outputInterpretation.style.color = '#d97706';
+      outputInterpretation.style.background = '#fffbeb';
+    } else {
+      outputInterpretation.textContent = '\u2192 Safe to touch (no danger detected)';
+      outputInterpretation.style.color = '#16a34a';
+      outputInterpretation.style.background = '#f0fdf4';
+    }
+
     // Signal bar
     var maxBar;
     if (activationFn === 'sigmoid') maxBar = 1;
@@ -823,6 +853,9 @@ footer {
 
     // Formula label
     formulaLabel.textContent = activationFormulas[activationFn];
+
+    // Activation description
+    actDescEl.textContent = activationDescriptions[activationFn];
 
     // Draw graph
     drawGraph(z);

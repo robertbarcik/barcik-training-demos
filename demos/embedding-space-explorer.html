@@ -105,13 +105,11 @@
   .filter-btn.inactive { opacity: 0.35; }
   .filter-btn[data-cat="all"] { background: #475569; }
   .filter-btn[data-cat="animals"] { background: #16a34a; }
-  .filter-btn[data-cat="countries"] { background: #2563eb; }
+  .filter-btn[data-cat="geography"] { background: #15803d; }
   .filter-btn[data-cat="professions"] { background: #d97706; }
   .filter-btn[data-cat="emotions"] { background: #db2777; }
-  .filter-btn[data-cat="food"] { background: #92400e; }
   .filter-btn[data-cat="technology"] { background: #0d9488; }
   .filter-btn[data-cat="people"] { background: #7c3aed; }
-  .filter-btn[data-cat="places"] { background: #15803d; }
 
   /* Main layout */
   .main-layout {
@@ -297,6 +295,20 @@
     color: var(--text-dim);
     margin-top: 0.15rem;
   }
+  .clear-btn {
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .clear-btn:hover { background: #fecaca; }
 
   /* Legend */
   .legend-grid {
@@ -365,13 +377,11 @@
   <span class="label">Filter:</span>
   <button class="filter-btn" data-cat="all">All</button>
   <button class="filter-btn" data-cat="animals">Animals</button>
-  <button class="filter-btn" data-cat="countries">Countries/Cities</button>
+  <button class="filter-btn" data-cat="geography">Geography</button>
   <button class="filter-btn" data-cat="professions">Professions</button>
   <button class="filter-btn" data-cat="emotions">Emotions</button>
-  <button class="filter-btn" data-cat="food">Food</button>
   <button class="filter-btn" data-cat="technology">Technology</button>
   <button class="filter-btn" data-cat="people">People/Royalty</button>
-  <button class="filter-btn" data-cat="places">Places</button>
 </div>
 
 <div class="main-layout">
@@ -404,13 +414,14 @@
       <div class="preset-btns">
         <button class="preset-btn" data-a="king" data-b="man" data-c="woman">king &minus; man + woman</button>
         <button class="preset-btn" data-a="paris" data-b="france" data-c="germany">paris &minus; france + germany</button>
-        <button class="preset-btn" data-a="tokyo" data-b="japan" data-c="spain">tokyo &minus; japan + spain</button>
+        <button class="preset-btn" data-a="tokyo" data-b="japan" data-c="france">tokyo &minus; japan + france</button>
       </div>
       <button class="calc-btn" id="calcBtn">Calculate</button>
       <div class="arith-result" id="arithResult">
         <div class="formula" id="arithFormula"></div>
         <div class="answer" id="arithAnswer"></div>
         <div class="answer-dist" id="arithDist"></div>
+        <button class="clear-btn" id="clearVectorsBtn">Clear Vectors</button>
       </div>
     </div>
 
@@ -428,106 +439,77 @@
 
   // ====== Category definitions ======
   const CATEGORIES = {
-    animals:     { label: 'Animals',          color: '#16a34a' },
-    countries:   { label: 'Countries/Cities', color: '#2563eb' },
-    professions: { label: 'Professions',      color: '#d97706' },
-    emotions:    { label: 'Emotions',         color: '#db2777' },
-    food:        { label: 'Food',             color: '#92400e' },
-    technology:  { label: 'Technology',        color: '#0d9488' },
-    people:      { label: 'People/Royalty',   color: '#7c3aed' },
-    places:      { label: 'Places',           color: '#15803d' }
+    animals:     { label: 'Animals',        color: '#16a34a' },
+    geography:   { label: 'Geography',      color: '#15803d' },
+    professions: { label: 'Professions',    color: '#d97706' },
+    emotions:    { label: 'Emotions',       color: '#db2777' },
+    technology:  { label: 'Technology',      color: '#0d9488' },
+    people:      { label: 'People/Royalty', color: '#7c3aed' }
   };
 
   // ====== Word positions (pre-tuned for vector arithmetic) ======
   //
   // Design principles:
-  //   - Categories cluster in distinct regions
+  //   - 6 categories cluster in distinct regions
   //   - king - man + woman = queen  (must land within ~15 units)
   //   - paris - france + germany = berlin (within ~15 units)
-  //   - tokyo - japan + spain = madrid (within ~15 units)
   //
   // To achieve the arithmetic constraints, we ensure:
   //   king - man = queen - woman  =>  king - queen = man - woman
   //   paris - france = berlin - germany  =>  paris - berlin = france - germany
-  //   tokyo - japan = madrid - spain  =>  tokyo - madrid = japan - spain
 
   // People/Royalty cluster: centered around (170, 110)
-  // We set an exact royalty offset: king-queen differ by same vector as man-woman
-  // man-woman offset: let's use (28, -18)
+  // man-woman offset: (28, -18)
   // king(184, 94), queen(156, 112), man(178, 128), woman(150, 146)
   // Verify: king - man + woman = (184-178+150, 94-128+146) = (156, 112) = queen. Perfect!
-  // prince(198, 108), princess(166, 82), boy(192, 140), girl(160, 158)
 
-  // Countries/Cities cluster: centered around (580, 130)
-  // Country-capital offset for France-Paris: let's use (35, -40)
+  // Geography cluster: centered around (560, 160)
+  // Countries/cities + natural places merged together
+  // Country-capital offset for France-Paris: (35, -40)
   // france(540, 160), paris(575, 120)
   // germany(590, 150), berlin(625, 110)
   // Verify: paris - france + germany = (575-540+590, 120-160+150) = (625, 110) = berlin. Perfect!
   // japan(635, 170), tokyo(670, 130)
-  // spain(555, 185), madrid(590, 145)
-  // Verify: tokyo - japan + spain = (670-635+555, 130-170+185) = (590, 145) = madrid. Perfect!
-  // italy(520, 175), rome(555, 135)
+  // Natural geography words cluster nearby
 
   const WORDS = [
     // Animals — cluster center ~(120, 420)
     { word: 'cat',       cat: 'animals',     x: 95,  y: 395 },
     { word: 'dog',       cat: 'animals',     x: 115, y: 410 },
     { word: 'lion',      cat: 'animals',     x: 140, y: 430 },
-    { word: 'tiger',     cat: 'animals',     x: 155, y: 440 },
     { word: 'eagle',     cat: 'animals',     x: 100, y: 450 },
     { word: 'whale',     cat: 'animals',     x: 80,  y: 435 },
     { word: 'dolphin',   cat: 'animals',     x: 70,  y: 420 },
-    { word: 'horse',     cat: 'animals',     x: 130, y: 400 },
-    { word: 'bear',      cat: 'animals',     x: 160, y: 415 },
-    { word: 'fish',      cat: 'animals',     x: 85,  y: 460 },
 
-    // Countries/Cities — cluster center ~(590, 140)
-    { word: 'france',    cat: 'countries',   x: 540, y: 160 },
-    { word: 'paris',     cat: 'countries',   x: 575, y: 120 },
-    { word: 'germany',   cat: 'countries',   x: 590, y: 150 },
-    { word: 'berlin',    cat: 'countries',   x: 625, y: 110 },
-    { word: 'italy',     cat: 'countries',   x: 520, y: 175 },
-    { word: 'rome',      cat: 'countries',   x: 555, y: 135 },
-    { word: 'spain',     cat: 'countries',   x: 555, y: 185 },
-    { word: 'madrid',    cat: 'countries',   x: 590, y: 145 },
-    { word: 'japan',     cat: 'countries',   x: 635, y: 170 },
-    { word: 'tokyo',     cat: 'countries',   x: 670, y: 130 },
+    // Geography — cluster center ~(560, 160)
+    { word: 'france',    cat: 'geography',   x: 540, y: 160 },
+    { word: 'paris',     cat: 'geography',   x: 575, y: 120 },
+    { word: 'germany',   cat: 'geography',   x: 590, y: 150 },
+    { word: 'berlin',    cat: 'geography',   x: 625, y: 110 },
+    { word: 'japan',     cat: 'geography',   x: 635, y: 170 },
+    { word: 'tokyo',     cat: 'geography',   x: 670, y: 130 },
+    { word: 'ocean',     cat: 'geography',   x: 510, y: 195 },
+    { word: 'mountain',  cat: 'geography',   x: 530, y: 205 },
+    { word: 'forest',    cat: 'geography',   x: 515, y: 215 },
+    { word: 'city',      cat: 'geography',   x: 550, y: 190 },
 
     // Professions — cluster center ~(420, 470)
     { word: 'doctor',    cat: 'professions', x: 400, y: 450 },
-    { word: 'nurse',     cat: 'professions', x: 415, y: 465 },
     { word: 'teacher',   cat: 'professions', x: 435, y: 480 },
     { word: 'engineer',  cat: 'professions', x: 450, y: 455 },
     { word: 'lawyer',    cat: 'professions', x: 395, y: 485 },
     { word: 'chef',      cat: 'professions', x: 430, y: 500 },
-    { word: 'pilot',     cat: 'professions', x: 460, y: 470 },
     { word: 'artist',    cat: 'professions', x: 380, y: 470 },
-    { word: 'musician',  cat: 'professions', x: 375, y: 490 },
     { word: 'scientist', cat: 'professions', x: 445, y: 440 },
 
     // Emotions — cluster center ~(680, 420)
     { word: 'happy',     cat: 'emotions',    x: 665, y: 400 },
     { word: 'sad',       cat: 'emotions',    x: 690, y: 415 },
     { word: 'angry',     cat: 'emotions',    x: 710, y: 430 },
-    { word: 'fear',      cat: 'emotions',    x: 700, y: 445 },
     { word: 'love',      cat: 'emotions',    x: 655, y: 420 },
     { word: 'joy',       cat: 'emotions',    x: 650, y: 405 },
     { word: 'surprise',  cat: 'emotions',    x: 680, y: 450 },
-    { word: 'disgust',   cat: 'emotions',    x: 720, y: 440 },
     { word: 'calm',      cat: 'emotions',    x: 660, y: 435 },
-    { word: 'anxious',   cat: 'emotions',    x: 695, y: 460 },
-
-    // Food — cluster center ~(300, 300)
-    { word: 'pizza',     cat: 'food',        x: 280, y: 280 },
-    { word: 'pasta',     cat: 'food',        x: 270, y: 295 },
-    { word: 'sushi',     cat: 'food',        x: 310, y: 285 },
-    { word: 'bread',     cat: 'food',        x: 295, y: 310 },
-    { word: 'rice',      cat: 'food',        x: 320, y: 300 },
-    { word: 'apple',     cat: 'food',        x: 285, y: 325 },
-    { word: 'banana',    cat: 'food',        x: 275, y: 340 },
-    { word: 'chocolate', cat: 'food',        x: 310, y: 320 },
-    { word: 'coffee',    cat: 'food',        x: 330, y: 310 },
-    { word: 'tea',       cat: 'food',        x: 340, y: 295 },
 
     // Technology — cluster center ~(550, 360)
     { word: 'computer',  cat: 'technology',  x: 530, y: 340 },
@@ -536,9 +518,6 @@
     { word: 'software',  cat: 'technology',  x: 540, y: 370 },
     { word: 'robot',     cat: 'technology',  x: 575, y: 360 },
     { word: 'algorithm', cat: 'technology',  x: 555, y: 380 },
-    { word: 'database',  cat: 'technology',  x: 530, y: 385 },
-    { word: 'network',   cat: 'technology',  x: 565, y: 375 },
-    { word: 'server',    cat: 'technology',  x: 520, y: 365 },
     { word: 'code',      cat: 'technology',  x: 550, y: 395 },
 
     // People/Royalty — cluster center ~(170, 120)
@@ -549,17 +528,7 @@
     { word: 'man',       cat: 'people',      x: 178, y: 128 },
     { word: 'woman',     cat: 'people',      x: 150, y: 146 },
     { word: 'boy',       cat: 'people',      x: 192, y: 140 },
-    { word: 'girl',      cat: 'people',      x: 160, y: 158 },
-
-    // Places — cluster center ~(120, 270)
-    { word: 'ocean',     cat: 'places',      x: 100, y: 250 },
-    { word: 'mountain',  cat: 'places',      x: 130, y: 260 },
-    { word: 'forest',    cat: 'places',      x: 115, y: 275 },
-    { word: 'desert',    cat: 'places',      x: 145, y: 280 },
-    { word: 'river',     cat: 'places',      x: 105, y: 290 },
-    { word: 'island',    cat: 'places',      x: 90,  y: 270 },
-    { word: 'city',      cat: 'places',      x: 140, y: 255 },
-    { word: 'village',   cat: 'places',      x: 135, y: 295 }
+    { word: 'girl',      cat: 'people',      x: 160, y: 158 }
   ];
 
   // Build lookup map
@@ -721,6 +690,91 @@
 
       ctx.save();
       ctx.globalAlpha = p;
+
+      // Vector arrows showing arithmetic steps
+      if (arithResult.wordA && arithResult.wordB && arithResult.wordC) {
+        const wA = arithResult.wordA;
+        const wB = arithResult.wordB;
+        const wC = arithResult.wordC;
+        // Intermediate point: A - B (the displacement vector applied from origin)
+        // We draw: arrow from A to B (subtraction), arrow from A to (A + (C - B)) showing the offset,
+        // and arrow from A to final result
+        const interX = wA.x - wB.x; // displacement vector dx
+        const interY = wA.y - wB.y; // displacement vector dy
+
+        // Helper: draw arrow with arrowhead
+        function drawArrow(x1, y1, x2, y2, color, dashed, label) {
+          var headLen = 10;
+          var angle = Math.atan2(y2 - y1, x2 - x1);
+          ctx.save();
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = 2;
+          if (dashed) {
+            ctx.setLineDash([6, 4]);
+          } else {
+            ctx.setLineDash([]);
+          }
+          // Line
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          // Arrowhead
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 7), y2 - headLen * Math.sin(angle - Math.PI / 7));
+          ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 7), y2 - headLen * Math.sin(angle + Math.PI / 7));
+          ctx.closePath();
+          ctx.fill();
+          // Label
+          if (label) {
+            var mx = (x1 + x2) / 2;
+            var my = (y1 + y2) / 2;
+            // Offset label perpendicular to arrow
+            var perpX = -Math.sin(angle) * 12;
+            var perpY = Math.cos(angle) * 12;
+            ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            // Background for label
+            var lm = ctx.measureText(label);
+            ctx.fillStyle = 'rgba(250,252,255,0.85)';
+            ctx.fillRect(mx + perpX - lm.width / 2 - 2, my + perpY - 7, lm.width + 4, 14);
+            ctx.fillStyle = color;
+            ctx.fillText(label, mx + perpX, my + perpY);
+          }
+          ctx.restore();
+        }
+
+        // Arrow 1: from wordA to wordB (subtraction step) — red, dashed
+        var prog1 = Math.min(p / 0.4, 1); // animate in first 40%
+        if (prog1 > 0) {
+          var endX1 = wA.x + (wB.x - wA.x) * prog1;
+          var endY1 = wA.y + (wB.y - wA.y) * prog1;
+          drawArrow(wA.x, wA.y, endX1, endY1, 'rgba(220, 38, 38, 0.6)', true, prog1 >= 1 ? '\u2212' : null);
+        }
+
+        // Arrow 2: from wordB to wordC (addition step) — green, dashed
+        // This represents adding C's position offset. We draw from the intermediate
+        // result point to show adding C. Intermediate = A - B, then we add C.
+        // Visually: draw from wordB to wordC to show the +C concept
+        var prog2 = Math.min(Math.max((p - 0.3) / 0.4, 0), 1); // animate 30%-70%
+        if (prog2 > 0) {
+          var endX2 = wB.x + (wC.x - wB.x) * prog2;
+          var endY2 = wB.y + (wC.y - wB.y) * prog2;
+          drawArrow(wB.x, wB.y, endX2, endY2, 'rgba(22, 163, 74, 0.6)', true, prog2 >= 1 ? '+' : null);
+        }
+
+        // Arrow 3: from wordA to final result — blue, solid
+        var prog3 = Math.min(Math.max((p - 0.5) / 0.5, 0), 1); // animate 50%-100%
+        if (prog3 > 0) {
+          var endX3 = wA.x + (ax - wA.x) * prog3;
+          var endY3 = wA.y + (ay - wA.y) * prog3;
+          drawArrow(wA.x, wA.y, endX3, endY3, 'rgba(37, 99, 235, 0.7)', false, prog3 >= 1 ? '=' : null);
+        }
+      }
 
       // Crosshair
       ctx.strokeStyle = '#dc2626';
@@ -927,7 +981,10 @@
       x: rx,
       y: ry,
       nearest: nearest ? nearest.word : null,
-      dist: nearestDist
+      dist: nearestDist,
+      wordA: a,
+      wordB: b,
+      wordC: c
     };
 
     // Show result panel
@@ -955,6 +1012,17 @@
       arithAnimId = requestAnimationFrame(animStep);
     }
     arithAnimId = requestAnimationFrame(animStep);
+  });
+
+  document.getElementById('clearVectorsBtn').addEventListener('click', function() {
+    arithResult = null;
+    arithAnimProgress = 0;
+    if (arithAnimId) {
+      cancelAnimationFrame(arithAnimId);
+      arithAnimId = null;
+    }
+    document.getElementById('arithResult').style.display = 'none';
+    draw();
   });
 
   // ====== Legend ======
