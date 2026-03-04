@@ -29,7 +29,14 @@
     background: #1e3a5f;
     color: #fff;
     padding: 1.25rem 2rem;
+    position: relative;
   }
+  .back-link {
+    position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+    color: #94a3b8; text-decoration: none; font-size: 0.85rem; font-weight: 600;
+    display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;
+  }
+  .back-link:hover { color: #fff; }
   header .inner {
     max-width: 1400px;
     margin: 0 auto;
@@ -335,6 +342,7 @@
 <body>
 
 <header>
+  <a href="../" class="back-link" title="All Demos">&larr; All Demos</a>
   <div class="inner">
     <h1>Embedding Space Explorer</h1>
     <span class="brand">barcik.training</span>

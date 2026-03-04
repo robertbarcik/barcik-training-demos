@@ -21,7 +21,14 @@ header {
   color: #fff;
   padding: 1.4rem 2rem;
   text-align: center;
+  position: relative;
 }
+.back-link {
+  position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+  color: #94a3b8; text-decoration: none; font-size: 0.85rem; font-weight: 600;
+  display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;
+}
+.back-link:hover { color: #fff; }
 header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
 header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 
@@ -335,6 +342,7 @@ footer {
 <body>
 
 <header>
+  <a href="../" class="back-link" title="All Demos">&larr; All Demos</a>
   <div class="brand">barcik.training</div>
   <h1>Neuron Playground</h1>
 </header>
