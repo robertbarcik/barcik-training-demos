@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Should You Build? — barcik.training</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8; color: #1a202c; min-height: 100vh; line-height: 1.5;
+}
+header { background: #1e3a5f; color: #fff; padding: 1.4rem 2rem; text-align: center; }
+header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
+header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
+.intro { max-width: 880px; margin: 1.5rem auto 0; padding: 0 1.25rem; text-align: center; }
+.intro p { font-size: 0.95rem; color: #4a5568; max-width: 700px; margin: 0 auto; line-height: 1.65; }
+
+/* Progress */
+.progress-bar { max-width: 880px; margin: 1.5rem auto 0; padding: 0 1.25rem; }
+.progress-track { display: flex; gap: 0.35rem; }
+.progress-step { flex: 1; height: 6px; border-radius: 3px; background: #e2e8f0; transition: background 0.3s; }
+.progress-step.active { background: #1e3a5f; }
+.progress-step.done { background: #27ae60; }
+.progress-labels { display: flex; gap: 0.35rem; margin-top: 0.4rem; }
+.progress-labels span { flex: 1; text-align: center; font-size: 0.6rem; color: #94a3b8; font-weight: 600; }
+.progress-labels span.active { color: #1e3a5f; }
+
+/* Steps */
+.step { display: none; max-width: 880px; margin: 1.5rem auto; padding: 0 1.25rem; }
+.step.active { display: block; }
+.panel { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 1.25rem; }
+.panel-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 1rem; font-weight: 600; }
+
+/* Form */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.4rem; }
+.form-group textarea, .form-group input[type="text"] {
+  width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;
+  font-size: 0.9rem; font-family: inherit; color: #1a202c; resize: vertical;
+}
+.form-group textarea { min-height: 60px; }
+.form-group input:focus, .form-group textarea:focus { outline: none; border-color: #1e3a5f; }
+
+/* Pillar toggles */
+.pillar-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.pillar-card {
+  background: #f0f4f8; border: 2px solid #e2e8f0; border-radius: 10px; padding: 1rem;
+  cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.pillar-card:hover { border-color: #1e3a5f; }
+.pillar-card.selected { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+.pillar-card .pillar-icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+.pillar-card .pillar-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
+.pillar-card .pillar-desc { font-size: 0.78rem; opacity: 0.8; }
+.pillar-card.selected .pillar-desc { color: #cbd5e0; }
+
+.warning-box {
+  background: #fef3cd; border: 1px solid #e67e22; border-radius: 8px; padding: 0.75rem 1rem;
+  font-size: 0.85rem; color: #92400e; display: none;
+}
+.warning-box.visible { display: block; }
+
+/* Validation tests */
+.test-card { margin-bottom: 1rem; }
+.test-card h3 { font-size: 1rem; font-weight: 700; color: #1e3a5f; margin-bottom: 0.5rem; }
+.test-card p { font-size: 0.85rem; color: #4a5568; margin-bottom: 0.75rem; }
+.test-options { display: flex; flex-direction: column; gap: 0.4rem; }
+.test-opt {
+  padding: 0.6rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px;
+  font-size: 0.85rem; cursor: pointer; transition: all 0.15s; background: #fff;
+}
+.test-opt:hover { border-color: #1e3a5f; }
+.test-opt.selected { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+
+/* Diamond chart */
+.diamond-container { display: flex; justify-content: center; align-items: center; margin: 1.5rem 0; }
+.diamond-container svg { max-width: 280px; }
+
+.scorecard { text-align: center; margin: 1rem 0; }
+.scorecard .score-label { font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; }
+.scorecard .score-value { font-size: 1.8rem; font-weight: 800; color: #1e3a5f; }
+.scorecard .score-desc { font-size: 0.9rem; color: #4a5568; }
+
+/* Cornerstones */
+.corner-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.corner-check {
+  display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.75rem;
+  background: #f0f4f8; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s;
+}
+.corner-check:hover { border-color: #1e3a5f; }
+.corner-check.checked { border-color: #27ae60; background: #f0fdf4; }
+.corner-box {
+  width: 20px; height: 20px; border: 2px solid #cbd5e0; border-radius: 4px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 2px;
+  transition: all 0.15s;
+}
+.corner-check.checked .corner-box { background: #27ae60; border-color: #27ae60; color: #fff; }
+.corner-label { font-size: 0.85rem; font-weight: 600; color: #1e3a5f; }
+.corner-desc { font-size: 0.78rem; color: #64748b; margin-top: 0.15rem; }
+
+/* Recommendation */
+.rec-card {
+  background: #1e3a5f; border-radius: 12px; padding: 1.5rem; color: #fff; text-align: center;
+}
+.rec-type { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 0.5rem; }
+.rec-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.3rem; }
+.rec-timeline { font-size: 1rem; color: #e67e22; font-weight: 600; margin-bottom: 0.75rem; }
+.rec-desc { font-size: 0.9rem; color: #cbd5e0; line-height: 1.6; }
+
+/* Summary */
+.summary-section { margin-bottom: 1rem; }
+.summary-section h3 { font-size: 0.95rem; font-weight: 700; color: #1e3a5f; margin-bottom: 0.5rem; }
+.summary-row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid #f0f4f8; font-size: 0.88rem; }
+.summary-row .sr-label { color: #4a5568; }
+.summary-row .sr-value { font-weight: 700; color: #1e3a5f; text-align: right; max-width: 60%; }
+
+/* Nav */
+.nav-bar { max-width: 880px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; }
+.nav-btn { padding: 0.6rem 1.5rem; border: 2px solid #1e3a5f; background: #fff; color: #1e3a5f; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.nav-btn:hover { background: #1e3a5f; color: #fff; }
+.nav-btn.primary { background: #1e3a5f; color: #fff; }
+.nav-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* Export */
+.export-bar { display: flex; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 880px; padding: 0 1.25rem; }
+.export-btn { padding: 0.6rem 1.5rem; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+.export-btn.primary { background: #1e3a5f; color: #fff; }
+.export-btn.secondary { background: #e2e8f0; color: #1e3a5f; }
+.copy-toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e3a5f; color: #fff; padding: 0.6rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; opacity: 0; transition: all 0.3s; z-index: 100; }
+.copy-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
+
+@media print {
+  body { background: #fff; }
+  header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .progress-bar, .nav-bar, .export-bar, footer { display: none; }
+  .step { display: block !important; page-break-inside: avoid; }
+  .panel { box-shadow: none; border: 1px solid #e2e8f0; }
+  .rec-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+@media (max-width: 740px) {
+  .pillar-cards { grid-template-columns: 1fr; }
+  .corner-checks { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>What Should You Build?</h1>
+  <div class="brand">barcik.training</div>
+</header>
+
+<div class="intro">
+  <p>Take a vague GenAI idea through a structured validation process. In 6 steps you'll go from "we should use AI for something" to a concrete MVP recommendation.</p>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-track">
+    <div class="progress-step active" id="ps1"></div>
+    <div class="progress-step" id="ps2"></div>
+    <div class="progress-step" id="ps3"></div>
+    <div class="progress-step" id="ps4"></div>
+    <div class="progress-step" id="ps5"></div>
+    <div class="progress-step" id="ps6"></div>
+  </div>
+  <div class="progress-labels">
+    <span class="active" id="pl1">Idea</span>
+    <span id="pl2">Pillars</span>
+    <span id="pl3">Validate</span>
+    <span id="pl4">Moat</span>
+    <span id="pl5">Prototype</span>
+    <span id="pl6">Summary</span>
+  </div>
+</div>
+
+<!-- Step 1: Describe Your Idea -->
+<div class="step active" id="step1">
+  <div class="panel">
+    <div class="panel-title">Step 1 — Describe Your Idea</div>
+    <div class="form-group">
+      <label>What's the idea? (one sentence)</label>
+      <input type="text" id="ideaSentence" placeholder="e.g. An AI tool that automatically categorizes and routes customer support tickets">
+    </div>
+    <div class="form-group">
+      <label>Who is the primary user?</label>
+      <input type="text" id="ideaUser" placeholder="e.g. Customer support team leads">
+    </div>
+    <div class="form-group">
+      <label>What problem does it solve?</label>
+      <textarea id="ideaProblem" placeholder="e.g. Support tickets take 15 minutes on average to route to the right team, causing delays and customer frustration"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2: Three Pillars Check -->
+<div class="step" id="step2">
+  <div class="panel">
+    <div class="panel-title">Step 2 — Three Pillars Check</div>
+    <p style="font-size: 0.88rem; color: #4a5568; margin-bottom: 1rem;">Which pillars does your solution use? Strong GenAI products combine multiple pillars — single-pillar solutions are vulnerable to the ChatGPT Tax.</p>
+    <div class="pillar-cards">
+      <div class="pillar-card" onclick="togglePillar('generate')">
+        <div class="pillar-icon">&#9997;&#65039;</div>
+        <div class="pillar-name">Generate</div>
+        <div class="pillar-desc">Creates new content: text, images, code, summaries, translations</div>
+      </div>
+      <div class="pillar-card" onclick="togglePillar('retrieve')">
+        <div class="pillar-icon">&#128269;</div>
+        <div class="pillar-name">Retrieve</div>
+        <div class="pillar-desc">Searches, filters, or surfaces relevant information from data sources</div>
+      </div>
+      <div class="pillar-card" onclick="togglePillar('act')">
+        <div class="pillar-icon">&#9889;</div>
+        <div class="pillar-name">Act</div>
+        <div class="pillar-desc">Takes actions: API calls, database writes, workflow triggers, notifications</div>
+      </div>
+    </div>
+    <div class="warning-box" id="pillarWarning">
+      &#9888;&#65039; <strong>Single-pillar solutions are vulnerable to the ChatGPT Tax.</strong> Users can replicate "generate-only" or "retrieve-only" features with a €20/month ChatGPT subscription. Consider adding more pillars.
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: Four Validation Tests -->
+<div class="step" id="step3">
+  <div class="panel">
+    <div class="panel-title">Step 3 — Four Validation Tests</div>
+
+    <div class="test-card">
+      <h3>&#128260; Substitution Test</h3>
+      <p>What do people use today to solve this problem?</p>
+      <div class="test-options" id="testSubstitution">
+        <div class="test-opt" onclick="selectTest('substitution', 3)">Nothing — they suffer through it</div>
+        <div class="test-opt" onclick="selectTest('substitution', 2)">Manual workarounds (spreadsheets, emails, etc.)</div>
+        <div class="test-opt" onclick="selectTest('substitution', 1)">Existing software tools (partially solve it)</div>
+        <div class="test-opt" onclick="selectTest('substitution', 0)">Strong existing solutions already available</div>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>&#128176; Payment Test</h3>
+      <p>How much are people currently spending to solve this problem (annually)?</p>
+      <div class="test-options" id="testPayment">
+        <div class="test-opt" onclick="selectTest('payment', 0)">Nothing (or &lt; €1K)</div>
+        <div class="test-opt" onclick="selectTest('payment', 1)">€1K – €10K</div>
+        <div class="test-opt" onclick="selectTest('payment', 2)">€10K – €100K</div>
+        <div class="test-opt" onclick="selectTest('payment', 3)">€100K+</div>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>&#128337; Frequency Test</h3>
+      <p>How often does the user encounter this problem?</p>
+      <div class="test-options" id="testFrequency">
+        <div class="test-opt" onclick="selectTest('frequency', 0)">Rarely (quarterly or less)</div>
+        <div class="test-opt" onclick="selectTest('frequency', 1)">Monthly</div>
+        <div class="test-opt" onclick="selectTest('frequency', 2)">Weekly</div>
+        <div class="test-opt" onclick="selectTest('frequency', 3)">Daily or multiple times per day</div>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>&#128680; Urgency Test</h3>
+      <p>What happens if the problem isn't solved?</p>
+      <div class="test-options" id="testUrgency">
+        <div class="test-opt" onclick="selectTest('urgency', 0)">Minor inconvenience</div>
+        <div class="test-opt" onclick="selectTest('urgency', 1)">Productivity loss</div>
+        <div class="test-opt" onclick="selectTest('urgency', 2)">Revenue impact or significant waste</div>
+        <div class="test-opt" onclick="selectTest('urgency', 3)">Critical business risk or compliance failure</div>
+      </div>
+    </div>
+
+    <!-- Validation Scorecard -->
+    <div style="margin-top: 1.5rem;">
+      <div class="diamond-container">
+        <svg viewBox="0 0 280 280" id="diamondSvg">
+          <!-- Grid -->
+          <line x1="140" y1="20" x2="140" y2="260" stroke="#e2e8f0" stroke-width="1"/>
+          <line x1="20" y1="140" x2="260" y2="140" stroke="#e2e8f0" stroke-width="1"/>
+          <!-- Outer diamond -->
+          <polygon points="140,20 260,140 140,260 20,140" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+          <!-- Mid diamond -->
+          <polygon points="140,60 220,140 140,220 60,140" fill="none" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+          <!-- Inner diamond -->
+          <polygon points="140,100 180,140 140,180 100,140" fill="none" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+          <!-- Data diamond -->
+          <polygon id="dataDiamond" points="140,140 140,140 140,140 140,140" fill="rgba(30,58,95,0.15)" stroke="#1e3a5f" stroke-width="2.5"/>
+          <!-- Labels -->
+          <text x="140" y="12" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">Substitution</text>
+          <text x="272" y="144" text-anchor="start" font-size="11" fill="#64748b" font-weight="600">Payment</text>
+          <text x="140" y="278" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">Frequency</text>
+          <text x="8" y="144" text-anchor="start" font-size="11" fill="#64748b" font-weight="600">Urgency</text>
+        </svg>
+      </div>
+      <div class="scorecard">
+        <div class="score-label">Validation Score</div>
+        <div class="score-value" id="validationScore">—</div>
+        <div class="score-desc" id="validationDesc">Complete all four tests to see your score</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4: Cornerstone of Success -->
+<div class="step" id="step4">
+  <div class="panel">
+    <div class="panel-title">Step 4 — Cornerstone of Success</div>
+    <p style="font-size: 0.88rem; color: #4a5568; margin-bottom: 1rem;">What gives your product a defensible advantage? Check all that apply. Without at least 2 cornerstones, you'll struggle to beat "just use ChatGPT."</p>
+    <div class="corner-checks">
+      <div class="corner-check" onclick="toggleCorner(this, 'data')">
+        <div class="corner-box">&#10003;</div>
+        <div>
+          <div class="corner-label">Proprietary Data</div>
+          <div class="corner-desc">Access to unique datasets competitors can't easily replicate</div>
+        </div>
+      </div>
+      <div class="corner-check" onclick="toggleCorner(this, 'behavior')">
+        <div class="corner-box">&#10003;</div>
+        <div>
+          <div class="corner-label">Specialized Behavior</div>
+          <div class="corner-desc">Fine-tuned models, custom prompts, or domain expertise baked in</div>
+        </div>
+      </div>
+      <div class="corner-check" onclick="toggleCorner(this, 'workflow')">
+        <div class="corner-box">&#10003;</div>
+        <div>
+          <div class="corner-label">Workflow Integration</div>
+          <div class="corner-desc">Embedded in existing tools (Slack, CRM, ERP) — not a standalone app</div>
+        </div>
+      </div>
+      <div class="corner-check" onclick="toggleCorner(this, 'privacy')">
+        <div class="corner-box">&#10003;</div>
+        <div>
+          <div class="corner-label">Privacy Advantage</div>
+          <div class="corner-desc">On-premise, data residency, or compliance features competitors lack</div>
+        </div>
+      </div>
+    </div>
+    <div class="warning-box" id="cornerWarning" style="margin-top: 1rem;">
+      &#9888;&#65039; <strong>Weak defensibility.</strong> With fewer than 2 cornerstones, you'll struggle to beat "just use ChatGPT." Consider strengthening your moat before building.
+    </div>
+  </div>
+</div>
+
+<!-- Step 5: Prototype Recommendation -->
+<div class="step" id="step5">
+  <div class="panel">
+    <div class="panel-title">Step 5 — Prototype Recommendation</div>
+    <p style="font-size: 0.88rem; color: #4a5568; margin-bottom: 1.25rem;">Based on your validation level and pillar count, here's the recommended next step.</p>
+    <div class="rec-card" id="recCard">
+      <div class="rec-type">Recommended Prototype</div>
+      <div class="rec-name" id="recName">—</div>
+      <div class="rec-timeline" id="recTimeline">—</div>
+      <div class="rec-desc" id="recDesc">Complete previous steps to see your recommendation.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 6: Summary -->
+<div class="step" id="step6">
+  <div class="panel">
+    <div class="panel-title">Full Summary</div>
+    <div id="summaryContent"></div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>&larr; Back</button>
+  <button class="nav-btn primary" id="nextBtn" onclick="navigate(1)">Next &rarr;</button>
+</div>
+
+<div class="export-bar">
+  <button class="export-btn primary" onclick="window.print()">&#128424; Save as PDF</button>
+  <button class="export-btn secondary" onclick="copyResults()">&#128203; Copy to Clipboard</button>
+</div>
+
+<div class="copy-toast" id="copyToast">Copied to clipboard!</div>
+<footer>&copy; 2026 barcik.training</footer>
+
+<script>
+let currentStep = 1;
+const totalSteps = 6;
+
+const state = {
+  pillars: new Set(),
+  tests: { substitution: -1, payment: -1, frequency: -1, urgency: -1 },
+  corners: new Set()
+};
+
+/* ===== NAVIGATION ===== */
+function navigate(dir) {
+  const next = currentStep + dir;
+  if (next < 1 || next > totalSteps) return;
+  document.getElementById('step' + currentStep).classList.remove('active');
+  currentStep = next;
+  document.getElementById('step' + currentStep).classList.add('active');
+  updateProgressBar();
+  if (currentStep === 5) updateRecommendation();
+  if (currentStep === 6) updateSummary();
+  document.getElementById('prevBtn').disabled = currentStep === 1;
+  document.getElementById('nextBtn').textContent = currentStep === totalSteps ? 'Done ✓' : 'Next →';
+  document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+}
+
+function updateProgressBar() {
+  for (let i = 1; i <= totalSteps; i++) {
+    const ps = document.getElementById('ps' + i);
+    const pl = document.getElementById('pl' + i);
+    ps.className = 'progress-step';
+    pl.className = '';
+    if (i < currentStep) ps.classList.add('done');
+    else if (i === currentStep) { ps.classList.add('active'); pl.classList.add('active'); }
+  }
+}
+
+/* ===== PILLARS ===== */
+function togglePillar(name) {
+  if (state.pillars.has(name)) state.pillars.delete(name);
+  else state.pillars.add(name);
+
+  document.querySelectorAll('.pillar-card').forEach(c => {
+    const pName = c.querySelector('.pillar-name').textContent.toLowerCase();
+    c.classList.toggle('selected', state.pillars.has(pName));
+  });
+
+  const warn = document.getElementById('pillarWarning');
+  warn.classList.toggle('visible', state.pillars.size <= 1 && state.pillars.size > 0);
+}
+
+/* ===== VALIDATION TESTS ===== */
+function selectTest(test, score) {
+  state.tests[test] = score;
+  const container = document.getElementById('test' + test.charAt(0).toUpperCase() + test.slice(1));
+  container.querySelectorAll('.test-opt').forEach((opt, i) => {
+    const optScores = test === 'substitution' ? [3, 2, 1, 0] : (test === 'payment' ? [0, 1, 2, 3] : (test === 'frequency' ? [0, 1, 2, 3] : [0, 1, 2, 3]));
+    opt.classList.toggle('selected', optScores[i] === score);
+  });
+  updateDiamond();
+}
+
+function updateDiamond() {
+  const t = state.tests;
+  const allDone = Object.values(t).every(v => v >= 0);
+
+  // Map scores (0-3) to diamond coords
+  const cx = 140, cy = 140, maxR = 120;
+  const sub = t.substitution >= 0 ? t.substitution / 3 : 0;
+  const pay = t.payment >= 0 ? t.payment / 3 : 0;
+  const freq = t.frequency >= 0 ? t.frequency / 3 : 0;
+  const urg = t.urgency >= 0 ? t.urgency / 3 : 0;
+
+  const points = [
+    `${cx},${cy - sub * maxR}`,
+    `${cx + pay * maxR},${cy}`,
+    `${cx},${cy + freq * maxR}`,
+    `${cx - urg * maxR},${cy}`
+  ].join(' ');
+
+  document.getElementById('dataDiamond').setAttribute('points', points);
+
+  if (allDone) {
+    const total = t.substitution + t.payment + t.frequency + t.urgency; // 0-12
+    let level, desc;
+    if (total >= 10) { level = 'Strong'; desc = 'Clear market need with validated demand. Go build!'; }
+    else if (total >= 7) { level = 'Worth Exploring'; desc = 'Promising signals but some gaps. Validate with target users.'; }
+    else if (total >= 4) { level = 'Needs Validation'; desc = 'Mixed signals. Run experiments before committing resources.'; }
+    else { level = 'Reconsider'; desc = 'Weak across dimensions. Pivot the idea or find a stronger use case.'; }
+
+    document.getElementById('validationScore').textContent = level;
+    document.getElementById('validationDesc').textContent = `Score: ${total}/12 — ${desc}`;
+  }
+}
+
+/* ===== CORNERSTONES ===== */
+function toggleCorner(el, name) {
+  if (state.corners.has(name)) { state.corners.delete(name); el.classList.remove('checked'); }
+  else { state.corners.add(name); el.classList.add('checked'); }
+
+  const warn = document.getElementById('cornerWarning');
+  warn.classList.toggle('visible', state.corners.size < 2 && state.corners.size > 0);
+}
+
+/* ===== RECOMMENDATION ===== */
+function updateRecommendation() {
+  const totalScore = Object.values(state.tests).reduce((a, b) => a + Math.max(0, b), 0);
+  const pillarCount = state.pillars.size;
+
+  let level;
+  if (totalScore >= 10) level = 'high';
+  else if (totalScore >= 5) level = 'medium';
+  else level = 'low';
+
+  let name, timeline, desc;
+
+  if (level === 'low') {
+    name = 'Landing Page / Video MVP';
+    timeline = '1–3 days';
+    desc = 'Create a landing page or explainer video describing your solution. Measure interest with a signup form before building anything. This validates demand with minimal investment.';
+  } else if (level === 'medium' && pillarCount <= 1) {
+    name = 'Low-Fi Prototype with Custom GPTs';
+    timeline = '3–5 days';
+    desc = 'Build a quick proof-of-concept using Custom GPTs or a no-code AI tool. This lets you test the core value proposition without any engineering investment. Perfect for single-pillar ideas.';
+  } else if (level === 'medium' && pillarCount >= 2) {
+    name = 'Wizard of Oz MVP';
+    timeline = '1–2 weeks';
+    desc = 'Build the UI and workflow, but run the AI part manually (or semi-automated) behind the scenes. This validates the full user experience without building the complete AI pipeline.';
+  } else if (level === 'high' && pillarCount >= 3) {
+    name = 'High-Fidelity Prototype';
+    timeline = '4–8 weeks';
+    desc = 'Strong validation across all dimensions with a multi-pillar architecture. Build a full working prototype with real AI integration. Focus on the end-to-end flow for 1 key use case.';
+  } else if (level === 'high' && pillarCount >= 2) {
+    name = 'Single-Feature / Piecemeal MVP';
+    timeline = '2–4 weeks';
+    desc = 'Build one killer feature end-to-end with real AI. Ship it, measure usage and satisfaction, then expand. Don\'t try to build everything at once — nail one workflow first.';
+  } else {
+    name = 'Low-Fi Prototype with Custom GPTs';
+    timeline = '3–5 days';
+    desc = 'Start simple: validate the core concept with a Custom GPT or API prototype before investing in engineering.';
+  }
+
+  document.getElementById('recName').textContent = name;
+  document.getElementById('recTimeline').textContent = timeline;
+  document.getElementById('recDesc').textContent = desc;
+}
+
+/* ===== SUMMARY ===== */
+function updateSummary() {
+  const idea = document.getElementById('ideaSentence').value || '(not specified)';
+  const user = document.getElementById('ideaUser').value || '(not specified)';
+  const problem = document.getElementById('ideaProblem').value || '(not specified)';
+  const pillars = state.pillars.size > 0 ? [...state.pillars].map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ') : 'None selected';
+
+  const totalScore = Object.values(state.tests).reduce((a, b) => a + Math.max(0, b), 0);
+  let valLevel;
+  if (totalScore >= 10) valLevel = 'Strong';
+  else if (totalScore >= 7) valLevel = 'Worth Exploring';
+  else if (totalScore >= 4) valLevel = 'Needs Validation';
+  else valLevel = 'Reconsider';
+
+  const corners = state.corners.size > 0 ? [...state.corners].map(c => {
+    const labels = { data: 'Proprietary Data', behavior: 'Specialized Behavior', workflow: 'Workflow Integration', privacy: 'Privacy Advantage' };
+    return labels[c];
+  }).join(', ') : 'None';
+
+  const recName = document.getElementById('recName').textContent;
+  const recTimeline = document.getElementById('recTimeline').textContent;
+
+  document.getElementById('summaryContent').innerHTML = `
+    <div class="summary-section">
+      <h3>The Idea</h3>
+      <div class="summary-row"><span class="sr-label">Concept</span><span class="sr-value">${idea}</span></div>
+      <div class="summary-row"><span class="sr-label">Primary User</span><span class="sr-value">${user}</span></div>
+      <div class="summary-row"><span class="sr-label">Problem</span><span class="sr-value">${problem}</span></div>
+    </div>
+    <div class="summary-section">
+      <h3>Analysis</h3>
+      <div class="summary-row"><span class="sr-label">Pillars</span><span class="sr-value">${pillars} (${state.pillars.size}/3)</span></div>
+      <div class="summary-row"><span class="sr-label">Validation Score</span><span class="sr-value">${valLevel} (${totalScore}/12)</span></div>
+      <div class="summary-row"><span class="sr-label">Cornerstones</span><span class="sr-value">${corners} (${state.corners.size}/4)</span></div>
+    </div>
+    <div class="summary-section">
+      <h3>Recommendation</h3>
+      <div class="summary-row"><span class="sr-label">Prototype Type</span><span class="sr-value">${recName}</span></div>
+      <div class="summary-row"><span class="sr-label">Timeline</span><span class="sr-value">${recTimeline}</span></div>
+    </div>
+  `;
+}
+
+function copyResults() {
+  const idea = document.getElementById('ideaSentence').value || '(not specified)';
+  const user = document.getElementById('ideaUser').value || '(not specified)';
+  const pillars = [...state.pillars].join(', ') || 'None';
+  const totalScore = Object.values(state.tests).reduce((a, b) => a + Math.max(0, b), 0);
+  const corners = [...state.corners].join(', ') || 'None';
+  const recName = document.getElementById('recName').textContent;
+  const recTimeline = document.getElementById('recTimeline').textContent;
+
+  let text = `WHAT SHOULD YOU BUILD? — Summary\n`;
+  text += `================================\n\n`;
+  text += `IDEA: ${idea}\nUSER: ${user}\n\n`;
+  text += `PILLARS: ${pillars} (${state.pillars.size}/3)\n`;
+  text += `VALIDATION: ${totalScore}/12\n`;
+  text += `CORNERSTONES: ${corners} (${state.corners.size}/4)\n\n`;
+  text += `RECOMMENDATION: ${recName} (${recTimeline})\n\n`;
+  text += `— Generated by barcik.training What Should You Build?`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('copyToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+</script>
+</body>
+</html>
