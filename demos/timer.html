@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Timer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Outfit:wght@200;400;600&display=swap');
+
+  :root {
+    --bg: #080a0f;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --text: #e8eaf0;
+    --text-dim: rgba(255,255,255,0.35);
+    --accent: #4ecdc4;
+    --accent-glow: rgba(78, 205, 196, 0.3);
+    --warn: #ff6b6b;
+    --warn-glow: rgba(255, 107, 107, 0.3);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    cursor: default;
+    user-select: none;
+  }
+
+  canvas#bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+  }
+
+  .overlay {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── SETUP SCREEN ── */
+  #setup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    animation: fadeIn 0.6s ease;
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.35rem;
+  }
+
+  .mode-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    padding: 0.6rem 1.8rem;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.02em;
+  }
+  .mode-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .mode-btn:hover:not(.active) {
+    color: var(--text);
+    background: rgba(255,255,255,0.06);
+  }
+
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.6rem;
+    max-width: 480px;
+  }
+
+  .time-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.15rem;
+    font-weight: 400;
+    width: 68px; height: 68px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .time-btn:hover {
+    border-color: var(--accent);
+    background: rgba(78, 205, 196, 0.08);
+    box-shadow: 0 0 15px var(--accent-glow);
+    transform: translateY(-2px);
+  }
+  .time-btn.popular {
+    border-color: rgba(78, 205, 196, 0.25);
+  }
+
+  .custom-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .custom-input, .next-up-input {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .custom-input {
+    font-family: 'JetBrains Mono', monospace;
+    width: 80px;
+    text-align: center;
+  }
+  .custom-input:focus, .next-up-input:focus {
+    border-color: var(--accent);
+  }
+  .custom-label {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+  .go-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.6rem 1.6rem;
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    background: rgba(78, 205, 196, 0.1);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .go-btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .next-up-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    width: 100%;
+    max-width: 480px;
+  }
+  .next-up-label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .next-up-input {
+    flex: 1;
+    min-width: 0;
+  }
+  .next-up-input::placeholder {
+    color: var(--text-dim);
+  }
+
+  #notes-section {
+    display: none;
+    width: 100%;
+    max-width: 520px;
+  }
+  #notes-section.visible { display: block; }
+
+  .notes-label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .notes-input {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    width: 100%;
+    min-height: 100px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text);
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+    transition: border-color 0.3s;
+  }
+  .notes-input:focus { border-color: var(--accent); }
+  .notes-input::placeholder { color: var(--text-dim); }
+
+  /* ── COUNTDOWN SCREEN ── */
+  #countdown {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    height: 100vh;
+    width: 100%;
+    animation: fadeIn 0.6s ease;
+  }
+
+  .countdown-mode-label {
+    font-size: 1.1rem;
+    font-weight: 200;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  .countdown-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(6rem, 15vw, 14rem);
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    text-shadow: 0 0 40px var(--accent-glow);
+    transition: color 0.5s, text-shadow 0.5s;
+  }
+  .countdown-time.warning {
+    color: var(--warn);
+    text-shadow: 0 0 40px var(--warn-glow);
+  }
+
+  .progress-track {
+    width: min(80vw, 600px);
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 1s linear, background 0.5s;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .progress-fill.warning {
+    background: var(--warn);
+    box-shadow: 0 0 8px var(--warn-glow);
+  }
+
+  .content-area {
+    min-height: 5rem;
+    max-width: min(80vw, 750px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .cycling-text {
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    font-weight: 400;
+    text-align: center;
+    color: var(--text);
+    opacity: 0;
+    line-height: 1.5;
+    transition: opacity 0.8s ease;
+  }
+  .cycling-text.visible { opacity: 1; }
+
+  .fact-category {
+    font-size: 0.7rem;
+    font-weight: 200;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0;
+    margin-top: 0.6rem;
+    transition: opacity 0.8s ease;
+  }
+  .fact-category.visible { opacity: 0.7; }
+
+  .dot-indicators {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 1rem;
+  }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: all 0.3s;
+  }
+  .dot.active {
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+
+  .next-up-display {
+    position: fixed;
+    bottom: 5rem;
+    font-size: 1.1rem;
+    font-weight: 200;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    z-index: 2;
+    opacity: 0;
+    animation: fadeIn 0.6s ease 0.3s forwards;
+  }
+  .next-up-display span {
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .timer-controls {
+    position: fixed;
+    bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .overlay:hover .timer-controls,
+  .timer-controls:focus-within {
+    opacity: 1;
+  }
+
+  .ctrl-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 400;
+    padding: 0.5rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(0,0,0,0.6);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.04em;
+    backdrop-filter: blur(10px);
+  }
+  .ctrl-btn:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
+
+  .countdown-time.finished {
+    animation: pulse 1.5s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hint {
+    position: fixed;
+    bottom: 1rem;
+    right: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    z-index: 2;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="overlay">
+  <!-- SETUP -->
+  <div id="setup">
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="break" onclick="setMode('break')">Break</button>
+      <button class="mode-btn" data-mode="exercise" onclick="setMode('exercise')">Exercise</button>
+    </div>
+
+    <div class="time-grid" id="time-grid"></div>
+
+    <div class="custom-row">
+      <input type="number" class="custom-input" id="custom-min" min="1" max="120" placeholder="min">
+      <span class="custom-label">minutes</span>
+      <button class="go-btn" onclick="startCustom()">Start</button>
+    </div>
+
+    <div class="next-up-row">
+      <span class="next-up-label">Next up</span>
+      <input type="text" class="next-up-input" id="next-up-input" placeholder="e.g. Hands-on exercise, Attention mechanisms...">
+    </div>
+
+    <div id="notes-section">
+      <div class="notes-label">Recap points (one per line)</div>
+      <textarea class="notes-input" id="notes-input" placeholder="What is a transformer?&#10;Attention is all you need&#10;Tokens ≠ words&#10;Temperature controls randomness"></textarea>
+    </div>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div id="countdown">
+    <div class="countdown-mode-label" id="mode-label">BREAK</div>
+    <div class="countdown-time" id="timer-display">10:00</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div class="content-area" id="content-area">
+      <div class="cycling-text" id="cycling-text"></div>
+      <div class="fact-category" id="fact-category"></div>
+    </div>
+    <div class="dot-indicators" id="dot-indicators"></div>
+
+    <div class="next-up-display" id="next-up-display" style="display:none;">
+      Next up: <span id="next-up-text"></span>
+    </div>
+
+    <div class="timer-controls">
+      <button class="ctrl-btn" id="pause-btn" onclick="togglePause()">Pause</button>
+      <button class="ctrl-btn" onclick="addMinute()">+1 min</button>
+      <button class="ctrl-btn" onclick="resetTimer()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="hint">F11 fullscreen · Space pause · Esc reset</div>
+
+<script>
+// ══════════════════════════════════════════
+// AI / ML FUN FACTS
+// ══════════════════════════════════════════
+const AI_FACTS = [
+  // ── HISTORY & MILESTONES ──
+  { text: 'The term "Artificial Intelligence" was coined at a 1956 Dartmouth workshop. The organizers proposed they could crack it in a 2-month, 10-person summer study.', cat: "History" },
+  { text: "The first AI program (1952) was a checkers player by Arthur Samuel — who also coined \"machine learning\" in 1959.", cat: "History" },
+  { text: "ELIZA (1966) was the first chatbot. It mimicked a psychotherapist by turning your statements into questions. Some users were genuinely convinced it understood them.", cat: "History" },
+  { text: "Isaac Asimov wrote the Three Laws of Robotics in 1942 — decades before any real AI existed. They're still cited in AI ethics debates today.", cat: "History" },
+  { text: "The first industrial robot, Unimate, started welding car parts at a General Motors plant in 1961. The task was deemed too dangerous for humans.", cat: "History" },
+  { text: "LISP, the first programming language for AI research, was created in 1958. Variants of it are still used today — 67 years later.", cat: "History" },
+  { text: 'AI has gone through multiple "AI Winters" — periods where hype collapsed, funding dried up, and researchers had to find new careers.', cat: "History" },
+  { text: "In 1997, IBM's Deep Blue defeated world chess champion Garry Kasparov. Kasparov accused the machine of cheating — he couldn't believe a computer could play that creatively.", cat: "History" },
+  { text: 'Alan Turing proposed the "Imitation Game" in 1950 — now the Turing Test — to evaluate whether a machine can exhibit intelligent behavior indistinguishable from a human.', cat: "History" },
+  { text: "The 1956 Dartmouth workshop optimistically claimed AI's core problems could be solved in one summer. We're still working on them 70 years later.", cat: "History" },
+  { text: "The first computer-generated music was created in 1957 by the Illiac Suite, composed by an AI at the University of Illinois.", cat: "History" },
+
+  // ── DEEP LEARNING & MODELS ──
+  { text: "GPT-3 has 175 billion parameters. Training it on a single GPU would take ~355 years and cost an estimated $4.6 million.", cat: "Scale" },
+  { text: "The number of possible board positions in Go exceeds 10¹⁷⁰ — more than the number of atoms in the observable universe.", cat: "Scale" },
+  { text: "GPT-4's training reportedly consumed ~2.1 × 10²⁵ floating point operations. That's 21 billion petaFLOPs.", cat: "Scale" },
+  { text: "The cost of training frontier AI models roughly triples each year. Some projections suggest $10 billion training runs by 2026.", cat: "Scale" },
+  { text: "Alibaba's M6 model reached 10 trillion parameters — 50× GPT-3's size — trained on just 512 GPUs in 10 days at 1% of GPT-3's energy cost.", cat: "Scale" },
+  { text: 'The "Chinchilla scaling law" (2022) showed you often get better results from a smaller model trained on more data — not just making models bigger.', cat: "Science" },
+  { text: 'The paper that introduced the transformer architecture was literally called "Attention Is All You Need" (2017). It now has over 100,000 citations.', cat: "Science" },
+  { text: "Word embeddings map words to vectors where king − man + woman ≈ queen. Meaning becomes geometry.", cat: "Science" },
+  { text: "A transformer doesn't \"know\" facts. It predicts the next most likely token based on patterns. It's autocomplete on steroids.", cat: "Science" },
+  { text: "OpenAI chose not to retrain GPT-3 after finding a bug in the training data — because repeating the run would cost millions.", cat: "Scale" },
+
+  // ── ALPHAGO & GAMES ──
+  { text: "AlphaGo's Move 37 against Lee Sedol had a 1-in-10,000 chance of being played by a human. Commentators called it \"creative\" and \"beautiful.\" It won the game.", cat: "AlphaGo" },
+  { text: "Lee Sedol countered in Game 4 with his own Move 78 — also 1-in-10,000 probability — nicknamed \"God's Touch.\" He won that game. Humans surprise back.", cat: "AlphaGo" },
+  { text: "After defeating Lee Sedol 4-1, AlphaGo's $1M prize went to UNICEF. The Korean Go Association awarded AlphaGo an honorary 9 dan rank.", cat: "AlphaGo" },
+  { text: "AlphaZero (2017) mastered chess, Go, and shogi by self-play alone — no human data. It defeated the world's best chess engine after just 4 hours of training.", cat: "AlphaGo" },
+  { text: "When AlphaGo played Move 37, commentator Michael Redmond kept looking between the board and monitor to make sure he wasn't seeing it wrong.", cat: "AlphaGo" },
+  { text: "Over 200 million people worldwide watched the 2016 AlphaGo vs Lee Sedol match. Go experts said it arrived a decade earlier than expected.", cat: "AlphaGo" },
+
+  // ── FUNNY FAILS ──
+  { text: "Microsoft's chatbot Tay was shut down after <24 hours on Twitter (2016). Users taught it to post offensive content by gaming its learning.", cat: "Fails" },
+  { text: "An AI-generated Microsoft travel guide recommended the Ottawa Food Bank as a tourist attraction, suggesting visitors \"arrive on an empty stomach.\"", cat: "Fails" },
+  { text: "A lawyer used ChatGPT for a legal brief. It cited six court cases that never existed. The judge was not amused.", cat: "Fails" },
+  { text: "Google's Bard got a fact wrong in its very first public demo. Google lost $100 billion in market cap that day.", cat: "Fails" },
+  { text: "Image generators still struggle with hands. The running joke: if it has 6 or 7 fingers, it's probably AI-generated.", cat: "Fails" },
+  { text: "McDonald's tested AI drive-thru ordering for 3 years, then cancelled it in 2024 after viral videos showed the AI adding 260 Chicken McNuggets to one order.", cat: "Fails" },
+  { text: "A professor failed his entire class after asking ChatGPT if their essays were AI-generated. ChatGPT said yes to all of them. It can't actually detect AI text.", cat: "Fails" },
+  { text: "In 2023, newspapers published AI-generated book recommendation lists. Many of the recommended books — with real authors' names — didn't actually exist.", cat: "Fails" },
+  { text: "An AI once confidently stated the record for crossing the English Channel entirely on foot. That record does not exist, for obvious reasons.", cat: "Fails" },
+  { text: 'Cambridge Dictionary chose "hallucinate" as its 2023 Word of the Year — specifically because of AI making things up with total confidence.', cat: "Fails" },
+
+  // ── CONCEPTS ──
+  { text: 'The "black box problem": powerful neural networks give great answers but can\'t explain how they got them. Not even their creators fully know.', cat: "Concepts" },
+  { text: "AI hallucinations aren't bugs — the model is doing exactly what it was trained to do: predict plausible next tokens. It has no concept of truth.", cat: "Concepts" },
+  { text: "Temperature in AI controls randomness. At 0 = always the most likely word. At 1 = creative and unpredictable. At 2 = unhinged.", cat: "Concepts" },
+  { text: 'Tokens ≠ words. "Hamburger" might become ["ham", "bur", "ger"]. LLMs think in token chunks, not human words.', cat: "Concepts" },
+  { text: "RAG (Retrieval-Augmented Generation) reduces hallucinations by giving AI actual documents to reference instead of relying on memorized patterns.", cat: "Concepts" },
+  { text: "Few-shot learning: show the AI 2–3 examples, it figures out the pattern. Zero-shot: just describe the task. Both work surprisingly well.", cat: "Concepts" },
+  { text: "RLHF (Reinforcement Learning from Human Feedback) is how ChatGPT learned to be helpful. Humans ranked outputs, and it optimized for those rankings.", cat: "Concepts" },
+  { text: "A \"foundation model\" is trained on broad data, then specialized. Like a medical student doing general training before choosing a specialty.", cat: "Concepts" },
+
+  // ── INDUSTRY & SURPRISING ──
+  { text: "OpenAI started in 2015 as a nonprofit. By 2024 it was valued at over $150 billion and restructuring to become for-profit.", cat: "Industry" },
+  { text: "In 2022, an AI-generated artwork won first place at the Colorado State Fair. The artist disclosed it was AI. Other artists were furious.", cat: "Surprise" },
+  { text: "Sophia the robot got Saudi Arabian citizenship in 2017. The same year, Saudi women gained the right to drive.", cat: "Surprise" },
+  { text: "The FDA had approved 223 AI-powered medical devices by 2023. AI is reading your X-rays, ECGs, and retinal scans.", cat: "Industry" },
+  { text: "According to McKinsey (2026), 71% of companies report using generative AI in at least one business function.", cat: "Industry" },
+  { text: "Most AI assistants (Siri, Alexa, Cortana) were given female voices by default. The reasons behind this design choice are still debated.", cat: "Surprise" },
+  { text: "In 2022, a Google engineer publicly claimed the LaMDA language model had become sentient. Google disagreed and fired him.", cat: "Surprise" },
+  { text: "DeepMind's AlphaFold predicted the 3D structure of nearly all known proteins — a problem biologists had been working on for 50 years.", cat: "Science" },
+];
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let mode = 'break';
+let totalSeconds = 0;
+let remaining = 0;
+let interval = null;
+let paused = false;
+let cyclingItems = [];
+let currentItem = -1;
+let cycleInterval = null;
+let soundPlayed = false;
+
+// ══════════════════════════════════════════
+// SOUND (Web Audio API)
+// ══════════════════════════════════════════
+let audioCtx = null;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playChime() {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+  notes.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, now + i * 0.25);
+    gain.gain.linearRampToValueAtTime(0.22, now + i * 0.25 + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.25 + 1.2);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now + i * 0.25);
+    osc.stop(now + i * 0.25 + 1.5);
+  });
+}
+
+// Warm up audio on first interaction
+document.addEventListener('click', ensureAudio, { once: false });
+
+// ══════════════════════════════════════════
+// SETUP
+// ══════════════════════════════════════════
+const presets = [1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30, 45];
+const popular = [5, 10, 15];
+const grid = document.getElementById('time-grid');
+
+presets.forEach(m => {
+  const btn = document.createElement('button');
+  btn.className = 'time-btn' + (popular.includes(m) ? ' popular' : '');
+  btn.textContent = m;
+  btn.onclick = () => startTimer(m * 60);
+  grid.appendChild(btn);
+});
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  document.getElementById('notes-section').classList.toggle('visible', m === 'exercise');
+}
+
+function startCustom() {
+  const v = parseInt(document.getElementById('custom-min').value);
+  if (v > 0 && v <= 120) startTimer(v * 60);
+}
+
+// ══════════════════════════════════════════
+// COUNTDOWN
+// ══════════════════════════════════════════
+function startTimer(seconds) {
+  totalSeconds = seconds;
+  remaining = seconds;
+  paused = false;
+  soundPlayed = false;
+
+  const nextUpValue = document.getElementById('next-up-input').value.trim();
+  const catEl = document.getElementById('fact-category');
+
+  // Determine cycling content
+  if (mode === 'exercise') {
+    const raw = document.getElementById('notes-input').value.trim();
+    cyclingItems = raw ? raw.split('\n').map(s => ({ text: s.trim(), cat: '' })).filter(i => i.text) : [];
+    catEl.style.display = 'none';
+  } else {
+    cyclingItems = shuffleArray(AI_FACTS);
+    catEl.style.display = 'block';
+  }
+
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('countdown').style.display = 'flex';
+  document.getElementById('mode-label').textContent = mode === 'break' ? 'BREAK' : 'EXERCISE';
+
+  const contentArea = document.getElementById('content-area');
+  const dotsEl = document.getElementById('dot-indicators');
+
+  if (cyclingItems.length) {
+    contentArea.style.display = 'flex';
+    dotsEl.style.display = 'flex';
+    buildDots();
+    startCycling();
+  } else {
+    contentArea.style.display = 'none';
+    dotsEl.style.display = 'none';
+  }
+
+  // Next up
+  const nextUpDisplay = document.getElementById('next-up-display');
+  if (nextUpValue) {
+    document.getElementById('next-up-text').textContent = nextUpValue;
+    nextUpDisplay.style.display = 'block';
+  } else {
+    nextUpDisplay.style.display = 'none';
+  }
+
+  updateDisplay();
+
+  interval = setInterval(() => {
+    if (paused) return;
+    remaining--;
+    updateDisplay();
+    if (remaining <= 0) {
+      clearInterval(interval);
+      interval = null;
+      onFinished();
+    }
+  }, 1000);
+}
+
+function updateDisplay() {
+  const m = Math.floor(Math.abs(remaining) / 60);
+  const s = Math.abs(remaining) % 60;
+  const display = document.getElementById('timer-display');
+  const progress = document.getElementById('progress-fill');
+  const isWarning = remaining <= 60 && remaining > 0;
+  const prefix = remaining < 0 ? '-' : '';
+
+  display.textContent = prefix + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  display.classList.toggle('warning', isWarning);
+
+  const pct = Math.max(0, (remaining / totalSeconds) * 100);
+  progress.style.width = pct + '%';
+  progress.classList.toggle('warning', isWarning);
+}
+
+function onFinished() {
+  const display = document.getElementById('timer-display');
+  display.classList.remove('warning');
+  display.classList.add('finished');
+  display.textContent = '00:00';
+  document.getElementById('progress-fill').style.width = '0%';
+
+  if (!soundPlayed) {
+    soundPlayed = true;
+    playChime();
+    setTimeout(playChime, 3500);
+  }
+}
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pause-btn').textContent = paused ? 'Resume' : 'Pause';
+}
+
+function addMinute() {
+  remaining += 60;
+  totalSeconds += 60;
+  document.getElementById('timer-display').classList.remove('finished');
+  soundPlayed = false;
+  if (!interval) {
+    interval = setInterval(() => {
+      if (paused) return;
+      remaining--;
+      updateDisplay();
+      if (remaining <= 0) { clearInterval(interval); interval = null; onFinished(); }
+    }, 1000);
+  }
+  updateDisplay();
+}
+
+function resetTimer() {
+  clearInterval(interval);
+  clearInterval(cycleInterval);
+  interval = null;
+  cycleInterval = null;
+  document.getElementById('countdown').style.display = 'none';
+  document.getElementById('setup').style.display = 'flex';
+  document.getElementById('timer-display').classList.remove('finished', 'warning');
+  document.getElementById('next-up-display').style.display = 'none';
+}
+
+// ══════════════════════════════════════════
+// CYCLING (facts or recap points)
+// ══════════════════════════════════════════
+function buildDots() {
+  const container = document.getElementById('dot-indicators');
+  container.innerHTML = '';
+  const count = Math.min(cyclingItems.length, 8);
+  for (let i = 0; i < count; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    container.appendChild(dot);
+  }
+}
+
+function startCycling() {
+  currentItem = -1;
+  showNext();
+  // For break facts: 11s. For recap points: adaptive to total time
+  let ms;
+  if (mode === 'break') {
+    ms = 11000;
+  } else {
+    ms = Math.min(15000, Math.max(8000, (totalSeconds * 1000) / cyclingItems.length));
+  }
+  cycleInterval = setInterval(showNext, ms);
+}
+
+function showNext() {
+  const textEl = document.getElementById('cycling-text');
+  const catEl = document.getElementById('fact-category');
+  const dots = document.querySelectorAll('.dot');
+
+  textEl.classList.remove('visible');
+  catEl.classList.remove('visible');
+
+  setTimeout(() => {
+    currentItem = (currentItem + 1) % cyclingItems.length;
+    const item = cyclingItems[currentItem];
+    textEl.textContent = item.text;
+    if (item.cat) {
+      catEl.textContent = item.cat;
+      catEl.classList.add('visible');
+    }
+    textEl.classList.add('visible');
+    if (dots.length) {
+      const idx = currentItem % dots.length;
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+  }, 500);
+}
+
+// ══════════════════════════════════════════
+// NEURAL NETWORK BACKGROUND
+// ══════════════════════════════════════════
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let nodes = [];
+let W, H;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  initNodes();
+}
+
+function initNodes() {
+  const count = Math.floor((W * H) / 18000);
+  nodes = [];
+  for (let i = 0; i < count; i++) {
+    nodes.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 1.5 + 0.5,
+      pulse: Math.random() * Math.PI * 2,
+      pulseSpeed: 0.005 + Math.random() * 0.015
+    });
+  }
+}
+
+const connectionDist = 140;
+
+function drawFrame(t) {
+  ctx.fillStyle = 'rgba(8, 10, 15, 0.15)';
+  ctx.fillRect(0, 0, W, H);
+
+  for (const n of nodes) {
+    n.x += n.vx; n.y += n.vy; n.pulse += n.pulseSpeed;
+    if (n.x < 0 || n.x > W) n.vx *= -1;
+    if (n.y < 0 || n.y > H) n.vy *= -1;
+  }
+
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < connectionDist) {
+        const alpha = (1 - dist / connectionDist) * 0.12;
+        ctx.strokeStyle = `rgba(78, 205, 196, ${alpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+
+        if (Math.sin(t * 0.001 + i * 0.1) > 0.97) {
+          const frac = (Math.sin(t * 0.003 + j) * 0.5 + 0.5);
+          const px = nodes[i].x + dx * -frac;
+          const py = nodes[i].y + dy * -frac;
+          ctx.fillStyle = `rgba(78, 205, 196, ${alpha * 3})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  for (const n of nodes) {
+    const glow = 0.3 + Math.sin(n.pulse) * 0.2;
+    ctx.fillStyle = `rgba(78, 205, 196, ${glow})`;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  requestAnimationFrame(drawFrame);
+}
+
+window.addEventListener('resize', resize);
+resize();
+requestAnimationFrame(drawFrame);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') resetTimer();
+  if (e.key === ' ' && interval !== null) { e.preventDefault(); togglePause(); }
+});
+</script>
+
+</body>
+</html>
