@@ -128,14 +128,19 @@
   .explanation .expl-label.green { color: #059669; }
   .explanation .expl-text { font-size: 12px; line-height: 1.6; color: #475569; }
 
-  /* Footer */
-  .footer {
-    margin-top: 24px; padding: 14px 18px;
-    background: #1e3a5f; border: 1px solid #1e3a5f;
-    border-radius: 6px; font-size: 12px; line-height: 1.7; color: rgba(255,255,255,0.7);
+  /* Key insight callout */
+  .key-insight {
+    background: #1e3a5f;
+    border-left: 4px solid #e67e22;
+    padding: 1rem 1.25rem;
+    margin: 0 0 1.5rem 0;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.75);
+    border-radius: 6px;
   }
-  .footer strong { color: #ffffff; }
-  .footer em { color: rgba(255,255,255,0.85); }
+  .key-insight strong { color: #e67e22; }
+  .key-insight em { color: #6ee7b7; }
 </style>
 </head>
 <body>
@@ -149,6 +154,12 @@
       <h1>Base Model vs Instruction-Tuned Model</h1>
     </div>
     <p>Same architecture, different training — see why post-training matters.</p>
+  </div>
+
+  <div class="key-insight">
+    <strong>Key insight:</strong> The base model is an internet text simulator — it autocompletes based on patterns in training data.
+    The instruction-tuned model (SFT → RLHF) learns to <em>follow instructions</em> and <em>be helpful</em>.
+    Same underlying knowledge, fundamentally different behavior. InstructGPT (Jan 2022) demonstrated this; ChatGPT (Nov 2022) brought it to the public.
   </div>
 
   <!-- Controls -->
@@ -189,12 +200,6 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <div class="footer">
-    <strong>Key insight:</strong> The base model is an internet text simulator — it autocompletes based on patterns in training data.
-    The instruction-tuned model (SFT → RLHF) learns to <em>follow instructions</em> and <em>be helpful</em>.
-    Same underlying knowledge, fundamentally different behavior. InstructGPT (Jan 2022) demonstrated this; ChatGPT (Nov 2022) brought it to the public.
-  </div>
 </div>
 
 <script>
