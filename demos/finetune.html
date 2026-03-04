@@ -877,14 +877,36 @@ function fillMatrix(id, rows, cols, cellClass, values) {
 
 // Initial matrix fills
 const wVals = [0.3, -0.7, 0.1, 0.5, -0.2, 0.8, -0.4, 0.6, 0.9, -0.1, 0.3, -0.8, -0.5, 0.4, -0.6, 0.2];
+
+// LoRA matrices: B is 4x2, A is 2x4 (rank r=2)
+const bVals = [0.2, -0.1, 0.3, 0.4, -0.3, 0.1, 0.5, -0.2];
+const aVals = [0.1, 0.3, -0.2, 0.4, -0.1, 0.2, 0.5, -0.3];
+
+// Compute B*A (4x2 * 2x4 = 4x4)
+function matMul(B, A, m, k, n) {
+  const result = [];
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < n; j++) {
+      let sum = 0;
+      for (let p = 0; p < k; p++) {
+        sum += B[i * k + p] * A[p * n + j];
+      }
+      result.push(sum);
+    }
+  }
+  return result;
+}
+const baProduct = matMul(bVals, aVals, 4, 2, 4);
+const wPlusBA = wVals.map((w, i) => (w + baProduct[i]).toFixed(1));
+// Full fine-tune: W' is just a plausible update (W + small random delta)
 const wPrimeVals = wVals.map(v => (v + (Math.random()*0.6-0.3)).toFixed(1));
 
 fillMatrix('matrix-w-full', 4, 4, 'delta-cell', wVals.map(v=>v.toFixed(1)));
 fillMatrix('matrix-w-prime', 4, 4, 'result-cell', wPrimeVals);
 fillMatrix('matrix-w-frozen', 4, 4, 'frozen-cell', wVals.map(v=>v.toFixed(1)));
-fillMatrix('matrix-b', 4, 2, 'lora-b-cell');
-fillMatrix('matrix-a', 2, 4, 'lora-a-cell');
-fillMatrix('matrix-result', 4, 4, 'result-cell', wPrimeVals);
+fillMatrix('matrix-b', 4, 2, 'lora-b-cell', bVals.map(v=>v.toFixed(1)));
+fillMatrix('matrix-a', 2, 4, 'lora-a-cell', aVals.map(v=>v.toFixed(1)));
+fillMatrix('matrix-result', 4, 4, 'result-cell', wPlusBA);
 
 // Rank explorer
 const D = 4096; // model dimension
