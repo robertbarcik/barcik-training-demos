@@ -27,12 +27,18 @@
 
   /* Architecture diagram */
   .arch { display: flex; align-items: center; justify-content: center; gap: 0; padding: 16px 0; flex-wrap: wrap; }
+  .arch-item { display: flex; align-items: center; }
   .arch-box {
     border-radius: 10px; padding: 8px 12px; text-align: center;
     font-size: 12px; font-weight: 600; color: #334155; min-width: 80px;
   }
   .arch-icon { font-size: 18px; }
   .arch-arrow { font-size: 20px; color: #94A3B8; padding: 0 2px; }
+  @media (max-width: 480px) {
+    .arch { flex-direction: column; gap: 4px; }
+    .arch-item { flex-direction: row; }
+    .arch-arrow { transform: rotate(90deg); }
+  }
 
   /* Scenario buttons */
   .scenarios { display: flex; gap: 8px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
@@ -174,15 +180,11 @@
 
   <!-- Architecture Diagram -->
   <div class="arch">
-    <div class="arch-box" style="background:#DBEAFE"><div class="arch-icon">🖥️</div>Your App</div>
-    <span class="arch-arrow">→</span>
-    <div class="arch-box" style="background:#EDE9FE"><div class="arch-icon">🤖</div>OpenAI API</div>
-    <span class="arch-arrow">→</span>
-    <div class="arch-box" style="background:#FEF3C7"><div class="arch-icon">🧠</div>Model Decides</div>
-    <span class="arch-arrow">→</span>
-    <div class="arch-box" style="background:#D1FAE5"><div class="arch-icon">⚙️</div>Your App Executes</div>
-    <span class="arch-arrow">→</span>
-    <div class="arch-box" style="background:#CFFAFE"><div class="arch-icon">✨</div>Model Responds</div>
+    <div class="arch-item"><div class="arch-box" style="background:#DBEAFE"><div class="arch-icon">🖥️</div>Your App</div><span class="arch-arrow">→</span></div>
+    <div class="arch-item"><div class="arch-box" style="background:#EDE9FE"><div class="arch-icon">🤖</div>LLM API</div><span class="arch-arrow">→</span></div>
+    <div class="arch-item"><div class="arch-box" style="background:#FEF3C7"><div class="arch-icon">🧠</div>Model Decides</div><span class="arch-arrow">→</span></div>
+    <div class="arch-item"><div class="arch-box" style="background:#D1FAE5"><div class="arch-icon">⚙️</div>Your App Executes</div><span class="arch-arrow">→</span></div>
+    <div class="arch-item"><div class="arch-box" style="background:#CFFAFE"><div class="arch-icon">✨</div>Model Responds</div></div>
   </div>
 
   <!-- Scenario Selector -->
