@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embedding Space Explorer | barcik.training</title>
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --text-dim: #64748b;
+    --accent: #1e3a5f;
+    --accent-light: #2563eb;
+    --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    background: #1e3a5f;
+    color: #fff;
+    padding: 1.25rem 2rem;
+  }
+  header .inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  header h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+  header .brand {
+    font-size: 0.85rem;
+    color: #cbd5e0;
+  }
+
+  /* Explanation */
+  .explanation {
+    max-width: 1400px;
+    margin: 1.25rem auto 0;
+    padding: 0 1.5rem;
+  }
+  .explanation .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+  .explanation .card strong { color: var(--text); }
+
+  /* Filter bar */
+  .filter-bar {
+    max-width: 1400px;
+    margin: 1rem auto 0;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  .filter-bar .label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-right: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .filter-btn {
+    border: 2px solid transparent;
+    border-radius: 20px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    color: #fff;
+  }
+  .filter-btn:hover { transform: translateY(-1px); }
+  .filter-btn.inactive { opacity: 0.35; }
+  .filter-btn[data-cat="all"] { background: #475569; }
+  .filter-btn[data-cat="animals"] { background: #16a34a; }
+  .filter-btn[data-cat="countries"] { background: #2563eb; }
+  .filter-btn[data-cat="professions"] { background: #d97706; }
+  .filter-btn[data-cat="emotions"] { background: #db2777; }
+  .filter-btn[data-cat="food"] { background: #92400e; }
+  .filter-btn[data-cat="technology"] { background: #0d9488; }
+  .filter-btn[data-cat="people"] { background: #7c3aed; }
+  .filter-btn[data-cat="places"] { background: #15803d; }
+
+  /* Main layout */
+  .main-layout {
+    max-width: 1400px;
+    margin: 1rem auto 2rem;
+    padding: 0 1.5rem;
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+  }
+  .canvas-wrap {
+    flex: 0 0 65%;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+  }
+  .canvas-wrap canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: crosshair;
+  }
+  .sidebar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Sidebar cards */
+  .panel {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 1rem 1.15rem;
+  }
+  .panel h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  /* Word info */
+  .word-info-empty {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+  .word-info-content { display: none; }
+  .word-info-content .word-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .word-info-content .word-cat {
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 12px;
+    color: #fff;
+    margin-top: 0.25rem;
+  }
+  .word-info-content .word-coords {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 0.4rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .neighbor-list {
+    list-style: none;
+    margin-top: 0.6rem;
+  }
+  .neighbor-list li {
+    font-size: 0.82rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .neighbor-list .n-name { font-weight: 600; color: var(--text); }
+  .neighbor-list .n-dist { font-size: 0.75rem; color: var(--text-dim); font-family: monospace; }
+  .neighbor-list .n-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Vector arithmetic */
+  .arith-row {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.65rem;
+  }
+  .arith-row .op {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 18px;
+    text-align: center;
+  }
+  .arith-row select {
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    background: #f8fafc;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .arith-row select:focus { outline: 2px solid var(--accent-light); border-color: transparent; }
+  .preset-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.65rem;
+  }
+  .preset-btn {
+    font-size: 0.72rem;
+    padding: 0.3rem 0.6rem;
+    background: #eef2ff;
+    color: var(--accent);
+    border: 1px solid #c7d2fe;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.15s;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .preset-btn:hover { background: #dbeafe; }
+  .calc-btn {
+    width: 100%;
+    padding: 0.55rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: inherit;
+  }
+  .calc-btn:hover { background: #15294a; }
+  .arith-result {
+    margin-top: 0.65rem;
+    padding: 0.75rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    display: none;
+  }
+  .arith-result .formula {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 0.3rem;
+  }
+  .arith-result .answer {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #15803d;
+  }
+  .arith-result .answer-dist {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-top: 0.15rem;
+  }
+
+  /* Legend */
+  .legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem 0.75rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 740px) {
+    .main-layout {
+      flex-direction: column;
+    }
+    .canvas-wrap {
+      flex: none;
+      width: 100%;
+    }
+    .sidebar {
+      width: 100%;
+    }
+    header .inner {
+      flex-direction: column;
+      text-align: center;
+    }
+    .filter-bar {
+      justify-content: center;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <h1>Embedding Space Explorer</h1>
+    <span class="brand">barcik.training</span>
+  </div>
+</header>
+
+<div class="explanation">
+  <div class="card">
+    <strong>Word embeddings</strong> represent words as points in a high-dimensional space, where
+    semantically similar words are positioned close together. This 2D visualization shows how
+    relationships between words are captured as geometric directions. For example, the vector from
+    <em>"man"</em> to <em>"king"</em> is roughly the same as <em>"woman"</em> to <em>"queen"</em> &mdash;
+    enabling arithmetic like <strong>king &minus; man + woman &approx; queen</strong>.
+    Click on any word to explore its neighbors, or try the vector arithmetic panel.
+  </div>
+</div>
+
+<div class="filter-bar">
+  <span class="label">Filter:</span>
+  <button class="filter-btn" data-cat="all">All</button>
+  <button class="filter-btn" data-cat="animals">Animals</button>
+  <button class="filter-btn" data-cat="countries">Countries/Cities</button>
+  <button class="filter-btn" data-cat="professions">Professions</button>
+  <button class="filter-btn" data-cat="emotions">Emotions</button>
+  <button class="filter-btn" data-cat="food">Food</button>
+  <button class="filter-btn" data-cat="technology">Technology</button>
+  <button class="filter-btn" data-cat="people">People/Royalty</button>
+  <button class="filter-btn" data-cat="places">Places</button>
+</div>
+
+<div class="main-layout">
+  <div class="canvas-wrap">
+    <canvas id="plotCanvas" width="800" height="600"></canvas>
+  </div>
+  <div class="sidebar">
+    <!-- Word info -->
+    <div class="panel" id="wordPanel">
+      <h3>Selected Word</h3>
+      <div class="word-info-empty" id="wordEmpty">Click a word on the plot to inspect it.</div>
+      <div class="word-info-content" id="wordContent">
+        <div class="word-name" id="wordName"></div>
+        <div class="word-cat" id="wordCat"></div>
+        <div class="word-coords" id="wordCoords"></div>
+        <ul class="neighbor-list" id="neighborList"></ul>
+      </div>
+    </div>
+
+    <!-- Vector arithmetic -->
+    <div class="panel">
+      <h3>Vector Arithmetic</h3>
+      <div class="arith-row">
+        <select id="wordA"></select>
+        <span class="op">&minus;</span>
+        <select id="wordB"></select>
+        <span class="op">+</span>
+        <select id="wordC"></select>
+      </div>
+      <div class="preset-btns">
+        <button class="preset-btn" data-a="king" data-b="man" data-c="woman">king &minus; man + woman</button>
+        <button class="preset-btn" data-a="paris" data-b="france" data-c="germany">paris &minus; france + germany</button>
+        <button class="preset-btn" data-a="tokyo" data-b="japan" data-c="spain">tokyo &minus; japan + spain</button>
+      </div>
+      <button class="calc-btn" id="calcBtn">Calculate</button>
+      <div class="arith-result" id="arithResult">
+        <div class="formula" id="arithFormula"></div>
+        <div class="answer" id="arithAnswer"></div>
+        <div class="answer-dist" id="arithDist"></div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="panel">
+      <h3>Legend</h3>
+      <div class="legend-grid" id="legendGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ====== Category definitions ======
+  const CATEGORIES = {
+    animals:     { label: 'Animals',          color: '#16a34a' },
+    countries:   { label: 'Countries/Cities', color: '#2563eb' },
+    professions: { label: 'Professions',      color: '#d97706' },
+    emotions:    { label: 'Emotions',         color: '#db2777' },
+    food:        { label: 'Food',             color: '#92400e' },
+    technology:  { label: 'Technology',        color: '#0d9488' },
+    people:      { label: 'People/Royalty',   color: '#7c3aed' },
+    places:      { label: 'Places',           color: '#15803d' }
+  };
+
+  // ====== Word positions (pre-tuned for vector arithmetic) ======
+  //
+  // Design principles:
+  //   - Categories cluster in distinct regions
+  //   - king - man + woman = queen  (must land within ~15 units)
+  //   - paris - france + germany = berlin (within ~15 units)
+  //   - tokyo - japan + spain = madrid (within ~15 units)
+  //
+  // To achieve the arithmetic constraints, we ensure:
+  //   king - man = queen - woman  =>  king - queen = man - woman
+  //   paris - france = berlin - germany  =>  paris - berlin = france - germany
+  //   tokyo - japan = madrid - spain  =>  tokyo - madrid = japan - spain
+
+  // People/Royalty cluster: centered around (170, 110)
+  // We set an exact royalty offset: king-queen differ by same vector as man-woman
+  // man-woman offset: let's use (28, -18)
+  // king(184, 94), queen(156, 112), man(178, 128), woman(150, 146)
+  // Verify: king - man + woman = (184-178+150, 94-128+146) = (156, 112) = queen. Perfect!
+  // prince(198, 108), princess(166, 82), boy(192, 140), girl(160, 158)
+
+  // Countries/Cities cluster: centered around (580, 130)
+  // Country-capital offset for France-Paris: let's use (35, -40)
+  // france(540, 160), paris(575, 120)
+  // germany(590, 150), berlin(625, 110)
+  // Verify: paris - france + germany = (575-540+590, 120-160+150) = (625, 110) = berlin. Perfect!
+  // japan(635, 170), tokyo(670, 130)
+  // spain(555, 185), madrid(590, 145)
+  // Verify: tokyo - japan + spain = (670-635+555, 130-170+185) = (590, 145) = madrid. Perfect!
+  // italy(520, 175), rome(555, 135)
+
+  const WORDS = [
+    // Animals — cluster center ~(120, 420)
+    { word: 'cat',       cat: 'animals',     x: 95,  y: 395 },
+    { word: 'dog',       cat: 'animals',     x: 115, y: 410 },
+    { word: 'lion',      cat: 'animals',     x: 140, y: 430 },
+    { word: 'tiger',     cat: 'animals',     x: 155, y: 440 },
+    { word: 'eagle',     cat: 'animals',     x: 100, y: 450 },
+    { word: 'whale',     cat: 'animals',     x: 80,  y: 435 },
+    { word: 'dolphin',   cat: 'animals',     x: 70,  y: 420 },
+    { word: 'horse',     cat: 'animals',     x: 130, y: 400 },
+    { word: 'bear',      cat: 'animals',     x: 160, y: 415 },
+    { word: 'fish',      cat: 'animals',     x: 85,  y: 460 },
+
+    // Countries/Cities — cluster center ~(590, 140)
+    { word: 'france',    cat: 'countries',   x: 540, y: 160 },
+    { word: 'paris',     cat: 'countries',   x: 575, y: 120 },
+    { word: 'germany',   cat: 'countries',   x: 590, y: 150 },
+    { word: 'berlin',    cat: 'countries',   x: 625, y: 110 },
+    { word: 'italy',     cat: 'countries',   x: 520, y: 175 },
+    { word: 'rome',      cat: 'countries',   x: 555, y: 135 },
+    { word: 'spain',     cat: 'countries',   x: 555, y: 185 },
+    { word: 'madrid',    cat: 'countries',   x: 590, y: 145 },
+    { word: 'japan',     cat: 'countries',   x: 635, y: 170 },
+    { word: 'tokyo',     cat: 'countries',   x: 670, y: 130 },
+
+    // Professions — cluster center ~(420, 470)
+    { word: 'doctor',    cat: 'professions', x: 400, y: 450 },
+    { word: 'nurse',     cat: 'professions', x: 415, y: 465 },
+    { word: 'teacher',   cat: 'professions', x: 435, y: 480 },
+    { word: 'engineer',  cat: 'professions', x: 450, y: 455 },
+    { word: 'lawyer',    cat: 'professions', x: 395, y: 485 },
+    { word: 'chef',      cat: 'professions', x: 430, y: 500 },
+    { word: 'pilot',     cat: 'professions', x: 460, y: 470 },
+    { word: 'artist',    cat: 'professions', x: 380, y: 470 },
+    { word: 'musician',  cat: 'professions', x: 375, y: 490 },
+    { word: 'scientist', cat: 'professions', x: 445, y: 440 },
+
+    // Emotions — cluster center ~(680, 420)
+    { word: 'happy',     cat: 'emotions',    x: 665, y: 400 },
+    { word: 'sad',       cat: 'emotions',    x: 690, y: 415 },
+    { word: 'angry',     cat: 'emotions',    x: 710, y: 430 },
+    { word: 'fear',      cat: 'emotions',    x: 700, y: 445 },
+    { word: 'love',      cat: 'emotions',    x: 655, y: 420 },
+    { word: 'joy',       cat: 'emotions',    x: 650, y: 405 },
+    { word: 'surprise',  cat: 'emotions',    x: 680, y: 450 },
+    { word: 'disgust',   cat: 'emotions',    x: 720, y: 440 },
+    { word: 'calm',      cat: 'emotions',    x: 660, y: 435 },
+    { word: 'anxious',   cat: 'emotions',    x: 695, y: 460 },
+
+    // Food — cluster center ~(300, 300)
+    { word: 'pizza',     cat: 'food',        x: 280, y: 280 },
+    { word: 'pasta',     cat: 'food',        x: 270, y: 295 },
+    { word: 'sushi',     cat: 'food',        x: 310, y: 285 },
+    { word: 'bread',     cat: 'food',        x: 295, y: 310 },
+    { word: 'rice',      cat: 'food',        x: 320, y: 300 },
+    { word: 'apple',     cat: 'food',        x: 285, y: 325 },
+    { word: 'banana',    cat: 'food',        x: 275, y: 340 },
+    { word: 'chocolate', cat: 'food',        x: 310, y: 320 },
+    { word: 'coffee',    cat: 'food',        x: 330, y: 310 },
+    { word: 'tea',       cat: 'food',        x: 340, y: 295 },
+
+    // Technology — cluster center ~(550, 360)
+    { word: 'computer',  cat: 'technology',  x: 530, y: 340 },
+    { word: 'phone',     cat: 'technology',  x: 545, y: 355 },
+    { word: 'internet',  cat: 'technology',  x: 560, y: 345 },
+    { word: 'software',  cat: 'technology',  x: 540, y: 370 },
+    { word: 'robot',     cat: 'technology',  x: 575, y: 360 },
+    { word: 'algorithm', cat: 'technology',  x: 555, y: 380 },
+    { word: 'database',  cat: 'technology',  x: 530, y: 385 },
+    { word: 'network',   cat: 'technology',  x: 565, y: 375 },
+    { word: 'server',    cat: 'technology',  x: 520, y: 365 },
+    { word: 'code',      cat: 'technology',  x: 550, y: 395 },
+
+    // People/Royalty — cluster center ~(170, 120)
+    { word: 'king',      cat: 'people',      x: 184, y: 94  },
+    { word: 'queen',     cat: 'people',      x: 156, y: 112 },
+    { word: 'prince',    cat: 'people',      x: 198, y: 108 },
+    { word: 'princess',  cat: 'people',      x: 166, y: 82  },
+    { word: 'man',       cat: 'people',      x: 178, y: 128 },
+    { word: 'woman',     cat: 'people',      x: 150, y: 146 },
+    { word: 'boy',       cat: 'people',      x: 192, y: 140 },
+    { word: 'girl',      cat: 'people',      x: 160, y: 158 },
+
+    // Places — cluster center ~(120, 270)
+    { word: 'ocean',     cat: 'places',      x: 100, y: 250 },
+    { word: 'mountain',  cat: 'places',      x: 130, y: 260 },
+    { word: 'forest',    cat: 'places',      x: 115, y: 275 },
+    { word: 'desert',    cat: 'places',      x: 145, y: 280 },
+    { word: 'river',     cat: 'places',      x: 105, y: 290 },
+    { word: 'island',    cat: 'places',      x: 90,  y: 270 },
+    { word: 'city',      cat: 'places',      x: 140, y: 255 },
+    { word: 'village',   cat: 'places',      x: 135, y: 295 }
+  ];
+
+  // Build lookup map
+  const wordMap = {};
+  WORDS.forEach(w => { wordMap[w.word] = w; });
+
+  // ====== State ======
+  const visibleCats = {};
+  Object.keys(CATEGORIES).forEach(c => { visibleCats[c] = true; });
+  let selectedWord = null;
+  let neighbors = [];
+  let arithResult = null; // { x, y, nearest, dist }
+  let arithAnimProgress = 0;
+  let arithAnimId = null;
+
+  // ====== Canvas setup ======
+  const canvas = document.getElementById('plotCanvas');
+  const ctx = canvas.getContext('2d');
+  const PADDING = 40;
+
+  // ====== Utility ======
+  function dist(a, b) {
+    return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+  }
+
+  function getVisibleWords() {
+    return WORDS.filter(w => visibleCats[w.cat]);
+  }
+
+  function findNearest(target, exclude, count) {
+    const visible = getVisibleWords().filter(w => w.word !== exclude);
+    visible.sort((a, b) => dist(target, a) - dist(target, b));
+    return visible.slice(0, count).map(w => ({ word: w.word, cat: w.cat, dist: dist(target, w) }));
+  }
+
+  function catColor(cat) {
+    return CATEGORIES[cat] ? CATEGORIES[cat].color : '#888';
+  }
+
+  // ====== Drawing ======
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    // Only resize the buffer if DPR changed
+    if (canvas.width !== 800 * dpr || canvas.height !== 600 * dpr) {
+      canvas.width = 800 * dpr;
+      canvas.height = 600 * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    ctx.clearRect(0, 0, 800, 600);
+
+    // Background
+    ctx.fillStyle = '#fafcff';
+    ctx.fillRect(0, 0, 800, 600);
+
+    // Grid lines
+    ctx.strokeStyle = '#e8edf3';
+    ctx.lineWidth = 0.5;
+    for (let gx = PADDING; gx <= 800 - PADDING; gx += 50) {
+      ctx.beginPath();
+      ctx.moveTo(gx, PADDING);
+      ctx.lineTo(gx, 600 - PADDING);
+      ctx.stroke();
+    }
+    for (let gy = PADDING; gy <= 600 - PADDING; gy += 50) {
+      ctx.beginPath();
+      ctx.moveTo(PADDING, gy);
+      ctx.lineTo(800 - PADDING, gy);
+      ctx.stroke();
+    }
+
+    // Border
+    ctx.strokeStyle = '#d0d7e2';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(PADDING, PADDING, 800 - 2 * PADDING, 600 - 2 * PADDING);
+
+    const visible = getVisibleWords();
+
+    // Neighbor lines
+    if (selectedWord && neighbors.length > 0) {
+      const sw = wordMap[selectedWord];
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.2;
+      neighbors.forEach(n => {
+        const nw = wordMap[n.word];
+        if (!nw || !visibleCats[nw.cat]) return;
+        ctx.strokeStyle = catColor(nw.cat) + '80';
+        ctx.beginPath();
+        ctx.moveTo(sw.x, sw.y);
+        ctx.lineTo(nw.x, nw.y);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    // Draw dots and labels
+    visible.forEach(w => {
+      const isSelected = w.word === selectedWord;
+      const isNeighbor = neighbors.some(n => n.word === w.word);
+      const r = isSelected ? 9 : (isNeighbor ? 7 : 6);
+      const color = catColor(w.cat);
+
+      // Dot shadow
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.12)';
+      ctx.shadowBlur = isSelected ? 8 : 3;
+      ctx.shadowOffsetY = 1;
+      ctx.beginPath();
+      ctx.arc(w.x, w.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+
+      // Dot border
+      if (isSelected) {
+        ctx.beginPath();
+        ctx.arc(w.x, w.y, r + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(w.x, w.y, r + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else if (isNeighbor) {
+        ctx.beginPath();
+        ctx.arc(w.x, w.y, r + 1.5, 0, Math.PI * 2);
+        ctx.strokeStyle = color + '60';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Label
+      ctx.font = isSelected ? 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif' :
+                              '11px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+
+      // Text background for readability
+      const text = w.word;
+      const tm = ctx.measureText(text);
+      const tx = w.x;
+      const ty = w.y - r - 3;
+      ctx.fillStyle = 'rgba(250,252,255,0.85)';
+      ctx.fillRect(tx - tm.width / 2 - 2, ty - 11, tm.width + 4, 13);
+
+      ctx.fillStyle = isSelected ? '#111' : '#374151';
+      ctx.fillText(text, tx, ty);
+    });
+
+    // Vector arithmetic crosshair + result
+    if (arithResult && arithAnimProgress > 0) {
+      const ax = arithResult.x;
+      const ay = arithResult.y;
+      const p = arithAnimProgress;
+      const len = 14 * p;
+
+      ctx.save();
+      ctx.globalAlpha = p;
+
+      // Crosshair
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(ax - len, ay);
+      ctx.lineTo(ax + len, ay);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(ax, ay - len);
+      ctx.lineTo(ax, ay + len);
+      ctx.stroke();
+
+      // Circle around crosshair
+      ctx.beginPath();
+      ctx.arc(ax, ay, 18 * p, 0, Math.PI * 2);
+      ctx.strokeStyle = '#dc262680';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Line to nearest word
+      if (arithResult.nearest) {
+        const nw = wordMap[arithResult.nearest];
+        if (nw) {
+          ctx.strokeStyle = '#dc262660';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          ctx.moveTo(ax, ay);
+          ctx.lineTo(nw.x, nw.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Highlight nearest word
+          ctx.beginPath();
+          ctx.arc(nw.x, nw.y, 11, 0, Math.PI * 2);
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+        }
+      }
+
+      // Label at crosshair
+      ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = 'rgba(250,252,255,0.9)';
+      const rl = arithResult.nearest ? ('\u2248 ' + arithResult.nearest) : 'result';
+      const rm = ctx.measureText(rl);
+      ctx.fillRect(ax - rm.width / 2 - 3, ay + 20, rm.width + 6, 15);
+      ctx.fillStyle = '#dc2626';
+      ctx.fillText(rl, ax, ay + 21);
+
+      ctx.restore();
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Dimension 1', 400, 600 - 16);
+    ctx.save();
+    ctx.translate(14, 300);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Dimension 2', 0, 0);
+    ctx.restore();
+  }
+
+  // ====== Interaction: click ======
+  canvas.addEventListener('click', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = 800 / rect.width;
+    const scaleY = 600 / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    // Find closest visible word within 20 units
+    let closest = null;
+    let closestDist = Infinity;
+    getVisibleWords().forEach(w => {
+      const d = dist({ x: mx, y: my }, w);
+      if (d < closestDist) {
+        closestDist = d;
+        closest = w;
+      }
+    });
+
+    if (closest && closestDist < 25) {
+      selectWord(closest.word);
+    } else {
+      deselectWord();
+    }
+    draw();
+  });
+
+  function selectWord(word) {
+    selectedWord = word;
+    const w = wordMap[word];
+    neighbors = findNearest(w, word, 5);
+
+    // Update panel
+    document.getElementById('wordEmpty').style.display = 'none';
+    const content = document.getElementById('wordContent');
+    content.style.display = 'block';
+    document.getElementById('wordName').textContent = word;
+    const catEl = document.getElementById('wordCat');
+    catEl.textContent = CATEGORIES[w.cat].label;
+    catEl.style.background = catColor(w.cat);
+    document.getElementById('wordCoords').textContent = '(' + w.x.toFixed(0) + ', ' + w.y.toFixed(0) + ')';
+
+    const list = document.getElementById('neighborList');
+    list.innerHTML = '';
+    neighbors.forEach(n => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span><span class="n-dot" style="background:' + catColor(n.cat) + '"></span>' +
+                     '<span class="n-name">' + n.word + '</span></span>' +
+                     '<span class="n-dist">d=' + n.dist.toFixed(1) + '</span>';
+      list.appendChild(li);
+    });
+  }
+
+  function deselectWord() {
+    selectedWord = null;
+    neighbors = [];
+    document.getElementById('wordEmpty').style.display = 'block';
+    document.getElementById('wordContent').style.display = 'none';
+  }
+
+  // ====== Filter buttons ======
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const cat = this.dataset.cat;
+      if (cat === 'all') {
+        Object.keys(visibleCats).forEach(c => { visibleCats[c] = true; });
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('inactive'));
+      } else {
+        visibleCats[cat] = !visibleCats[cat];
+        this.classList.toggle('inactive', !visibleCats[cat]);
+        // Update "all" button state
+        const allOn = Object.values(visibleCats).every(v => v);
+        document.querySelector('.filter-btn[data-cat="all"]').classList.toggle('inactive', !allOn);
+      }
+      // If selected word is now hidden, deselect
+      if (selectedWord && !visibleCats[wordMap[selectedWord].cat]) {
+        deselectWord();
+      }
+      draw();
+    });
+  });
+
+  // ====== Vector arithmetic ======
+  function populateDropdowns() {
+    const sorted = WORDS.slice().sort((a, b) => a.word.localeCompare(b.word));
+    ['wordA', 'wordB', 'wordC'].forEach(id => {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '';
+      sorted.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w.word;
+        opt.textContent = w.word;
+        sel.appendChild(opt);
+      });
+    });
+    // Defaults
+    document.getElementById('wordA').value = 'king';
+    document.getElementById('wordB').value = 'man';
+    document.getElementById('wordC').value = 'woman';
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.getElementById('wordA').value = this.dataset.a;
+      document.getElementById('wordB').value = this.dataset.b;
+      document.getElementById('wordC').value = this.dataset.c;
+    });
+  });
+
+  document.getElementById('calcBtn').addEventListener('click', function() {
+    const a = wordMap[document.getElementById('wordA').value];
+    const b = wordMap[document.getElementById('wordB').value];
+    const c = wordMap[document.getElementById('wordC').value];
+    if (!a || !b || !c) return;
+
+    const rx = a.x - b.x + c.x;
+    const ry = a.y - b.y + c.y;
+
+    // Find nearest word to result (exclude inputs)
+    const exclude = new Set([a.word, b.word, c.word]);
+    let nearest = null;
+    let nearestDist = Infinity;
+    WORDS.forEach(w => {
+      if (exclude.has(w.word)) return;
+      const d = dist({ x: rx, y: ry }, w);
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearest = w;
+      }
+    });
+
+    arithResult = {
+      x: rx,
+      y: ry,
+      nearest: nearest ? nearest.word : null,
+      dist: nearestDist
+    };
+
+    // Show result panel
+    const rp = document.getElementById('arithResult');
+    rp.style.display = 'block';
+    document.getElementById('arithFormula').textContent =
+      a.word + ' \u2212 ' + b.word + ' + ' + c.word + ' = ?';
+    document.getElementById('arithAnswer').textContent =
+      '\u2248 ' + (nearest ? nearest.word : '(none)');
+    document.getElementById('arithDist').textContent =
+      'Nearest word at distance ' + nearestDist.toFixed(1) + ' units' +
+      (nearest ? ' (' + CATEGORIES[nearest.cat].label + ')' : '');
+
+    // Animate crosshair
+    arithAnimProgress = 0;
+    if (arithAnimId) cancelAnimationFrame(arithAnimId);
+    function animStep() {
+      arithAnimProgress += 0.04;
+      if (arithAnimProgress >= 1) {
+        arithAnimProgress = 1;
+        draw();
+        return;
+      }
+      draw();
+      arithAnimId = requestAnimationFrame(animStep);
+    }
+    arithAnimId = requestAnimationFrame(animStep);
+  });
+
+  // ====== Legend ======
+  function buildLegend() {
+    const grid = document.getElementById('legendGrid');
+    grid.innerHTML = '';
+    Object.keys(CATEGORIES).forEach(cat => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = '<span class="legend-dot" style="background:' + CATEGORIES[cat].color + '"></span>' +
+                       '<span>' + CATEGORIES[cat].label + '</span>';
+      grid.appendChild(item);
+    });
+  }
+
+  // ====== Init ======
+  populateDropdowns();
+  buildLegend();
+  draw();
+
+  // Redraw on resize
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+</body>
+</html>
