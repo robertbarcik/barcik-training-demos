@@ -432,14 +432,12 @@
     bottom: 0.8rem;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.7rem;
-    color: var(--text-dim);
+    font-size: 0.9rem;
+    color: var(--accent);
     letter-spacing: 0.06em;
     z-index: 2;
-    opacity: 0.35;
+    opacity: 0.5;
   }
-  .branding a { color: var(--text-dim); text-decoration: none; }
-  .branding a:hover { color: var(--text); }
 
   .hint {
     position: fixed;
@@ -515,7 +513,7 @@
   </div>
 </div>
 
-<div class="branding"><a href="mailto:robert@barcik.training">robert@barcik.training</a></div>
+<div class="branding">robert@barcik.training</div>
 
 <script>
 // ══════════════════════════════════════════
@@ -561,7 +559,6 @@ const AI_FACTS = [
   { text: "Over 200 million people worldwide watched the 2016 AlphaGo vs Lee Sedol match. Go experts said it arrived a decade earlier than expected.", cat: "AlphaGo" },
 
   // ── FUNNY FAILS ──
-  { text: "Microsoft's chatbot Tay went from \"Hello world!\" to tweeting \"Hitler was right\" in just 16 hours. Microsoft's identical Chinese chatbot, Xiaoice, had handled 40 million conversations without incident.", cat: "Fails" },
   { text: "An AI-generated Microsoft travel guide recommended the Ottawa Food Bank as a tourist attraction, suggesting visitors \"arrive on an empty stomach.\"", cat: "Fails" },
   { text: "A New York attorney used ChatGPT for legal research and submitted a brief citing six completely fabricated court cases. When questioned, he asked ChatGPT if they were real — it doubled down.", cat: "Fails" },
   { text: "Google Bard's first public demo included a factual error that could have been caught by Googling it. The mistake wiped $100 billion off Alphabet's market value in a single day.", cat: "Fails" },
@@ -572,11 +569,7 @@ const AI_FACTS = [
   { text: "An AI once confidently stated the record for crossing the English Channel entirely on foot. That record does not exist, for obvious reasons.", cat: "Fails" },
   { text: 'Cambridge Dictionary chose "hallucinate" as its 2023 Word of the Year — specifically because of AI making things up with total confidence.', cat: "Fails" },
   { text: "IBM poured over $4 billion into Watson Health after Watson won Jeopardy!, then sold the division for roughly $1 billion after it was caught making unsafe cancer treatment recommendations.", cat: "Fails" },
-  { text: "When Google Photos labeled photos of a Black software engineer as \"gorillas\" in 2015, Google's fix was to block the words \"gorilla,\" \"chimp,\" and \"monkey\" entirely. Eight years later, it still can't identify a gorilla.", cat: "Fails" },
-  { text: "Amazon built an AI recruiting tool that learned to penalize any résumé containing the word \"women's\". It was scrapped after engineers couldn't stop it finding new ways to discriminate.", cat: "Fails" },
-  { text: "Google Gemini's image generator (2024) overcorrected for diversity so aggressively it produced racially diverse Nazi soldiers and a Black female pope — costing Alphabet ~$97 billion in market cap.", cat: "Fails" },
   { text: "Air Canada's chatbot gave a customer incorrect bereavement fare information. When sued, the airline argued the chatbot was \"a separate legal entity responsible for its own actions.\" The tribunal was not persuaded.", cat: "Fails" },
-  { text: "The first fatal autonomous vehicle pedestrian crash (Uber, 2018) happened because the AI couldn't classify a person as a pedestrian unless they were near a crosswalk.", cat: "Fails" },
   { text: "After IBM fed Watson the entire contents of Urban Dictionary to help it understand slang, Watson began swearing in its responses. IBM had to manually purge the dataset.", cat: "Fails" },
 
   // ── CONCEPTS & TECHNICAL ODDITIES ──
@@ -600,7 +593,6 @@ const AI_FACTS = [
   // ── INDUSTRY & SURPRISING ──
   { text: "OpenAI was founded as a tax-exempt nonprofit in 2015 with a 100× profit cap. That cap was quietly reduced, then eliminated entirely when OpenAI converted to a for-profit corporation in 2025.", cat: "Industry" },
   { text: "In 2022, an AI-generated artwork won first place at the Colorado State Fair. The artist disclosed it was AI. Other artists were furious.", cat: "Surprise" },
-  { text: "Sophia the robot got Saudi Arabian citizenship in 2017. The same year, Saudi women gained the right to drive.", cat: "Surprise" },
   { text: "The FDA had approved 223 AI-powered medical devices by 2023. AI is reading your X-rays, ECGs, and retinal scans.", cat: "Industry" },
   { text: "According to McKinsey (2026), 71% of companies report using generative AI in at least one business function.", cat: "Industry" },
   { text: "Most AI assistants (Siri, Alexa, Cortana) were given female voices by default. The reasons behind this design choice are still debated.", cat: "Surprise" },
@@ -855,7 +847,7 @@ function startCycling() {
   // For break facts: 11s. For recap points: adaptive to total time
   let ms;
   if (mode === 'break') {
-    ms = 11000;
+    ms = 22000;
   } else {
     ms = Math.min(15000, Math.max(8000, (totalSeconds * 1000) / cyclingItems.length));
   }
