@@ -104,7 +104,7 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 /* Pricing tiers */
 .tier-cards { display: flex; gap: 0.75rem; }
 .tier-card { flex: 1; background: #f8fafc; border-radius: 10px; padding: 1rem; text-align: center; border: 2px solid transparent; }
-.tier-card.featured { border-color: #1e3a5f; background: #fff; }
+.tier-card { border: 2px solid #e2e8f0; }
 .tier-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; }
 .tier-price { font-size: 1.3rem; font-weight: 800; color: #1e3a5f; margin: 0.3rem 0; }
 .tier-unit { font-size: 0.68rem; color: #94a3b8; margin-bottom: 0.25rem; }
@@ -115,10 +115,10 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .tier-features li::before { content: "✓ "; color: #0d9488; font-weight: 700; }
 
 /* ChatGPT tax */
-.tax-bar-container { padding: 0.5rem 0; }
+.tax-bar-container { padding: 0.5rem 0; margin-top: 1.5rem; }
 .tax-bar { height: 32px; background: #e2e8f0; border-radius: 8px; position: relative; overflow: visible; }
 .tax-marker { position: absolute; top: -6px; bottom: -6px; width: 3px; border-radius: 2px; }
-.tax-marker-label { position: absolute; top: -22px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; transform: translateX(-50%); }
+.tax-marker-label { position: absolute; top: -26px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; transform: translateX(-50%); }
 
 /* Communication messages */
 .comm-cards { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -304,6 +304,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
   <div class="panel">
     <div class="panel-title">ChatGPT Tax Visual</div>
     <p style="font-size: 0.82rem; color: #4a5568; margin-bottom: 0.75rem;">How your Starter price compares to the $20/mo ChatGPT Plus subscription that everyone knows.</p>
+    <div id="taxExplainer" style="font-size: 0.82rem; color: #4a5568; line-height: 1.6; background: #eff6ff; padding: 0.75rem 1rem; border-radius: 8px; border-left: 3px solid #3b82f6; margin-bottom: 0.5rem;"></div>
     <div class="tax-bar-container">
       <div class="tax-bar" id="taxBar">
         <div class="tax-marker" id="taxMarkerChatGPT" style="background:#e74c3c;">
@@ -576,9 +577,9 @@ function updateStep3() {
   // Tier cards with features
   const tiers = sc.tiers;
   const tierData = [
-    { key: 'starter', name: 'Starter', featured: false },
-    { key: 'professional', name: 'Professional', featured: true },
-    { key: 'enterprise', name: 'Enterprise', featured: false }
+    { key: 'starter', name: 'Starter' },
+    { key: 'professional', name: 'Professional' },
+    { key: 'enterprise', name: 'Enterprise' }
   ];
 
   let tierHtml = '';
@@ -590,7 +591,7 @@ function updateStep3() {
     const featuresHtml = tier.features.map(f => `<li>${f}</li>`).join('');
 
     tierHtml += `
-      <div class="tier-card ${t.featured ? 'featured' : ''}">
+      <div class="tier-card">
         <div class="tier-name">${t.name}</div>
         <div class="tier-price">${fmtUsd(price)}</div>
         <div class="tier-unit">${sc.outcomeLabel}</div>
@@ -604,7 +605,14 @@ function updateStep3() {
 
   // ChatGPT Tax — use starter monthly estimate for comparison
   const starterPrice = roundPrice(baseCost * tiers.starter.multiplier);
-  const starterMonthlyPerUser = (starterPrice * d.outcomesPerMonth) / sc.users;
+  const starterMonthlyTotal = starterPrice * d.outcomesPerMonth;
+  const starterMonthlyPerUser = starterMonthlyTotal / sc.users;
+  const outcomesPerUser = d.outcomesPerMonth / sc.users;
+
+  // Explain the per-user derivation
+  const taxExplainer = document.getElementById('taxExplainer');
+  taxExplainer.innerHTML = `Your Starter price is <strong>${fmtUsd(starterPrice)} ${sc.outcomeLabel}</strong>. With <strong>${Math.round(d.outcomesPerMonth).toLocaleString()} ${sc.outcomeUnitPlural}/mo</strong> across <strong>${sc.users} users</strong> (~${Math.round(outcomesPerUser).toLocaleString()} per user), that works out to <strong>${fmtUsd(starterMonthlyPerUser)}/user/month</strong>. This is the number your customer compares to ChatGPT Plus.`;
+
   const chatgptPrice = 20;
   const maxBar = Math.max(starterMonthlyPerUser * 1.5, 200);
   const chatgptPct = Math.min(90, (chatgptPrice / maxBar) * 100);
@@ -648,34 +656,39 @@ function updateStep4() {
   });
   document.getElementById('pitchCards').innerHTML = pitchHtml;
 
-  // ROI talking points
+  // ROI talking points — each tier gets a different angle
   const starterPrice = roundPrice(baseCost * tiers.starter.multiplier);
   const proPrice = roundPrice(baseCost * tiers.professional.multiplier);
   const entPrice = roundPrice(baseCost * tiers.enterprise.multiplier);
 
+  // Starter angle: cost comparison vs manual processing
   const humanCostPerOutcome = sc.humanCostPerTask * sc.outcomeDivisor;
   const starterSavingsPct = humanCostPerOutcome > 0 ? Math.round((1 - starterPrice / humanCostPerOutcome) * 100) : 0;
 
+  // Professional angle: time savings per user
   const tasksPerUserMonth = (sc.tasksPerDay * 30) / sc.users;
   const minutesSavedPerDay = (tasksPerUserMonth / 30) * sc.humanMinutesSaved;
   const hoursSavedPerDay = (minutesSavedPerDay / 60).toFixed(1);
 
+  // Enterprise angle: what it would cost to hire FTEs instead
+  // Assume $5K/mo fully loaded cost per FTE, each handling tasks manually
+  const tasksPerFtePerDay = 60 / sc.humanMinutesSaved * 8; // 8hr day
+  const ftesNeeded = Math.ceil(sc.tasksPerDay / tasksPerFtePerDay);
+  const fteMonthlyCost = ftesNeeded * 5000;
   const totalMonthlyEnt = entPrice * d.outcomesPerMonth;
-  const totalHumanMonthly = sc.humanCostPerTask * d.tasksPerMonth;
-  const totalSavingsPct = totalHumanMonthly > 0 ? Math.round((1 - totalMonthlyEnt / totalHumanMonthly) * 100) : 0;
 
   document.getElementById('commCards').innerHTML = `
     <div class="comm-card">
       <div class="comm-tier">Starter — ${fmtUsd(starterPrice)} ${sc.outcomeLabel}</div>
-      <p>"At ${fmtUsd(starterPrice)} ${sc.outcomeLabel}, clients save ${starterSavingsPct > 0 ? starterSavingsPct + '% vs' : 'compared to'} manual processing ($${humanCostPerOutcome.toLocaleString()} equivalent)."</p>
+      <p>"At ${fmtUsd(starterPrice)} ${sc.outcomeLabel}, ${starterSavingsPct > 0 ? 'clients save ' + starterSavingsPct + '% vs' : 'comparable to'} manual processing (${fmtUsd(humanCostPerOutcome)} ${sc.outcomeLabel} equivalent)."</p>
     </div>
     <div class="comm-card">
       <div class="comm-tier">Professional — ${fmtUsd(proPrice)} ${sc.outcomeLabel}</div>
-      <p>"The tool pays for itself if it saves each user ${hoursSavedPerDay} hours/day — that's ${Math.round(minutesSavedPerDay)} minutes across ${Math.round(tasksPerUserMonth / 30)} daily tasks."</p>
+      <p>"Each user saves ~${hoursSavedPerDay} hours/day (${Math.round(minutesSavedPerDay)} min across ${Math.round(tasksPerUserMonth / 30)} daily tasks). The premium features pay for themselves through fewer errors and faster turnaround."</p>
     </div>
     <div class="comm-card">
       <div class="comm-tier">Enterprise — ${fmtUsd(entPrice)} ${sc.outcomeLabel}</div>
-      <p>"At scale (${sc.tasksPerDay.toLocaleString()} tasks/day), total cost is ${fmtUsd(totalMonthlyEnt)}/mo vs ${fmtUsd(totalHumanMonthly)}/mo in manual labor — a ${totalSavingsPct}% cost reduction with faster turnaround."</p>
+      <p>"To handle ${sc.tasksPerDay.toLocaleString()} tasks/day manually, you'd need ~${ftesNeeded} FTEs at ~${fmtUsd(fteMonthlyCost)}/mo. Enterprise tier costs ${fmtUsd(totalMonthlyEnt)}/mo — and includes compliance documentation, audit trails, and dedicated SLA."</p>
     </div>
   `;
 }
