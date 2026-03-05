@@ -55,7 +55,16 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .cost-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
 .cost-card {
   background: #f8fafc; border-radius: 10px; padding: 1rem; border: 2px solid #e2e8f0;
+  cursor: pointer; transition: all 0.25s;
 }
+.cost-card:hover { border-color: #1e3a5f; background: #fff; }
+.cost-card.selected { border-color: #0d9488; background: #fff; box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
+.cost-card.dimmed { opacity: 0.5; }
+.cost-card .cc-choose-label {
+  text-align: center; font-size: 0.72rem; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; transition: color 0.2s;
+}
+.cost-card.selected .cc-choose-label { color: #0d9488; }
 .cost-card h4 { font-size: 0.85rem; color: #1e3a5f; margin-bottom: 0.3rem; }
 .cost-card .cc-model { font-size: 0.72rem; color: #94a3b8; margin-bottom: 0.5rem; }
 .cost-card .cc-row { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 0.2rem; }
@@ -74,13 +83,36 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .cost-card .cc-total-val { font-size: 1.2rem; font-weight: 800; color: #1e3a5f; }
 .cost-explainer { margin-top: 0.75rem; font-size: 0.82rem; color: #4a5568; line-height: 1.6; background: #eff6ff; padding: 0.75rem 1rem; border-radius: 8px; border-left: 3px solid #3b82f6; }
 
+/* Delivery summary banner */
+.delivery-banner {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; margin-bottom: 1.25rem;
+}
+.delivery-banner .db-icon { font-size: 1.2rem; }
+.delivery-banner .db-text { font-size: 0.88rem; color: #1e3a5f; font-weight: 600; }
+.delivery-banner .db-cost { font-size: 0.82rem; color: #0d9488; font-weight: 700; }
+
+/* Outcome cost callout */
+.outcome-callout {
+  text-align: center; padding: 1.25rem; margin-bottom: 1.25rem;
+  background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+.outcome-callout .oc-label { font-size: 0.78rem; color: #64748b; margin-bottom: 0.25rem; }
+.outcome-callout .oc-price { font-size: 2rem; font-weight: 800; color: #1e3a5f; }
+.outcome-callout .oc-unit { font-size: 0.88rem; color: #94a3b8; font-weight: 600; }
+
 /* Pricing tiers */
 .tier-cards { display: flex; gap: 0.75rem; }
 .tier-card { flex: 1; background: #f8fafc; border-radius: 10px; padding: 1rem; text-align: center; border: 2px solid transparent; }
 .tier-card.featured { border-color: #1e3a5f; background: #fff; }
 .tier-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; }
 .tier-price { font-size: 1.3rem; font-weight: 800; color: #1e3a5f; margin: 0.3rem 0; }
-.tier-margin { font-size: 0.72rem; color: #27ae60; font-weight: 600; margin-top: 0.15rem; }
+.tier-unit { font-size: 0.68rem; color: #94a3b8; margin-bottom: 0.25rem; }
+.tier-monthly { font-size: 0.78rem; color: #4a5568; font-weight: 600; margin-bottom: 0.3rem; }
+.tier-margin { font-size: 0.72rem; color: #27ae60; font-weight: 600; margin-bottom: 0.5rem; }
+.tier-features { text-align: left; padding: 0.5rem 0; border-top: 1px solid #e2e8f0; }
+.tier-features li { font-size: 0.75rem; color: #4a5568; margin-bottom: 0.2rem; list-style: none; padding-left: 0; }
+.tier-features li::before { content: "✓ "; color: #0d9488; font-weight: 700; }
 
 /* ChatGPT tax */
 .tax-bar-container { padding: 0.5rem 0; }
@@ -94,12 +126,14 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .comm-card p { font-size: 0.85rem; color: #1e3a5f; font-weight: 500; line-height: 1.5; }
 .comm-card .comm-tier { font-size: 0.68rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.15rem; }
 
-/* Cost per customer */
-.customer-cost-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
-.cc-box { background: #f8fafc; border-radius: 8px; padding: 0.75rem; text-align: center; }
-.cc-box .ccb-label { font-size: 0.68rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
-.cc-box .ccb-val { font-size: 1.1rem; font-weight: 800; color: #1e3a5f; }
-.cc-box .ccb-sub { font-size: 0.72rem; color: #64748b; }
+/* Pitch cards */
+.pitch-card {
+  background: #fff; border-radius: 10px; padding: 1rem; border: 1px solid #e2e8f0;
+  margin-bottom: 0.75rem;
+}
+.pitch-card .pitch-tier { font-size: 0.68rem; font-weight: 700; color: #0d9488; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+.pitch-card .pitch-quote { font-size: 0.92rem; color: #1e3a5f; font-weight: 600; font-style: italic; line-height: 1.5; margin-bottom: 0.5rem; }
+.pitch-card .pitch-detail { font-size: 0.82rem; color: #4a5568; line-height: 1.5; }
 
 /* Navigation */
 .nav-bar { max-width: 920px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; }
@@ -108,6 +142,7 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .nav-btn.primary { background: #1e3a5f; color: #fff; }
 .nav-btn.primary:hover { background: #2a4a73; }
 .nav-btn:disabled { opacity: 0.4; cursor: default; }
+.nav-hint { font-size: 0.75rem; color: #e74c3c; font-weight: 600; align-self: center; }
 
 /* Export */
 .export-bar { display: flex; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 920px; padding: 0 1.25rem; }
@@ -130,7 +165,6 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
   .scenario-grid { grid-template-columns: 1fr; }
   .cost-cards { grid-template-columns: 1fr; }
   .tier-cards { flex-direction: column; }
-  .customer-cost-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -143,7 +177,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 </header>
 
 <div class="intro">
-  <p>You want to price your AI product competitively. First understand what it costs to deliver, then determine the right price to pitch.</p>
+  <p>You want to price your AI product by <strong>outcome</strong>, not per user. First understand what it costs to deliver, choose your delivery method, then build outcome-based pricing tiers with real sales arguments.</p>
 </div>
 
 <div class="progress-bar">
@@ -151,11 +185,13 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
     <div class="progress-step active" id="ps1"></div>
     <div class="progress-step" id="ps2"></div>
     <div class="progress-step" id="ps3"></div>
+    <div class="progress-step" id="ps4"></div>
   </div>
   <div class="progress-labels">
     <span class="active" id="pl1">Your AI Product</span>
     <span id="pl2">Cost Landscape</span>
-    <span id="pl3">Pricing &amp; Messaging</span>
+    <span id="pl3">Outcome Pricing</span>
+    <span id="pl4">Sales Messaging</span>
   </div>
 </div>
 
@@ -192,12 +228,12 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 <!-- Step 2: Cost Landscape -->
 <div class="step" id="step2">
   <div class="panel">
-    <div class="panel-title">Three Delivery Options</div>
+    <div class="panel-title">Three Delivery Options — Click to Select Your Approach</div>
     <div class="cost-cards">
-      <div class="cost-card">
+      <div class="cost-card" id="cardApi" onclick="selectDelivery('api')">
         <h4>Vendor API</h4>
         <div class="cc-model">Claude / GPT (frontier)</div>
-        <div class="cc-slider">
+        <div class="cc-slider" onclick="event.stopPropagation()">
           <label>Cost per 1M tokens</label>
           <input type="range" id="apiCostSlider" min="1" max="60" value="15" step="1" oninput="updateCosts()">
           <div class="cc-slider-labels"><span>$1</span><span class="cc-slider-current" id="apiCostLabel">$15</span><span>$60</span></div>
@@ -210,11 +246,12 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
           <div class="cc-total-label">Monthly Cost</div>
           <div class="cc-total-val" id="apiMonthly">-</div>
         </div>
+        <div class="cc-choose-label">&#9654; Click to select</div>
       </div>
-      <div class="cost-card">
+      <div class="cost-card" id="cardGpu" onclick="selectDelivery('gpu')">
         <h4>Self-Hosted Cloud GPU</h4>
         <div class="cc-model">Llama 70B (open-source)</div>
-        <div class="cc-slider">
+        <div class="cc-slider" onclick="event.stopPropagation()">
           <label>Monthly GPU cost</label>
           <input type="range" id="gpuCostSlider" min="500" max="10000" value="3000" step="100" oninput="updateCosts()">
           <div class="cc-slider-labels"><span>$500</span><span class="cc-slider-current" id="gpuCostLabel">$3,000</span><span>$10K</span></div>
@@ -227,11 +264,12 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
           <div class="cc-total-label">Monthly Cost</div>
           <div class="cc-total-val" id="gpuMonthly">-</div>
         </div>
+        <div class="cc-choose-label">&#9654; Click to select</div>
       </div>
-      <div class="cost-card">
+      <div class="cost-card" id="cardLocal" onclick="selectDelivery('local')">
         <h4>Tiny Local Model</h4>
         <div class="cc-model">Mistral 7B (local)</div>
-        <div class="cc-slider">
+        <div class="cc-slider" onclick="event.stopPropagation()">
           <label>Monthly electricity + amort.</label>
           <input type="range" id="localCostSlider" min="100" max="2000" value="500" step="50" oninput="updateCosts()">
           <div class="cc-slider-labels"><span>$100</span><span class="cc-slider-current" id="localCostLabel">$500</span><span>$2K</span></div>
@@ -244,6 +282,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
           <div class="cc-total-label">Monthly Cost</div>
           <div class="cc-total-val" id="localMonthly">-</div>
         </div>
+        <div class="cc-choose-label">&#9654; Click to select</div>
       </div>
     </div>
     <div class="cost-explainer">
@@ -252,15 +291,13 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
   </div>
 </div>
 
-<!-- Step 3: Pricing & Messaging -->
+<!-- Step 3: Outcome Pricing -->
 <div class="step" id="step3">
-  <div class="panel">
-    <div class="panel-title">Your Cost Per Customer / Month</div>
-    <div class="customer-cost-grid" id="customerCostGrid"></div>
-  </div>
+  <div id="deliveryBanner"></div>
+  <div id="outcomeCallout"></div>
 
   <div class="panel">
-    <div class="panel-title">Recommended Pricing Tiers</div>
+    <div class="panel-title">Recommended Pricing Tiers — Per Outcome</div>
     <div class="tier-cards" id="tierCards"></div>
   </div>
 
@@ -279,10 +316,19 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
     </div>
     <div id="taxVerdict" style="margin-top: 1.5rem; font-size: 0.82rem; color: #4a5568; text-align: center;"></div>
   </div>
+</div>
+
+<!-- Step 4: Sales Messaging -->
+<div class="step" id="step4">
+  <div class="panel">
+    <div class="panel-title">Pitch Per Tier</div>
+    <p style="font-size: 0.82rem; color: #4a5568; margin-bottom: 0.75rem;">Pre-built sales arguments tailored to your product scenario. Use these as starting points for client conversations.</p>
+    <div id="pitchCards"></div>
+  </div>
 
   <div class="panel">
-    <div class="panel-title">Communication Messages</div>
-    <p style="font-size: 0.82rem; color: #4a5568; margin-bottom: 0.75rem;">Ready-to-use value propositions for each tier.</p>
+    <div class="panel-title">ROI Talking Points</div>
+    <p style="font-size: 0.82rem; color: #4a5568; margin-bottom: 0.75rem;">Ready-to-use value propositions backed by your scenario's numbers.</p>
     <div class="comm-cards" id="commCards"></div>
   </div>
 </div>
@@ -290,6 +336,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 <!-- Navigation -->
 <div class="nav-bar">
   <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>&larr; Back</button>
+  <span class="nav-hint" id="navHint"></span>
   <button class="nav-btn primary" id="nextBtn" onclick="navigate(1)">Next &rarr;</button>
 </div>
 
@@ -307,32 +354,131 @@ const SCENARIOS = {
   legal: {
     name: 'Contract Review Tool', industry: 'Legal', users: 50,
     tasksPerDay: 200, tokensPerTask: 3000,
-    humanCostPerTask: 15, // what a human would cost to do the same
-    humanMinutesSaved: 20 // minutes saved per task vs manual
+    humanCostPerTask: 15,
+    humanMinutesSaved: 20,
+    outcomeUnit: 'contract reviewed',
+    outcomeUnitPlural: 'contracts reviewed',
+    outcomeDivisor: 1, // price per 1 outcome
+    outcomeLabel: 'per contract',
+    tiers: {
+      starter: {
+        multiplier: 4,
+        features: ['Standard contract review', 'Key clause extraction', 'Risk flagging'],
+        pitch: 'Review contracts in minutes instead of hours.',
+        detail: 'Perfect for teams getting started with AI-assisted legal review. Covers the most common contract types with reliable risk detection.'
+      },
+      professional: {
+        multiplier: 12,
+        features: ['Everything in Starter', 'Multi-jurisdiction support', 'Clause comparison across contracts', 'Priority processing'],
+        pitch: 'Your legal team focuses on strategy, not reading.',
+        detail: 'Cross-reference clauses across your entire contract portfolio. Multi-jurisdiction analysis means fewer outside counsel hours.'
+      },
+      enterprise: {
+        multiplier: 21,
+        features: ['Everything in Professional', 'Regulatory compliance documentation', 'Audit trail exports', 'Custom taxonomy', 'Dedicated SLA'],
+        pitch: 'Full compliance package — audit-ready from day one.',
+        detail: 'Built for regulated industries. Every review generates an audit trail. Export compliance documentation directly for regulators.'
+      }
+    }
   },
   support: {
     name: 'Customer Support Bot', industry: 'Retail', users: 200,
     tasksPerDay: 5000, tokensPerTask: 800,
     humanCostPerTask: 3,
-    humanMinutesSaved: 8
+    humanMinutesSaved: 8,
+    outcomeUnit: '1,000 conversations',
+    outcomeUnitPlural: 'conversations handled',
+    outcomeDivisor: 1000, // price per 1,000 outcomes
+    outcomeLabel: 'per 1K conversations',
+    tiers: {
+      starter: {
+        multiplier: 4,
+        features: ['Auto-response to FAQs', 'Ticket routing', 'Sentiment detection'],
+        pitch: 'Handle 80% of Tier-1 tickets automatically.',
+        detail: 'Instant responses to common questions — order status, returns, product info. Your agents focus on complex cases only.'
+      },
+      professional: {
+        multiplier: 12,
+        features: ['Everything in Starter', 'Multi-language support', 'Escalation workflows', 'CSAT tracking'],
+        pitch: 'Consistent quality across languages and time zones.',
+        detail: 'Serve global customers in their language. Smart escalation ensures complex issues reach the right agent with full context.'
+      },
+      enterprise: {
+        multiplier: 21,
+        features: ['Everything in Professional', 'Custom brand voice training', 'Compliance logging', 'CRM integration', '99.9% SLA'],
+        pitch: 'Enterprise-grade support ops — compliant, integrated, always on.',
+        detail: 'Your brand voice, your compliance rules, your CRM. Full audit logging for regulated industries. Guaranteed uptime SLA.'
+      }
+    }
   },
   code: {
     name: 'Internal Code Assistant', industry: 'Technology', users: 30,
     tasksPerDay: 15000, tokensPerTask: 1500,
     humanCostPerTask: 2,
-    humanMinutesSaved: 5
+    humanMinutesSaved: 5,
+    outcomeUnit: '1,000 code completions',
+    outcomeUnitPlural: 'code completions',
+    outcomeDivisor: 1000,
+    outcomeLabel: 'per 1K completions',
+    tiers: {
+      starter: {
+        multiplier: 4,
+        features: ['Code completion', 'Inline suggestions', 'Basic refactoring'],
+        pitch: 'Every developer gets a pair programmer.',
+        detail: 'Context-aware code suggestions across your stack. Developers spend less time on boilerplate and more on architecture.'
+      },
+      professional: {
+        multiplier: 12,
+        features: ['Everything in Starter', 'Codebase-aware suggestions', 'Test generation', 'PR review assistance'],
+        pitch: 'Ship faster with AI-generated tests and reviews.',
+        detail: 'The assistant understands your codebase. Auto-generated unit tests and PR summaries catch issues before they reach production.'
+      },
+      enterprise: {
+        multiplier: 21,
+        features: ['Everything in Professional', 'Security scanning', 'Compliance checks', 'Private model hosting', 'SSO integration'],
+        pitch: 'Secure, compliant code acceleration — your IP stays yours.',
+        detail: 'Private model hosting means zero data leaves your infrastructure. Built-in security scanning and compliance checks for regulated codebases.'
+      }
+    }
   },
   docproc: {
     name: 'Document Processing Agent', industry: 'Logistics', users: 40,
     tasksPerDay: 2000, tokensPerTask: 2000,
     humanCostPerTask: 5,
-    humanMinutesSaved: 12
+    humanMinutesSaved: 12,
+    outcomeUnit: '1,000 documents processed',
+    outcomeUnitPlural: 'documents processed',
+    outcomeDivisor: 1000,
+    outcomeLabel: 'per 1K documents',
+    tiers: {
+      starter: {
+        multiplier: 4,
+        features: ['Document classification', 'Text extraction', 'Structured output (JSON/CSV)'],
+        pitch: 'Process 1,000 documents while you drink your coffee.',
+        detail: 'Invoices, BOLs, customs forms — classified, extracted, structured. Output ready for your ERP or database.'
+      },
+      professional: {
+        multiplier: 12,
+        features: ['Everything in Starter', 'Table extraction', 'Cross-document linking', 'Batch processing API'],
+        pitch: 'From unstructured chaos to structured data — automatically.',
+        detail: 'Handle complex tables, link related documents across shipments, and integrate via API for fully automated pipelines.'
+      },
+      enterprise: {
+        multiplier: 21,
+        features: ['Everything in Professional', 'Regulatory filing support', 'Audit documentation', 'Custom schemas', 'Dedicated infrastructure'],
+        pitch: 'Audit-ready document pipeline — regulators love this.',
+        detail: 'Every document gets a processing audit trail. Custom schemas match your regulatory requirements. Export compliance packages on demand.'
+      }
+    }
   }
 };
 
+const DELIVERY_NAMES = { api: 'Vendor API', gpu: 'Self-Hosted GPU', local: 'Local Model' };
+
 let selectedScenario = 'legal';
+let selectedDelivery = null;
 let currentStep = 1;
-const totalSteps = 3;
+const totalSteps = 4;
 
 function selectScenario(key, el) {
   selectedScenario = key;
@@ -340,24 +486,53 @@ function selectScenario(key, el) {
   el.classList.add('selected');
 }
 
+function selectDelivery(key) {
+  selectedDelivery = key;
+  const cards = document.querySelectorAll('.cost-card');
+  cards.forEach(c => {
+    c.classList.remove('selected', 'dimmed');
+  });
+  const idMap = { api: 'cardApi', gpu: 'cardGpu', local: 'cardLocal' };
+  document.getElementById(idMap[key]).classList.add('selected');
+  cards.forEach(c => {
+    if (!c.classList.contains('selected')) c.classList.add('dimmed');
+  });
+  updateNavState();
+}
+
 function getScenarioData() {
   const sc = SCENARIOS[selectedScenario];
   const apiCostPerMillion = +document.getElementById('apiCostSlider').value;
-  const gpuMonthly = +document.getElementById('gpuCostSlider').value;
-  const localMonthly = +document.getElementById('localCostSlider').value;
+  const gpuMonthlyVal = +document.getElementById('gpuCostSlider').value;
+  const localMonthlyVal = +document.getElementById('localCostSlider').value;
   const tasksPerMonth = sc.tasksPerDay * 30;
   const tokensPerMonth = tasksPerMonth * sc.tokensPerTask;
 
   const apiPerTask = (sc.tokensPerTask / 1000000) * apiCostPerMillion;
   const apiMonthly = (tokensPerMonth / 1000000) * apiCostPerMillion;
-  const gpuPerTask = tasksPerMonth > 0 ? gpuMonthly / tasksPerMonth : 0;
-  const localPerTask = tasksPerMonth > 0 ? localMonthly / tasksPerMonth : 0;
+  const gpuPerTask = tasksPerMonth > 0 ? gpuMonthlyVal / tasksPerMonth : 0;
+  const localPerTask = tasksPerMonth > 0 ? localMonthlyVal / tasksPerMonth : 0;
 
-  const apiPerCustomer = apiMonthly / sc.users;
-  const gpuPerCustomer = gpuMonthly / sc.users;
-  const localPerCustomer = localMonthly / sc.users;
+  // Outcome-based cost: cost per outcome unit
+  const outcomesPerMonth = tasksPerMonth / sc.outcomeDivisor;
+  const apiPerOutcome = outcomesPerMonth > 0 ? apiMonthly / outcomesPerMonth : 0;
+  const gpuPerOutcome = outcomesPerMonth > 0 ? gpuMonthlyVal / outcomesPerMonth : 0;
+  const localPerOutcome = outcomesPerMonth > 0 ? localMonthlyVal / outcomesPerMonth : 0;
 
-  return { sc, apiCostPerMillion, gpuMonthly, localMonthly, tasksPerMonth, tokensPerMonth, apiPerTask, apiMonthly, gpuPerTask, gpuMonthly, localPerTask, localMonthly: localMonthly, apiPerCustomer, gpuPerCustomer, localPerCustomer };
+  // Selected delivery cost per outcome
+  let selectedCostPerOutcome = 0;
+  let selectedMonthly = 0;
+  if (selectedDelivery === 'api') { selectedCostPerOutcome = apiPerOutcome; selectedMonthly = apiMonthly; }
+  else if (selectedDelivery === 'gpu') { selectedCostPerOutcome = gpuPerOutcome; selectedMonthly = gpuMonthlyVal; }
+  else if (selectedDelivery === 'local') { selectedCostPerOutcome = localPerOutcome; selectedMonthly = localMonthlyVal; }
+
+  return {
+    sc, apiCostPerMillion, gpuMonthly: gpuMonthlyVal, localMonthly: localMonthlyVal,
+    tasksPerMonth, tokensPerMonth, outcomesPerMonth,
+    apiPerTask, apiMonthly, gpuPerTask, localPerTask,
+    apiPerOutcome, gpuPerOutcome, localPerOutcome,
+    selectedCostPerOutcome, selectedMonthly
+  };
 }
 
 function updateCosts() {
@@ -376,63 +551,137 @@ function updateCosts() {
 function updateStep3() {
   const d = getScenarioData();
   const sc = d.sc;
+  const baseCost = d.selectedCostPerOutcome;
 
-  // Customer cost grid
-  const ccGrid = document.getElementById('customerCostGrid');
-  ccGrid.innerHTML = `
-    <div class="cc-box"><div class="ccb-label">Vendor API</div><div class="ccb-val">${fmtUsd(d.apiPerCustomer)}</div><div class="ccb-sub">per customer/month</div></div>
-    <div class="cc-box"><div class="ccb-label">Self-Hosted GPU</div><div class="ccb-val">${fmtUsd(d.gpuPerCustomer)}</div><div class="ccb-sub">per customer/month</div></div>
-    <div class="cc-box"><div class="ccb-label">Local Model</div><div class="ccb-val">${fmtUsd(d.localPerCustomer)}</div><div class="ccb-sub">per customer/month</div></div>
+  // Delivery banner
+  document.getElementById('deliveryBanner').innerHTML = `
+    <div class="delivery-banner">
+      <div class="db-icon">${selectedDelivery === 'api' ? '☁️' : selectedDelivery === 'gpu' ? '🖥️' : '💻'}</div>
+      <div>
+        <div class="db-text">Your choice: ${DELIVERY_NAMES[selectedDelivery]}</div>
+        <div class="db-cost">Monthly cost: ${fmtUsd(d.selectedMonthly)} · Cost ${sc.outcomeLabel}: ${fmtUsd(baseCost)}</div>
+      </div>
+    </div>
   `;
 
-  // Use API cost as baseline for tier pricing
-  const baseCost = d.apiPerCustomer;
-  const starter = roundPrice(baseCost * 4);
-  const pro = roundPrice(baseCost * 12);
-  const enterprise = roundPrice(baseCost * 21);
-
-  const starterMargin = baseCost > 0 ? Math.round((1 - baseCost / starter) * 100) : 0;
-  const proMargin = baseCost > 0 ? Math.round((1 - baseCost / pro) * 100) : 0;
-  const entMargin = baseCost > 0 ? Math.round((1 - baseCost / enterprise) * 100) : 0;
-
-  document.getElementById('tierCards').innerHTML = `
-    <div class="tier-card"><div class="tier-name">Starter</div><div class="tier-price">${fmtUsd(starter)}<span style="font-size:0.5em;font-weight:400">/mo</span></div><div class="tier-margin">${starterMargin}% margin</div></div>
-    <div class="tier-card featured"><div class="tier-name">Professional</div><div class="tier-price">${fmtUsd(pro)}<span style="font-size:0.5em;font-weight:400">/mo</span></div><div class="tier-margin">${proMargin}% margin</div></div>
-    <div class="tier-card"><div class="tier-name">Enterprise</div><div class="tier-price">${fmtUsd(enterprise)}<span style="font-size:0.5em;font-weight:400">/mo</span></div><div class="tier-margin">${entMargin}% margin</div></div>
+  // Outcome callout
+  document.getElementById('outcomeCallout').innerHTML = `
+    <div class="outcome-callout">
+      <div class="oc-label">Your delivery cost</div>
+      <div class="oc-price">${fmtUsd(baseCost)}</div>
+      <div class="oc-unit">${sc.outcomeLabel}</div>
+    </div>
   `;
 
-  // ChatGPT Tax
+  // Tier cards with features
+  const tiers = sc.tiers;
+  const tierData = [
+    { key: 'starter', name: 'Starter', featured: false },
+    { key: 'professional', name: 'Professional', featured: true },
+    { key: 'enterprise', name: 'Enterprise', featured: false }
+  ];
+
+  let tierHtml = '';
+  tierData.forEach(t => {
+    const tier = tiers[t.key];
+    const price = roundPrice(baseCost * tier.multiplier);
+    const margin = baseCost > 0 ? Math.round((1 - baseCost / price) * 100) : 0;
+    const monthlyEstimate = price * d.outcomesPerMonth;
+    const featuresHtml = tier.features.map(f => `<li>${f}</li>`).join('');
+
+    tierHtml += `
+      <div class="tier-card ${t.featured ? 'featured' : ''}">
+        <div class="tier-name">${t.name}</div>
+        <div class="tier-price">${fmtUsd(price)}</div>
+        <div class="tier-unit">${sc.outcomeLabel}</div>
+        <div class="tier-monthly">~${fmtUsd(monthlyEstimate)}/mo total</div>
+        <div class="tier-margin">${margin}% margin</div>
+        <ul class="tier-features">${featuresHtml}</ul>
+      </div>
+    `;
+  });
+  document.getElementById('tierCards').innerHTML = tierHtml;
+
+  // ChatGPT Tax — use starter monthly estimate for comparison
+  const starterPrice = roundPrice(baseCost * tiers.starter.multiplier);
+  const starterMonthlyPerUser = (starterPrice * d.outcomesPerMonth) / sc.users;
   const chatgptPrice = 20;
-  const maxBar = Math.max(starter * 1.5, 200);
+  const maxBar = Math.max(starterMonthlyPerUser * 1.5, 200);
   const chatgptPct = Math.min(90, (chatgptPrice / maxBar) * 100);
-  const yourPct = Math.min(90, (starter / maxBar) * 100);
+  const yourPct = Math.min(90, (starterMonthlyPerUser / maxBar) * 100);
   document.getElementById('taxMarkerChatGPT').style.left = chatgptPct + '%';
   document.getElementById('taxMarkerYou').style.left = yourPct + '%';
-  document.getElementById('taxMarkerYouLabel').textContent = fmtUsd(starter) + ' Starter';
+  document.getElementById('taxMarkerYouLabel').textContent = fmtUsd(starterMonthlyPerUser) + '/user';
 
   let verdict = '';
-  if (starter <= chatgptPrice) verdict = 'Below ChatGPT Plus — you\'re competing on price with a general-purpose tool. Make sure your specialized value is clear.';
-  else if (starter <= chatgptPrice * 3) verdict = 'Reasonable premium over ChatGPT Plus. Emphasize what ChatGPT CAN\'T do for this use case.';
-  else if (starter <= chatgptPrice * 10) verdict = 'Significant premium. Your pitch needs strong ROI justification — focus on time saved and errors avoided.';
+  if (starterMonthlyPerUser <= chatgptPrice) verdict = 'Below ChatGPT Plus — you\'re competing on price with a general-purpose tool. Make sure your specialized value is clear.';
+  else if (starterMonthlyPerUser <= chatgptPrice * 3) verdict = 'Reasonable premium over ChatGPT Plus. Emphasize what ChatGPT CAN\'T do for this use case.';
+  else if (starterMonthlyPerUser <= chatgptPrice * 10) verdict = 'Significant premium. Your pitch needs strong ROI justification — focus on time saved and errors avoided.';
   else verdict = 'Enterprise-level pricing. Must demonstrate clear ROI per user to justify.';
   document.getElementById('taxVerdict').textContent = verdict;
+}
 
-  // Communication messages
+function updateStep4() {
+  const d = getScenarioData();
+  const sc = d.sc;
+  const baseCost = d.selectedCostPerOutcome;
+  const tiers = sc.tiers;
+
+  // Pitch cards
+  const tierData = [
+    { key: 'starter', name: 'Starter', color: '#2563eb' },
+    { key: 'professional', name: 'Professional', color: '#1e3a5f' },
+    { key: 'enterprise', name: 'Enterprise', color: '#0d9488' }
+  ];
+
+  let pitchHtml = '';
+  tierData.forEach(t => {
+    const tier = tiers[t.key];
+    const price = roundPrice(baseCost * tier.multiplier);
+    pitchHtml += `
+      <div class="pitch-card" style="border-left: 3px solid ${t.color};">
+        <div class="pitch-tier">${t.name} — ${fmtUsd(price)} ${sc.outcomeLabel}</div>
+        <div class="pitch-quote">"${tier.pitch}"</div>
+        <div class="pitch-detail">${tier.detail}</div>
+      </div>
+    `;
+  });
+  document.getElementById('pitchCards').innerHTML = pitchHtml;
+
+  // ROI talking points
+  const starterPrice = roundPrice(baseCost * tiers.starter.multiplier);
+  const proPrice = roundPrice(baseCost * tiers.professional.multiplier);
+  const entPrice = roundPrice(baseCost * tiers.enterprise.multiplier);
+
+  const humanCostPerOutcome = sc.humanCostPerTask * sc.outcomeDivisor;
+  const starterSavingsPct = humanCostPerOutcome > 0 ? Math.round((1 - starterPrice / humanCostPerOutcome) * 100) : 0;
+
   const tasksPerUserMonth = (sc.tasksPerDay * 30) / sc.users;
-  const humanSavingsPerMonth = tasksPerUserMonth * sc.humanCostPerTask;
   const minutesSavedPerDay = (tasksPerUserMonth / 30) * sc.humanMinutesSaved;
   const hoursSavedPerDay = (minutesSavedPerDay / 60).toFixed(1);
 
-  const humanSavingsPct = humanSavingsPerMonth > 0 ? Math.round((1 - starter / humanSavingsPerMonth) * 100) : 0;
+  const totalMonthlyEnt = entPrice * d.outcomesPerMonth;
+  const totalHumanMonthly = sc.humanCostPerTask * d.tasksPerMonth;
+  const totalSavingsPct = totalHumanMonthly > 0 ? Math.round((1 - totalMonthlyEnt / totalHumanMonthly) * 100) : 0;
 
   document.getElementById('commCards').innerHTML = `
-    <div class="comm-card"><div class="comm-tier">Starter — ${fmtUsd(starter)}/mo</div><p>"At ${fmtUsd(starter)}/month, each user saves ${humanSavingsPct > 0 ? humanSavingsPct + '% vs' : 'compared to'} hiring a human for this task (${fmtUsd(humanSavingsPerMonth)}/mo equivalent)."</p></div>
-    <div class="comm-card"><div class="comm-tier">Professional — ${fmtUsd(pro)}/mo</div><p>"The tool pays for itself if it saves each user ${hoursSavedPerDay} hours/day — that's ${Math.round(minutesSavedPerDay)} minutes across ${Math.round(tasksPerUserMonth / 30)} daily tasks."</p></div>
-    <div class="comm-card"><div class="comm-tier">Enterprise — ${fmtUsd(enterprise)}/mo</div><p>"For ${sc.users} users, total cost is ${fmtUsd(enterprise * sc.users)}/mo vs ${fmtUsd(humanSavingsPerMonth * sc.users)}/mo in equivalent human labor — a ${Math.round((1 - (enterprise * sc.users) / (humanSavingsPerMonth * sc.users)) * 100)}% cost reduction with faster turnaround."</p></div>
+    <div class="comm-card">
+      <div class="comm-tier">Starter — ${fmtUsd(starterPrice)} ${sc.outcomeLabel}</div>
+      <p>"At ${fmtUsd(starterPrice)} ${sc.outcomeLabel}, clients save ${starterSavingsPct > 0 ? starterSavingsPct + '% vs' : 'compared to'} manual processing ($${humanCostPerOutcome.toLocaleString()} equivalent)."</p>
+    </div>
+    <div class="comm-card">
+      <div class="comm-tier">Professional — ${fmtUsd(proPrice)} ${sc.outcomeLabel}</div>
+      <p>"The tool pays for itself if it saves each user ${hoursSavedPerDay} hours/day — that's ${Math.round(minutesSavedPerDay)} minutes across ${Math.round(tasksPerUserMonth / 30)} daily tasks."</p>
+    </div>
+    <div class="comm-card">
+      <div class="comm-tier">Enterprise — ${fmtUsd(entPrice)} ${sc.outcomeLabel}</div>
+      <p>"At scale (${sc.tasksPerDay.toLocaleString()} tasks/day), total cost is ${fmtUsd(totalMonthlyEnt)}/mo vs ${fmtUsd(totalHumanMonthly)}/mo in manual labor — a ${totalSavingsPct}% cost reduction with faster turnaround."</p>
+    </div>
   `;
 }
 
 function roundPrice(n) {
+  if (n < 1) return Math.ceil(n * 100) / 100;
   if (n < 10) return Math.ceil(n);
   if (n < 100) return Math.ceil(n / 5) * 5;
   if (n < 1000) return Math.ceil(n / 10) * 10;
@@ -440,18 +689,38 @@ function roundPrice(n) {
 }
 
 /* ===== NAVIGATION ===== */
+function updateNavState() {
+  const nextBtn = document.getElementById('nextBtn');
+  const hint = document.getElementById('navHint');
+
+  if (currentStep === 2 && !selectedDelivery) {
+    nextBtn.disabled = true;
+    hint.textContent = 'Select a delivery option to continue';
+  } else if (currentStep === totalSteps) {
+    nextBtn.textContent = 'Done';
+    nextBtn.disabled = true;
+    hint.textContent = '';
+  } else {
+    nextBtn.disabled = false;
+    nextBtn.textContent = 'Next \u2192';
+    hint.textContent = '';
+  }
+  document.getElementById('prevBtn').disabled = currentStep === 1;
+}
+
 function navigate(dir) {
   const next = currentStep + dir;
   if (next < 1 || next > totalSteps) return;
+  if (currentStep === 2 && dir === 1 && !selectedDelivery) return;
+
   document.getElementById('step' + currentStep).classList.remove('active');
   currentStep = next;
   document.getElementById('step' + currentStep).classList.add('active');
   updateProgressBar();
   if (currentStep === 2) updateCosts();
   if (currentStep === 3) updateStep3();
-  document.getElementById('prevBtn').disabled = currentStep === 1;
-  document.getElementById('nextBtn').textContent = currentStep === totalSteps ? 'Done' : 'Next \u2192';
-  document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+  if (currentStep === 4) updateStep4();
+  updateNavState();
 }
 
 function updateProgressBar() {
@@ -474,22 +743,26 @@ function fmtUsd(n) {
 
 function copyResults() {
   const d = getScenarioData();
-  const baseCost = d.apiPerCustomer;
-  const starter = roundPrice(baseCost * 4);
-  const pro = roundPrice(baseCost * 12);
-  const enterprise = roundPrice(baseCost * 21);
+  const sc = d.sc;
+  const baseCost = d.selectedCostPerOutcome;
+  const tiers = sc.tiers;
+  const starter = roundPrice(baseCost * tiers.starter.multiplier);
+  const pro = roundPrice(baseCost * tiers.professional.multiplier);
+  const ent = roundPrice(baseCost * tiers.enterprise.multiplier);
 
   let text = `GENAI PRICING LAB \u2014 Strategy Summary\n=====================================\n\n`;
-  text += `PRODUCT: ${d.sc.name} (${d.sc.industry})\n`;
-  text += `Users: ${d.sc.users} | Tasks/day: ${d.sc.tasksPerDay.toLocaleString()}\n\n`;
-  text += `DELIVERY COSTS (Monthly)\n`;
-  text += `Vendor API: ${fmtUsd(d.apiMonthly)}\n`;
-  text += `Self-Hosted GPU: ${fmtUsd(d.gpuMonthly)}\n`;
-  text += `Local Model: ${fmtUsd(d.localMonthly)}\n\n`;
-  text += `RECOMMENDED TIERS\n`;
-  text += `Starter: ${fmtUsd(starter)}/mo per user\n`;
-  text += `Professional: ${fmtUsd(pro)}/mo per user\n`;
-  text += `Enterprise: ${fmtUsd(enterprise)}/mo per user\n\n`;
+  text += `PRODUCT: ${sc.name} (${sc.industry})\n`;
+  text += `Tasks/day: ${sc.tasksPerDay.toLocaleString()} | Outcome unit: ${sc.outcomeLabel}\n\n`;
+  text += `DELIVERY METHOD: ${selectedDelivery ? DELIVERY_NAMES[selectedDelivery] : 'Not selected'}\n`;
+  text += `Monthly cost: ${fmtUsd(d.selectedMonthly)}\n`;
+  text += `Cost ${sc.outcomeLabel}: ${fmtUsd(baseCost)}\n\n`;
+  text += `OUTCOME-BASED PRICING TIERS\n`;
+  text += `Starter: ${fmtUsd(starter)} ${sc.outcomeLabel}\n`;
+  text += `  "${tiers.starter.pitch}"\n`;
+  text += `Professional: ${fmtUsd(pro)} ${sc.outcomeLabel}\n`;
+  text += `  "${tiers.professional.pitch}"\n`;
+  text += `Enterprise: ${fmtUsd(ent)} ${sc.outcomeLabel}\n`;
+  text += `  "${tiers.enterprise.pitch}"\n\n`;
   text += `\u2014 Generated by robert@barcik.training GenAI Pricing Lab`;
 
   navigator.clipboard.writeText(text).then(() => {
