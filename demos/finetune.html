@@ -621,6 +621,19 @@ canvas { display: block; margin: 0 auto; }
       <h3 style="margin-bottom:12px;">W' = W + ΔW,&nbsp; where ΔW ≈ B × A</h3>
       <p style="color:var(--text-dim); font-size:0.9rem;">Instead of computing a full 4096×4096 change matrix (16.7M params), LoRA decomposes it into two smaller matrices — say 4096×8 and 8×4096 — for only 65K params. The "rank" (r) controls how expressive this update is. Higher r = more capacity but more parameters.</p>
     </div>
+
+    <div style="background: #e0f2fe; border-left: 4px solid var(--cyan); border-radius: 10px; padding: 1.25rem 1.5rem; margin-top: 1rem;">
+      <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--text);">Why two matrices instead of one?</h3>
+      <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.7;">
+        If we used a single ΔW matrix, it would need the same dimensions as W — for example, 4096 × 4096 = <strong>16.7 million parameters</strong>. That's no savings at all.
+      </p>
+      <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.5rem;">
+        By decomposing into <strong>B</strong> (4096 × r) × <strong>A</strong> (r × 4096), we force all changes through a <em>rank-r bottleneck</em>. With r = 8, that's only <strong>65,536 parameters — a 99.6% reduction</strong>.
+      </p>
+      <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.5rem;">
+        The key insight: most fine-tuning changes don't need full expressiveness. The useful adaptations live in a low-dimensional subspace, and two small matrices are enough to capture them.
+      </p>
+    </div>
   </div>
 
   <!-- ===================== SECTION 3: LORA MAGIC ===================== -->

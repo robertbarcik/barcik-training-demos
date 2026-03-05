@@ -346,10 +346,8 @@
     margin-bottom: 1rem;
     padding: 0.8rem;
     border-radius: 8px;
-    cursor: pointer;
     transition: background 0.2s ease;
   }
-  .skill-item:hover { background: rgba(0,0,0,0.02); }
   .skill-item.active-skill { background: var(--highlight-light); }
   .skill-num {
     width: 28px;
@@ -517,24 +515,14 @@
     font-size: 0.82rem;
     font-style: italic;
     margin: 0.2rem 0.2rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
   }
   .example-pill.neuron-ex {
     background: var(--neuron-light);
     color: var(--neuron);
   }
-  .example-pill.neuron-ex:hover {
-    background: var(--neuron);
-    color: white;
-  }
   .example-pill.attention-ex {
     background: var(--attention-light);
     color: var(--attention);
-  }
-  .example-pill.attention-ex:hover {
-    background: var(--attention);
-    color: white;
   }
 
   .examples-label {
@@ -544,34 +532,77 @@
     margin-bottom: 0.4rem;
   }
 
-  /* Alternating flow visualization */
+  /* Transformer blocks flow visualization */
   .flow-bar {
     background: var(--bg-dark);
     border-radius: 12px;
-    padding: 1.2rem 1.5rem;
+    padding: 1.5rem;
     margin-top: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     flex-wrap: wrap;
   }
+  .transformer-block {
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.4s ease;
+    opacity: 0.4;
+    min-width: 100px;
+  }
+  .transformer-block.active-flow {
+    opacity: 1;
+    border-color: rgba(255,255,255,0.5);
+    transform: scale(1.05);
+  }
+  .block-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .transformer-block.active-flow .block-label { color: rgba(255,255,255,0.8); }
+  .block-steps {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
   .flow-step {
-    padding: 0.45rem 0.9rem;
-    border-radius: 6px;
-    font-size: 0.78rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 5px;
+    font-size: 0.72rem;
     font-weight: 600;
     color: white;
-    transition: all 0.3s ease;
-    opacity: 0.4;
   }
-  .flow-step.active-flow { opacity: 1; transform: scale(1.08); }
   .flow-step.neuron-step { background: var(--neuron); }
   .flow-step.attention-step { background: var(--attention); }
+  .block-arrow {
+    color: rgba(255,255,255,0.3);
+    font-size: 0.7rem;
+  }
   .flow-arrow {
     color: rgba(255,255,255,0.25);
-    font-size: 0.9rem;
+    font-size: 1.1rem;
+    font-weight: 700;
   }
+  .flow-output {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: var(--highlight);
+    color: var(--bg-dark);
+    font-size: 0.82rem;
+    font-weight: 700;
+    transition: all 0.4s ease;
+    opacity: 0.4;
+  }
+  .flow-output.active-flow { opacity: 1; transform: scale(1.08); }
   .flow-caption {
     color: var(--highlight);
     font-size: 0.82rem;
@@ -579,6 +610,7 @@
     text-align: center;
     margin-top: 0.8rem;
     width: 100%;
+    line-height: 1.5;
   }
 
   /* ===== FOOTER ===== */
@@ -623,30 +655,30 @@
     cursor: not-allowed;
   }
 
-  /* Custom sentence input */
-  .custom-sentence {
+  /* Sentence picker buttons */
+  .sentence-picker {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
     margin-top: 1rem;
-    text-align: center;
+    flex-wrap: wrap;
   }
-  .custom-sentence input {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem;
-    padding: 0.6rem 1rem;
-    border: 1px solid var(--dimmed);
+  .sentence-btn {
+    padding: 0.5rem 1rem;
     border-radius: 8px;
-    width: 320px;
-    max-width: 100%;
-    outline: none;
-    transition: border-color 0.2s ease;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid var(--dimmed);
+    background: var(--card);
+    color: var(--text);
+    transition: all 0.2s ease;
+    font-family: 'DM Sans', sans-serif;
   }
-  .custom-sentence input:focus {
+  .sentence-btn:hover { border-color: var(--highlight); }
+  .sentence-btn.active-sentence {
     border-color: var(--highlight);
-  }
-  .custom-sentence label {
-    display: block;
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    margin-bottom: 0.4rem;
+    background: var(--highlight-light);
   }
 
   /* Toggle for untrained/trained */
@@ -712,9 +744,10 @@
     </div>
   </div>
 
-  <div class="custom-sentence">
-    <label for="custom-input">Try your own sentence:</label>
-    <input type="text" id="custom-input" placeholder="The cat sat on the couch" maxlength="80">
+  <div class="sentence-picker">
+    <button class="sentence-btn active-sentence" data-sentence="The cat sat on the couch">The cat sat on the couch</button>
+    <button class="sentence-btn" data-sentence="She gave him the old book">She gave him the old book</button>
+    <button class="sentence-btn" data-sentence="The bank approved the loan quickly">The bank approved the loan quickly</button>
   </div>
 
   <div class="qkv-grid">
@@ -870,20 +903,35 @@
   </div>
 
   <div class="flow-bar" id="flow-bar">
-    <div class="flow-step attention-step" data-flow="0">Attention</div>
+    <div class="transformer-block" data-flow="0">
+      <div class="block-label">Block 1</div>
+      <div class="block-steps">
+        <div class="flow-step attention-step">Attention</div>
+        <div class="block-arrow">+</div>
+        <div class="flow-step neuron-step">Neurons</div>
+      </div>
+    </div>
     <div class="flow-arrow">→</div>
-    <div class="flow-step neuron-step" data-flow="1">Neurons</div>
+    <div class="transformer-block" data-flow="1">
+      <div class="block-label">Block 2</div>
+      <div class="block-steps">
+        <div class="flow-step attention-step">Attention</div>
+        <div class="block-arrow">+</div>
+        <div class="flow-step neuron-step">Neurons</div>
+      </div>
+    </div>
     <div class="flow-arrow">→</div>
-    <div class="flow-step attention-step" data-flow="2">Attention</div>
+    <div class="transformer-block" data-flow="2">
+      <div class="block-label">Block 3</div>
+      <div class="block-steps">
+        <div class="flow-step attention-step">Attention</div>
+        <div class="block-arrow">+</div>
+        <div class="flow-step neuron-step">Neurons</div>
+      </div>
+    </div>
     <div class="flow-arrow">→</div>
-    <div class="flow-step neuron-step" data-flow="3">Neurons</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step attention-step" data-flow="4">Attention</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step neuron-step" data-flow="5">Neurons</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step" style="background:var(--highlight);color:var(--bg-dark);" data-flow="6">Output</div>
-    <div class="flow-caption" id="flow-caption">Click to animate — watch the layers alternate</div>
+    <div class="flow-output" data-flow="3">Output</div>
+    <div class="flow-caption" id="flow-caption">Click to animate — watch comprehension deepen through each block</div>
   </div>
 
   <div class="insight-box">
@@ -895,7 +943,7 @@
 
   <div class="nav-buttons">
     <button class="nav-btn prev" onclick="goToTab(2)">← What's Stored</button>
-    <button class="nav-btn next" disabled>Complete ✓</button>
+    <span></span>
   </div>
 </div>
 
@@ -919,106 +967,78 @@ tabs.forEach(tab => {
 });
 
 // ===== SECTION 1: INTERACTIVE ATTENTION =====
-const defaultSentence = "The cat sat on the couch";
+const SENTENCES = [
+  "The cat sat on the couch",
+  "She gave him the old book",
+  "The bank approved the loan quickly"
+];
 
-// Simulated attention patterns for common words/relationships
+// Premade explanations: keyed by sentence index, then word index
+const PREMADE_EXPLANATIONS = {
+  // "The cat sat on the couch"
+  0: {
+    0: { weights: [0, 0.15, 0.05, 0.05, 0.05, 0.9], explanation: 'As a determiner, <span class="em-query">"The"</span> points to the noun it introduces. Strong attention to <span class="em-value">"cat"</span> — that\'s the word it\'s modifying. Almost no interest in function words or the verb.' },
+    1: { weights: [0.15, 0, 0.9, 0.1, 0.05, 0.6], explanation: '<span class="em-query">"cat"</span> pays strong attention to <span class="em-value">"sat"</span> — it needs to know what action it performed. Also attends to <span class="em-value">"couch"</span> to understand the spatial context. Function words like "on" and "the" are mostly ignored.' },
+    2: { weights: [0.05, 0.85, 0, 0.15, 0.05, 0.75], explanation: '<span class="em-query">"sat"</span> looks hard at <span class="em-value">"cat"</span> (who sat?) and <span class="em-value">"couch"</span> (where?). The verb needs its subject and the location. Prepositions and articles get low attention.' },
+    3: { weights: [0.05, 0.1, 0.3, 0, 0.05, 0.85], explanation: '<span class="em-query">"on"</span> is a preposition — it mainly attends to <span class="em-value">"couch"</span>, the noun it connects to the rest of the sentence. Some attention to "sat" to understand the spatial relationship being described.' },
+    4: { weights: [0.1, 0.05, 0.05, 0.05, 0, 0.9], explanation: 'The second <span class="em-query">"the"</span> attends almost exclusively to <span class="em-value">"couch"</span> — the noun it determines. Ignores nearly everything else, including the first "the" — each determiner cares about its own noun.' },
+    5: { weights: [0.05, 0.55, 0.6, 0.3, 0.15, 0], explanation: '<span class="em-query">"couch"</span> attends to <span class="em-value">"sat"</span> (what happened on me?) and <span class="em-value">"cat"</span> (who is on me?). Also notices "on" — the preposition that connects it to the action. This is how the model builds the spatial scene.' }
+  },
+  // "She gave him the old book"
+  1: {
+    0: { weights: [0, 0.9, 0.5, 0.05, 0.1, 0.3], explanation: '<span class="em-query">"She"</span> attends strongly to <span class="em-value">"gave"</span> — the pronoun needs to know what action it performed. Also looks at "him" to understand the social dynamic: she gave something to someone.' },
+    1: { weights: [0.8, 0, 0.7, 0.05, 0.15, 0.85], explanation: '<span class="em-query">"gave"</span> attends to three key roles: <span class="em-value">"She"</span> (who gave), <span class="em-value">"him"</span> (to whom), and <span class="em-value">"book"</span> (what was given). This verb has three arguments and it finds all of them.' },
+    2: { weights: [0.4, 0.7, 0, 0.05, 0.1, 0.6], explanation: '<span class="em-query">"him"</span> attends to <span class="em-value">"gave"</span> (what happened to me?) and <span class="em-value">"She"</span> (who did it?). Also notices "book" — the thing he received. The indirect object needs the full picture of the transaction.' },
+    3: { weights: [0.05, 0.05, 0.05, 0, 0.15, 0.9], explanation: 'As a determiner, <span class="em-query">"the"</span> attends almost entirely to <span class="em-value">"book"</span> — the noun it introduces. Minor attention to "old" which also modifies the same noun.' },
+    4: { weights: [0.05, 0.1, 0.05, 0.15, 0, 0.9], explanation: '<span class="em-query">"old"</span> attends strongly to <span class="em-value">"book"</span> — the noun it modifies. Adjectives focus on their noun to form the combined concept "old book." Almost everything else fades out.' },
+    5: { weights: [0.2, 0.8, 0.5, 0.15, 0.6, 0], explanation: '<span class="em-query">"book"</span> pays strong attention to <span class="em-value">"gave"</span> — it needs to know it\'s being given. Also attends to <span class="em-value">"old"</span> (what kind of book?) and "him" (who receives it?). The object gathers context about its role in the sentence.' }
+  },
+  // "The bank approved the loan quickly"
+  2: {
+    0: { weights: [0, 0.9, 0.1, 0.05, 0.1, 0.05], explanation: 'The first <span class="em-query">"The"</span> points directly to <span class="em-value">"bank"</span> — the noun it introduces. Determiners are simple: they find their noun and focus on it.' },
+    1: { weights: [0.15, 0, 0.85, 0.05, 0.7, 0.15], explanation: '<span class="em-query">"bank"</span> pays strong attention to <span class="em-value">"approved"</span> and <span class="em-value">"loan"</span> — this is what disambiguates it from a riverbank. The context of approving loans makes it clearly a financial institution. Without these words, "bank" would be ambiguous.' },
+    2: { weights: [0.05, 0.8, 0, 0.05, 0.75, 0.4], explanation: '<span class="em-query">"approved"</span> attends strongly to <span class="em-value">"bank"</span> (who approved?) and <span class="em-value">"loan"</span> (what was approved?). Also notices "quickly" for how the approval happened. The verb connects subject, object, and manner.' },
+    3: { weights: [0.1, 0.05, 0.05, 0, 0.05, 0.9], explanation: 'The second <span class="em-query">"the"</span> attends to <span class="em-value">"loan"</span> — the noun it determines. Like all determiners, its job is simple and focused.' },
+    4: { weights: [0.05, 0.7, 0.8, 0.15, 0, 0.2], explanation: '<span class="em-query">"loan"</span> attends strongly to <span class="em-value">"approved"</span> (what happened to me?) and <span class="em-value">"bank"</span> (who approved it?). This is the object of the sentence gathering context about its role.' },
+    5: { weights: [0.05, 0.15, 0.85, 0.05, 0.2, 0], explanation: '<span class="em-query">"quickly"</span> attends almost entirely to <span class="em-value">"approved"</span> — the verb it modifies. Adverbs are laser-focused on their verb. Minor attention to "loan" for additional context.' }
+  }
+};
+
+let currentSentenceIdx = 0;
+
+// Fallback heuristic attention (kept for any edge cases)
 function computeAttention(words, selectedIdx) {
   const selected = words[selectedIdx].toLowerCase();
   const n = words.length;
   const weights = new Array(n).fill(0);
-
-  // Simple heuristic-based attention simulation
   const funcWords = new Set(['the', 'a', 'an', 'on', 'in', 'at', 'to', 'of', 'is', 'was', 'and', 'or', 'but', 'for', 'with', 'by', 'from', 'that', 'this', 'it']);
-  const verbs = new Set(['sat', 'ran', 'ate', 'saw', 'went', 'came', 'put', 'got', 'made', 'took', 'gave', 'said', 'told', 'asked', 'walked', 'jumped', 'played', 'loved', 'hated', 'built', 'wrote', 'read', 'slept', 'cooked', 'drove', 'flew', 'sang', 'danced', 'bought', 'sold', 'found', 'lost', 'hit', 'kicked', 'threw', 'caught', 'opened', 'closed', 'likes', 'runs', 'eats', 'sees', 'goes', 'comes', 'puts', 'gets', 'makes', 'takes', 'gives', 'says', 'tells', 'asks', 'walks', 'jumps', 'plays', 'loves', 'hates', 'builds', 'writes', 'reads', 'sleeps', 'cooks', 'drives', 'flies', 'sings', 'dances', 'buys', 'sells', 'finds', 'hits', 'kicks', 'throws', 'catches', 'opens', 'closes']);
-  const adjectives = new Set(['big', 'small', 'red', 'blue', 'green', 'old', 'new', 'good', 'bad', 'happy', 'sad', 'fast', 'slow', 'hot', 'cold', 'tall', 'short', 'beautiful', 'ugly', 'smart', 'lazy', 'bright', 'dark', 'soft', 'hard', 'wet', 'dry', 'heavy', 'light', 'young', 'large', 'fluffy', 'shiny', 'quiet', 'loud']);
-
+  const verbs = new Set(['sat', 'ran', 'ate', 'saw', 'went', 'came', 'put', 'got', 'made', 'took', 'gave', 'said', 'told', 'asked', 'walked', 'jumped', 'played', 'loved', 'hated', 'built', 'wrote', 'read', 'slept', 'cooked', 'drove', 'flew', 'sang', 'danced', 'bought', 'sold', 'found', 'lost', 'hit', 'kicked', 'threw', 'caught', 'opened', 'closed', 'approved']);
   const isFunc = funcWords.has(selected);
   const isVerb = verbs.has(selected);
-  const isAdj = adjectives.has(selected);
 
   for (let i = 0; i < n; i++) {
     if (i === selectedIdx) { weights[i] = 0; continue; }
     const w = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
     const dist = Math.abs(i - selectedIdx);
-
     if (isVerb) {
-      // Verbs attend strongly to nearby nouns (subject before, object after)
-      if (!funcWords.has(w)) {
-        if (i < selectedIdx) weights[i] = 0.7 / dist; // subject
-        else weights[i] = 0.6 / dist; // object
-      } else {
-        weights[i] = 0.05;
-      }
+      if (!funcWords.has(w)) { weights[i] = i < selectedIdx ? 0.7/dist : 0.6/dist; } else { weights[i] = 0.05; }
     } else if (isFunc) {
-      // Function words attend to next content word
-      if (!funcWords.has(w) && i > selectedIdx && dist <= 2) {
-        weights[i] = 0.8;
-      } else {
-        weights[i] = 0.1 / (dist + 1);
-      }
-    } else if (isAdj) {
-      // Adjectives attend to the noun they modify (usually next word)
-      if (!funcWords.has(w) && !verbs.has(w)) {
-        weights[i] = 0.6 / dist;
-      } else if (verbs.has(w)) {
-        weights[i] = 0.3 / dist;
-      } else {
-        weights[i] = 0.05;
-      }
+      if (!funcWords.has(w) && i > selectedIdx && dist <= 2) { weights[i] = 0.8; } else { weights[i] = 0.1/(dist+1); }
     } else {
-      // Nouns attend to verbs and adjectives
-      if (verbs.has(w)) {
-        weights[i] = 0.7 / dist;
-      } else if (adjectives.has(w)) {
-        weights[i] = 0.6 / dist;
-      } else if (!funcWords.has(w)) {
-        weights[i] = 0.3 / dist;
-      } else {
-        weights[i] = 0.05;
-      }
+      if (verbs.has(w)) { weights[i] = 0.7/dist; } else if (!funcWords.has(w)) { weights[i] = 0.3/dist; } else { weights[i] = 0.05; }
     }
   }
-
-  // Normalize to 0-1
   const max = Math.max(...weights);
-  if (max > 0) {
-    for (let i = 0; i < n; i++) weights[i] = weights[i] / max;
-  }
+  if (max > 0) { for (let i = 0; i < n; i++) weights[i] /= max; }
   return weights;
-}
-
-function getExplanation(words, selectedIdx, weights) {
-  const selected = words[selectedIdx];
-  const pairs = weights.map((w, i) => ({ word: words[i], weight: w, idx: i }))
-    .filter(p => p.idx !== selectedIdx)
-    .sort((a, b) => b.weight - a.weight);
-
-  const top = pairs.filter(p => p.weight > 0.4);
-  const low = pairs.filter(p => p.weight <= 0.2);
-
-  if (top.length === 0) {
-    return `<span class="em-highlight">"${selected}"</span> has relatively even attention across the sentence — no single word stands out as especially relevant.`;
-  }
-
-  const topWords = top.map(p => `<span class="em-value">"${p.word}"</span>`).join(' and ');
-  const lowWords = low.slice(0, 2).map(p => `"${p.word}"`).join(', ');
-
-  let reason = '';
-  const funcWords = new Set(['the', 'a', 'an', 'on', 'in', 'at', 'to', 'of', 'is', 'was', 'and', 'or', 'but', 'for', 'with', 'by', 'from']);
-  if (funcWords.has(selected.toLowerCase())) {
-    reason = `As a function word, <span class="em-query">"${selected}"</span> mainly points toward the content word it introduces.`;
-  } else {
-    reason = `<span class="em-query">"${selected}"</span> asks: <span class="em-key">"Who is most relevant to me?"</span>`;
-  }
-
-  return `${reason} High match: ${topWords}.${lowWords ? ` Low match: ${lowWords} — mostly ignored.` : ''}`;
 }
 
 let currentWords = [];
 let selectedWordIdx = -1;
 
-function renderSentence(sentence) {
+function renderSentence(sentence, sentenceIdx) {
   currentWords = sentence.split(/\s+/).filter(w => w.length > 0);
+  currentSentenceIdx = sentenceIdx;
   selectedWordIdx = -1;
   const container = document.getElementById('sentence-display');
   container.innerHTML = '';
@@ -1045,9 +1065,11 @@ function renderSentence(sentence) {
 
 function selectWord(idx) {
   selectedWordIdx = idx;
-  const weights = computeAttention(currentWords, idx);
-  const pills = document.querySelectorAll('#sentence-display .word-pill');
+  const premade = PREMADE_EXPLANATIONS[currentSentenceIdx] && PREMADE_EXPLANATIONS[currentSentenceIdx][idx];
+  const weights = premade ? premade.weights : computeAttention(currentWords, idx);
+  const explanation = premade ? premade.explanation : getFallbackExplanation(currentWords, idx, weights);
 
+  const pills = document.querySelectorAll('#sentence-display .word-pill');
   pills.forEach((pill, i) => {
     pill.className = 'word-pill';
     const bar = pill.querySelector('.attention-weight-bar');
@@ -1066,23 +1088,30 @@ function selectWord(idx) {
     }
   });
 
-  document.getElementById('party-explanation').innerHTML = getExplanation(currentWords, idx, weights);
+  document.getElementById('party-explanation').innerHTML = explanation;
 }
 
-// Custom sentence input
-document.getElementById('custom-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    const val = e.target.value.trim();
-    if (val.length > 0) renderSentence(val);
-  }
-});
-document.getElementById('custom-input').addEventListener('blur', (e) => {
-  const val = e.target.value.trim();
-  if (val.length > 0) renderSentence(val);
+function getFallbackExplanation(words, selectedIdx, weights) {
+  const selected = words[selectedIdx];
+  const pairs = weights.map((w, i) => ({ word: words[i], weight: w, idx: i }))
+    .filter(p => p.idx !== selectedIdx).sort((a, b) => b.weight - a.weight);
+  const top = pairs.filter(p => p.weight > 0.4);
+  if (top.length === 0) return `<span class="em-highlight">"${selected}"</span> has relatively even attention — no single word stands out.`;
+  const topWords = top.map(p => `<span class="em-value">"${p.word}"</span>`).join(' and ');
+  return `<span class="em-query">"${selected}"</span> asks: <span class="em-key">"Who is most relevant to me?"</span> High match: ${topWords}.`;
+}
+
+// Sentence picker buttons
+document.querySelectorAll('.sentence-btn').forEach((btn, idx) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sentence-btn').forEach(b => b.classList.remove('active-sentence'));
+    btn.classList.add('active-sentence');
+    renderSentence(btn.dataset.sentence, idx);
+  });
 });
 
 // Initialize
-renderSentence(defaultSentence);
+renderSentence(SENTENCES[0], 0);
 
 // ===== SECTION 2: TRAINED VS UNTRAINED DEMO =====
 const demoWords = ['The', 'cat', 'sat', 'on', 'the', 'couch'];
@@ -1101,18 +1130,15 @@ function initDemo() {
 }
 
 function renderDemo() {
-  // For "sat" (index 2) as the reference word
   const trainedWeights = [0.05, 0.85, 0, 0.05, 0.03, 0.75];
   const randomWeights = demoWords.map(() => 0.2 + Math.random() * 0.8);
   randomWeights[2] = 0;
-
   const weights = modelMode === 'trained' ? trainedWeights : randomWeights;
   const max = Math.max(...weights);
 
   demoWords.forEach((word, i) => {
     const el = document.getElementById('demo-w-' + i);
     if (!el) return;
-
     const norm = max > 0 ? weights[i] / max : 0;
     if (i === 2) {
       el.style.background = 'var(--highlight)';
@@ -1120,14 +1146,12 @@ function renderDemo() {
       el.style.fontWeight = '700';
       el.style.transform = 'none';
     } else if (norm > 0.6) {
-      const opacity = 0.6 + norm * 0.4;
-      el.style.background = `rgba(72, 169, 166, ${opacity})`;
+      el.style.background = `rgba(72, 169, 166, ${0.6 + norm * 0.4})`;
       el.style.color = 'white';
       el.style.fontWeight = '600';
       el.style.transform = `scale(${0.9 + norm * 0.15})`;
     } else {
-      const opacity = 0.1 + norm * 0.2;
-      el.style.background = `rgba(255,255,255, ${opacity})`;
+      el.style.background = `rgba(255,255,255, ${0.1 + norm * 0.2})`;
       el.style.color = `rgba(248,245,239, ${0.2 + norm * 0.3})`;
       el.style.transform = `scale(${0.85 + norm * 0.1})`;
     }
@@ -1152,54 +1176,39 @@ function setModelMode(mode) {
   renderDemo();
 }
 
-// Auto-refresh untrained to show randomness (smooth transitions on existing elements)
-setInterval(() => {
-  if (modelMode === 'untrained') renderDemo();
-}, 2500);
-
+setInterval(() => { if (modelMode === 'untrained') renderDemo(); }, 2500);
 initDemo();
 renderDemo();
 
-// Skill item hover
-document.querySelectorAll('.skill-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.skill-item').forEach(i => i.classList.remove('active-skill'));
-    item.classList.add('active-skill');
-  });
-});
-
 // ===== SECTION 3: FLOW ANIMATION =====
 let flowAnimating = false;
-let flowInterval = null;
 
 document.getElementById('flow-bar').addEventListener('click', () => {
   if (flowAnimating) return;
   flowAnimating = true;
 
-  const steps = document.querySelectorAll('.flow-step');
+  const blocks = document.querySelectorAll('.transformer-block');
+  const output = document.querySelector('.flow-output');
+  const allAnimatable = [...blocks, output];
   const caption = document.getElementById('flow-caption');
   let current = 0;
 
-  // Reset
-  steps.forEach(s => s.classList.remove('active-flow'));
+  allAnimatable.forEach(el => el.classList.remove('active-flow'));
 
   const captions = [
-    'Attention: words figure out who to talk to...',
-    'Neurons: recall relevant facts...',
-    'Attention: communicate again, now with richer context...',
-    'Neurons: deeper knowledge activated...',
-    'Attention: final relationships locked in...',
-    'Neurons: precise knowledge for this context...',
+    'Block 1: Basic relationships — "cat" finds "sat", articles find their nouns',
+    'Block 2: Deeper patterns — the model grasps "cat sat ON the couch" as a spatial relationship',
+    'Block 3: Full comprehension — complete scene understanding, ready to predict what comes next',
     'Output: confident enough to predict the next word!'
   ];
 
   function step() {
-    steps.forEach(s => s.classList.remove('active-flow'));
-    if (current < steps.length) {
-      steps[current].classList.add('active-flow');
+    allAnimatable.forEach(el => el.classList.remove('active-flow'));
+    if (current < allAnimatable.length) {
+      allAnimatable[current].classList.add('active-flow');
       caption.textContent = captions[current] || '';
       current++;
-      flowInterval = setTimeout(step, 900);
+      setTimeout(step, 1200);
     } else {
       flowAnimating = false;
       caption.textContent = 'Click to animate again';

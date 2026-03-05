@@ -29,7 +29,7 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .progress-step.active { background: #1e3a5f; }
 .progress-step.done { background: #27ae60; }
 .progress-labels { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
-.progress-labels span { flex: 1; text-align: center; font-size: 0.65rem; color: #94a3b8; font-weight: 600; }
+.progress-labels span { flex: 1; text-align: center; font-size: 0.7rem; color: #94a3b8; font-weight: 600; }
 .progress-labels span.active { color: #1e3a5f; }
 
 /* Steps */
@@ -41,7 +41,7 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 /* Form */
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.4rem; }
-.form-group select, .form-group input[type="text"] {
+.form-group select {
   width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; color: #1a202c;
 }
 .form-group select:focus { outline: none; border-color: #1e3a5f; }
@@ -50,15 +50,35 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .radio-btn { padding: 0.4rem 0.9rem; border: 2px solid #e2e8f0; background: #fff; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: #4a5568; transition: all 0.15s; }
 .radio-btn:hover { border-color: #1e3a5f; color: #1e3a5f; }
 .radio-btn.selected { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+.toggle-row { display: flex; gap: 0.5rem; align-items: center; }
+.toggle-btn { padding: 0.4rem 1rem; border: 2px solid #e2e8f0; background: #fff; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: #4a5568; transition: all 0.15s; }
+.toggle-btn.selected { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
 
 /* Canvas chart */
 .chart-container { position: relative; width: 100%; }
 .chart-container canvas { width: 100%; height: 380px; display: block; }
-
-/* Legend */
 .chart-legend { display: flex; gap: 1.5rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap; }
 .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: #4a5568; font-weight: 600; }
 .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+/* Verdict box */
+.verdict-box {
+  display: flex; gap: 1.5rem; justify-content: center; align-items: center;
+  margin-top: 1.25rem; padding: 1rem; background: #f8fafc; border-radius: 10px; flex-wrap: wrap;
+}
+.verdict-col { text-align: center; min-width: 120px; }
+.verdict-col .vc-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; font-weight: 600; margin-bottom: 0.2rem; }
+.verdict-col .vc-amount { font-size: 1.5rem; font-weight: 800; }
+.verdict-vs { font-size: 1.2rem; font-weight: 800; color: #94a3b8; }
+.verdict-winner { font-size: 0.88rem; font-weight: 700; text-align: center; margin-top: 0.75rem; padding: 0.5rem; border-radius: 6px; }
+
+/* Cost explanation */
+.cost-explain { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+.cost-explain-card { background: #f8fafc; border-radius: 8px; padding: 0.75rem 1rem; border-left: 3px solid; }
+.cost-explain-card.self { border-left-color: #0d9488; }
+.cost-explain-card.api { border-left-color: #e67e22; }
+.cost-explain-card h4 { font-size: 0.82rem; color: #1e3a5f; margin-bottom: 0.3rem; }
+.cost-explain-card p { font-size: 0.78rem; color: #64748b; line-height: 1.5; }
 
 /* Insight cards */
 .insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -68,14 +88,17 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .insight-card.positive { border-left-color: #27ae60; }
 .insight-card.warning { border-left-color: #e67e22; }
 .insight-card.danger { border-left-color: #e74c3c; }
+.insight-card.info { border-left-color: #2563eb; }
 
-/* Summary */
-.summary-row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid #f0f4f8; font-size: 0.88rem; }
-.summary-row .sr-label { color: #4a5568; }
-.summary-row .sr-value { font-weight: 700; color: #1e3a5f; }
-.recommendation { background: #f0f4f8; border-radius: 8px; padding: 1rem; margin-top: 1rem; border-left: 4px solid #2563eb; }
-.recommendation h4 { font-size: 0.88rem; color: #2563eb; margin-bottom: 0.4rem; }
-.recommendation p { font-size: 0.85rem; color: #4a5568; }
+/* Recommendation */
+.recommendation { background: #f0f4f8; border-radius: 8px; padding: 1.25rem; margin-top: 1rem; border-left: 4px solid #2563eb; }
+.recommendation h4 { font-size: 0.95rem; color: #2563eb; margin-bottom: 0.4rem; }
+.recommendation p { font-size: 0.85rem; color: #4a5568; line-height: 1.6; }
+
+/* 12-month callout */
+.callout { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 8px; padding: 0.75rem 1rem; margin-top: 1rem; }
+.callout h4 { font-size: 0.82rem; color: #92400e; margin-bottom: 0.2rem; }
+.callout p { font-size: 0.78rem; color: #92400e; line-height: 1.5; }
 
 /* Nav */
 .nav-bar { max-width: 920px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; }
@@ -104,6 +127,8 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 @media (max-width: 740px) {
   .insights-grid { grid-template-columns: 1fr; }
   .radio-group { flex-direction: column; }
+  .cost-explain { grid-template-columns: 1fr; }
+  .verdict-box { flex-direction: column; gap: 0.75rem; }
 }
 </style>
 </head>
@@ -116,7 +141,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 </header>
 
 <div class="intro">
-  <p>Compare the 24-month total cost of self-hosting open-source models vs. using vendor APIs. Discover the real crossover point — and explore a pragmatic hybrid option.</p>
+  <p>Compare the 12-month total cost of self-hosting open-source models vs. using vendor APIs. Answer 4 simple questions and get a clear cost comparison.</p>
 </div>
 
 <div class="progress-bar">
@@ -124,22 +149,18 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
     <div class="progress-step active" id="ps1"></div>
     <div class="progress-step" id="ps2"></div>
     <div class="progress-step" id="ps3"></div>
-    <div class="progress-step" id="ps4"></div>
-    <div class="progress-step" id="ps5"></div>
   </div>
   <div class="progress-labels">
-    <span class="active" id="pl1">Scenario</span>
-    <span id="pl2">Costs</span>
-    <span id="pl3">Nuance</span>
-    <span id="pl4">Hybrid</span>
-    <span id="pl5">Summary</span>
+    <span class="active" id="pl1">Your Use Case</span>
+    <span id="pl2">Cost Comparison</span>
+    <span id="pl3">Recommendation</span>
   </div>
 </div>
 
-<!-- Step 1: Scenario -->
+<!-- Step 1: Your Use Case -->
 <div class="step active" id="step1">
   <div class="panel">
-    <div class="panel-title">Define Your Scenario</div>
+    <div class="panel-title">Your Use Case</div>
     <div class="form-group">
       <label>Use Case</label>
       <select id="useCase">
@@ -154,52 +175,34 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
     <div class="form-group">
       <label>Quality Level Required</label>
       <div class="radio-group" id="qualityGroup">
-        <button class="radio-btn" onclick="selectRadio('quality','good')">Good enough</button>
-        <button class="radio-btn selected" onclick="selectRadio('quality','high')">High quality</button>
-        <button class="radio-btn" onclick="selectRadio('quality','frontier')">Frontier-level</button>
+        <button class="radio-btn" data-val="good" onclick="selectRadio('quality','good')">Good enough</button>
+        <button class="radio-btn selected" data-val="high" onclick="selectRadio('quality','high')">High quality</button>
+        <button class="radio-btn" data-val="frontier" onclick="selectRadio('quality','frontier')">Frontier-level</button>
       </div>
-      <div class="hint">Good = open-source 7B, High = 70B/Sonnet, Frontier = Opus/GPT-4o</div>
+      <div class="hint">Good = open-source 7B | High = 70B/Sonnet | Frontier = Opus/GPT-4o</div>
     </div>
     <div class="form-group">
-      <label>Concurrent Users</label>
-      <div class="radio-group" id="usersGroup">
-        <button class="radio-btn" onclick="selectRadio('users','low')">1–10</button>
-        <button class="radio-btn selected" onclick="selectRadio('users','medium')">10–50</button>
-        <button class="radio-btn" onclick="selectRadio('users','high')">50–200</button>
-        <button class="radio-btn" onclick="selectRadio('users','very-high')">200+</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Uptime Requirement</label>
-      <div class="radio-group" id="uptimeGroup">
-        <button class="radio-btn selected" onclick="selectRadio('uptime','standard')">Business hours (99%)</button>
-        <button class="radio-btn" onclick="selectRadio('uptime','high')">24/7 (99.9%)</button>
-        <button class="radio-btn" onclick="selectRadio('uptime','critical')">Mission-critical (99.99%)</button>
+      <label>Monthly Request Volume</label>
+      <div class="radio-group" id="volumeGroup">
+        <button class="radio-btn" data-val="low" onclick="selectRadio('volume','low')">Low (&lt;10K)</button>
+        <button class="radio-btn selected" data-val="medium" onclick="selectRadio('volume','medium')">Medium (10–100K)</button>
+        <button class="radio-btn" data-val="high" onclick="selectRadio('volume','high')">High (100K+)</button>
       </div>
     </div>
     <div class="form-group">
-      <label>Data Sensitivity</label>
-      <div class="radio-group" id="dataGroup">
-        <button class="radio-btn selected" onclick="selectRadio('data','low')">Public / low sensitivity</button>
-        <button class="radio-btn" onclick="selectRadio('data','medium')">Internal / confidential</button>
-        <button class="radio-btn" onclick="selectRadio('data','high')">Regulated / PII / PHI</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>ML / AI Talent Available In-House</label>
-      <div class="radio-group" id="talentGroup">
-        <button class="radio-btn" onclick="selectRadio('talent','none')">None</button>
-        <button class="radio-btn selected" onclick="selectRadio('talent','some')">Some (1–2 engineers)</button>
-        <button class="radio-btn" onclick="selectRadio('talent','strong')">Strong team (3+)</button>
+      <label>Do you have ML engineers?</label>
+      <div class="toggle-row">
+        <button class="toggle-btn" data-val="no" onclick="selectToggle('talent','no')">No</button>
+        <button class="toggle-btn selected" data-val="yes" onclick="selectToggle('talent','yes')">Yes</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Step 2: Cost Comparison Chart -->
+<!-- Step 2: Cost Comparison -->
 <div class="step" id="step2">
   <div class="panel">
-    <div class="panel-title">24-Month Cumulative Cost Comparison</div>
+    <div class="panel-title">12-Month Cost Comparison</div>
     <div class="form-group" style="margin-bottom: 1rem;">
       <label>API Model</label>
       <select id="apiModel" onchange="renderChart()">
@@ -216,42 +219,31 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
       <div class="legend-item"><div class="legend-dot" style="background: #0d9488;"></div> Self-Hosted</div>
       <div class="legend-item"><div class="legend-dot" style="background: #e67e22;"></div> Vendor API</div>
     </div>
-    <div id="crossoverNote" style="text-align: center; margin-top: 0.75rem; font-size: 0.88rem; font-weight: 600; color: #1e3a5f;"></div>
+    <div class="verdict-box" id="verdictBox"></div>
+    <div class="cost-explain">
+      <div class="cost-explain-card self">
+        <h4>Self-Hosted Includes</h4>
+        <p>GPU hardware/rental, setup &amp; configuration, monthly electricity &amp; maintenance, ML engineer time for operations, model updates &amp; monitoring.</p>
+      </div>
+      <div class="cost-explain-card api">
+        <h4>Vendor API Includes</h4>
+        <p>Per-call pricing (input + output tokens), built-in uptime guarantees, automatic model updates, no infrastructure management needed.</p>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Step 3: Nuance Panel -->
+<!-- Step 3: Recommendation -->
 <div class="step" id="step3">
   <div class="panel">
-    <div class="panel-title">Context-Aware Insights</div>
-    <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 1rem;">Based on your scenario inputs, here are factors that could tip the balance.</p>
+    <div class="panel-title">Insights &amp; Recommendation</div>
+    <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 1rem;">Based on your inputs, here's what matters for your decision.</p>
     <div class="insights-grid" id="insightsGrid"></div>
-  </div>
-</div>
-
-<!-- Step 4: Hybrid Option -->
-<div class="step" id="step4">
-  <div class="panel">
-    <div class="panel-title">Hybrid Option: Best of Both Worlds</div>
-    <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 1rem;">A pragmatic middle ground: use <strong>vendor API for production</strong> (reliability, speed) and <strong>self-hosted for development/testing</strong> (cost savings, experimentation).</p>
-    <div class="chart-container">
-      <canvas id="hybridChart"></canvas>
-    </div>
-    <div class="chart-legend">
-      <div class="legend-item"><div class="legend-dot" style="background: #0d9488;"></div> Self-Hosted</div>
-      <div class="legend-item"><div class="legend-dot" style="background: #e67e22;"></div> Vendor API</div>
-      <div class="legend-item"><div class="legend-dot" style="background: #2563eb;"></div> Hybrid</div>
-    </div>
-    <div id="hybridNote" style="text-align: center; margin-top: 0.75rem; font-size: 0.88rem; color: #2563eb; font-weight: 600;"></div>
-  </div>
-</div>
-
-<!-- Step 5: Summary -->
-<div class="step" id="step5">
-  <div class="panel">
-    <div class="panel-title">TCO Summary &amp; Recommendation</div>
-    <div id="summaryContent"></div>
     <div class="recommendation" id="summaryRec"></div>
+    <div class="callout">
+      <h4>Why we stop at 12 months</h4>
+      <p>AI costs are dropping ~30% per year. GPU prices, API pricing, and open-source model quality all shift rapidly. Any projection beyond 12 months is unreliable — plan to re-evaluate in 6–12 months regardless of what you choose today.</p>
+    </div>
   </div>
 </div>
 
@@ -271,8 +263,8 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 <script>
 /* ===== STATE ===== */
 let currentStep = 1;
-const totalSteps = 5;
-const selections = { quality: 'high', users: 'medium', uptime: 'standard', data: 'low', talent: 'some' };
+const totalSteps = 3;
+const selections = { quality: 'high', volume: 'medium', talent: 'yes' };
 
 const apiPricing = {
   sonnet: { name: 'Claude Sonnet', costPerCall: 0.009 },
@@ -281,32 +273,36 @@ const apiPricing = {
   gpt4omini: { name: 'GPT-4o-mini', costPerCall: 0.003 }
 };
 
-const userMultiplier = { low: 1, medium: 3, high: 8, 'very-high': 20 };
-const qualityCost = { good: { hw: 8000, monthly: 400 }, high: { hw: 25000, monthly: 1200 }, frontier: { hw: 60000, monthly: 3000 } };
-const uptimeCost = { standard: 1, high: 1.3, critical: 1.8 };
+const volumeMultiplier = { low: 0.5, medium: 3, high: 15 };
+const qualityCost = { good: { hw: 5000, monthly: 300 }, high: { hw: 20000, monthly: 1000 }, frontier: { hw: 50000, monthly: 2500 } };
+const volumeCallsPerMonth = { low: 5000, medium: 50000, high: 300000 };
 
 function selectRadio(group, value) {
   selections[group] = value;
   const groupEl = document.getElementById(group + 'Group');
   if (!groupEl) return;
-  const labels = { quality: { good: 'Good enough', high: 'High quality', frontier: 'Frontier-level' }, users: { low: '1–10', medium: '10–50', high: '50–200', 'very-high': '200+' }, uptime: { standard: 'Business hours (99%)', high: '24/7 (99.9%)', critical: 'Mission-critical (99.99%)' }, data: { low: 'Public / low sensitivity', medium: 'Internal / confidential', high: 'Regulated / PII / PHI' }, talent: { none: 'None', some: 'Some (1–2 engineers)', strong: 'Strong team (3+)' } };
   groupEl.querySelectorAll('.radio-btn').forEach(b => {
-    const bVal = Object.entries(labels[group]).find(([k, v]) => v === b.textContent);
-    b.classList.toggle('selected', bVal && bVal[0] === value);
+    b.classList.toggle('selected', b.dataset.val === value);
+  });
+}
+
+function selectToggle(group, value) {
+  selections[group] = value;
+  document.querySelectorAll('.toggle-row .toggle-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.val === value);
   });
 }
 
 function getScenario() {
   const q = selections.quality;
-  const u = userMultiplier[selections.users];
-  const up = uptimeCost[selections.uptime];
-  const hw = qualityCost[q].hw * (selections.users === 'very-high' ? 2 : 1);
-  const setup = selections.talent === 'none' ? 15000 : selections.talent === 'some' ? 5000 : 1000;
-  const monthlyOps = qualityCost[q].monthly * u * up;
+  const vol = selections.volume;
+  const hw = qualityCost[q].hw;
+  const setup = selections.talent === 'no' ? 12000 : 3000;
+  const monthlyOps = qualityCost[q].monthly * volumeMultiplier[vol];
   const model = document.getElementById('apiModel').value;
-  const callsPerMonth = 5000 * u;
+  const callsPerMonth = volumeCallsPerMonth[vol];
   const apiMonthlyCost = callsPerMonth * apiPricing[model].costPerCall;
-  return { hw, setup, monthlyOps, apiMonthlyCost, callsPerMonth, model, q, u };
+  return { hw, setup, monthlyOps, apiMonthlyCost, callsPerMonth, model, q, vol };
 }
 
 /* ===== CHART RENDERING ===== */
@@ -323,77 +319,62 @@ function renderChart() {
   ctx.scale(dpr, dpr);
   const W = rect.width, H = 380;
 
-  // Calculate data
   const selfData = [], apiData = [];
-  let selfTotal = s.hw + s.setup;
-  let apiTotal = 0;
-  selfData.push(selfTotal);
-  apiData.push(0);
-  for (let m = 1; m <= 24; m++) {
+  let selfTotal = s.hw + s.setup, apiTotal = 0;
+  selfData.push(selfTotal); apiData.push(0);
+  for (let m = 1; m <= 12; m++) {
     selfTotal += s.monthlyOps;
     apiTotal += s.apiMonthlyCost;
     selfData.push(selfTotal);
     apiData.push(apiTotal);
   }
 
-  const maxVal = Math.max(selfData[24], apiData[24]) * 1.1;
-  drawLineChart(ctx, W, H, selfData, apiData, null, maxVal);
+  const maxVal = Math.max(selfData[12], apiData[12]) * 1.15;
+  drawLineChart(ctx, W, H, selfData, apiData, maxVal);
 
-  // Crossover
-  let crossMonth = -1;
-  for (let m = 1; m <= 24; m++) {
-    if (apiData[m] >= selfData[m] && apiData[m - 1] < selfData[m - 1]) { crossMonth = m; break; }
-  }
-  if (selfData[0] > 0 && apiData[0] < selfData[0]) {
-    for (let m = 1; m <= 24; m++) {
-      if (apiData[m] >= selfData[m]) { crossMonth = m; break; }
-    }
-  }
+  // Verdict box
+  const vb = document.getElementById('verdictBox');
+  const selfColor = selfData[12] <= apiData[12] ? '#0d9488' : '#94a3b8';
+  const apiColor = apiData[12] <= selfData[12] ? '#e67e22' : '#94a3b8';
+  const winner = selfData[12] < apiData[12] ? 'Self-hosted' : 'Vendor API';
+  const savings = Math.abs(selfData[12] - apiData[12]);
+  const winnerColor = selfData[12] < apiData[12] ? '#0d9488' : '#e67e22';
 
-  const note = document.getElementById('crossoverNote');
-  if (crossMonth > 0) {
-    note.textContent = `Crossover at Month ${crossMonth} — self-hosting pays off after €${Math.round(selfData[crossMonth]).toLocaleString()}`;
-    note.style.color = '#27ae60';
-  } else if (selfData[24] < apiData[24]) {
-    note.textContent = `Self-hosting is cheaper from the start for this scenario.`;
-    note.style.color = '#0d9488';
-  } else {
-    note.textContent = `Self-hosting doesn't pay off within 24 months. API is more cost-effective.`;
-    note.style.color = '#e67e22';
-  }
+  vb.innerHTML = `
+    <div class="verdict-col"><div class="vc-label">Self-Hosted (12 mo)</div><div class="vc-amount" style="color:${selfColor}">${fmtEur(selfData[12])}</div></div>
+    <div class="verdict-vs">vs</div>
+    <div class="verdict-col"><div class="vc-label">Vendor API (12 mo)</div><div class="vc-amount" style="color:${apiColor}">${fmtEur(apiData[12])}</div></div>
+  `;
+  vb.innerHTML += `<div class="verdict-winner" style="background:${winnerColor}15;color:${winnerColor};width:100%">${winner} wins by ${fmtEur(savings)} over 12 months</div>`;
 }
 
-function drawLineChart(ctx, W, H, selfData, apiData, hybridData, maxVal) {
+function drawLineChart(ctx, W, H, selfData, apiData, maxVal) {
   const pad = { top: 30, right: 20, bottom: 40, left: 65 };
   const cW = W - pad.left - pad.right;
   const cH = H - pad.top - pad.bottom;
-
   ctx.clearRect(0, 0, W, H);
 
   // Grid
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
   const ySteps = 5;
   for (let i = 0; i <= ySteps; i++) {
     const y = pad.top + (cH / ySteps) * i;
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
     ctx.fillStyle = '#94a3b8'; ctx.font = '11px -apple-system, sans-serif'; ctx.textAlign = 'right';
-    const val = maxVal - (maxVal / ySteps) * i;
-    ctx.fillText(fmtEur(val), pad.left - 8, y + 4);
+    ctx.fillText(fmtEur(maxVal - (maxVal / ySteps) * i), pad.left - 8, y + 4);
   }
 
-  // X-axis labels
+  // X-axis
   ctx.fillStyle = '#94a3b8'; ctx.font = '11px -apple-system, sans-serif'; ctx.textAlign = 'center';
-  for (let m = 0; m <= 24; m += 6) {
-    const x = pad.left + (m / 24) * cW;
-    ctx.fillText('M' + m, x, H - pad.bottom + 20);
+  for (let m = 0; m <= 12; m += 3) {
+    ctx.fillText('M' + m, pad.left + (m / 12) * cW, H - pad.bottom + 20);
   }
 
   function drawLine(data, color) {
     ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.beginPath();
     for (let i = 0; i < data.length; i++) {
-      const x = pad.left + (i / 24) * cW;
+      const x = pad.left + (i / 12) * cW;
       const y = pad.top + cH - (data[i] / maxVal) * cH;
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
@@ -402,121 +383,51 @@ function drawLineChart(ctx, W, H, selfData, apiData, hybridData, maxVal) {
 
   drawLine(selfData, '#0d9488');
   drawLine(apiData, '#e67e22');
-  if (hybridData) drawLine(hybridData, '#2563eb');
-
-  // End labels
-  function endLabel(data, color, label) {
-    const x = pad.left + cW;
-    const y = pad.top + cH - (data[data.length - 1] / maxVal) * cH;
-    ctx.fillStyle = color; ctx.font = 'bold 11px -apple-system, sans-serif'; ctx.textAlign = 'left';
-    ctx.fillText(fmtEur(data[data.length - 1]), x + 5, y + 4);
-  }
-  endLabel(selfData, '#0d9488');
-  endLabel(apiData, '#e67e22');
-  if (hybridData) endLabel(hybridData, '#2563eb');
 }
 
-function renderHybridChart() {
+/* ===== INSIGHTS & RECOMMENDATION ===== */
+function renderStep3() {
   const s = getScenario();
-  const canvas = document.getElementById('hybridChart');
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = 380 * dpr;
-  canvas.style.width = rect.width + 'px';
-  canvas.style.height = '380px';
-  ctx.scale(dpr, dpr);
-
-  const selfData = [], apiData = [], hybridData = [];
-  let selfTotal = s.hw + s.setup, apiTotal = 0;
-  // Hybrid: small self-hosted for dev (30% cost), API for prod (60% volume)
-  const hybridHw = s.hw * 0.3;
-  const hybridSetup = s.setup * 0.5;
-  let hybridTotal = hybridHw + hybridSetup;
-  selfData.push(selfTotal); apiData.push(0); hybridData.push(hybridTotal);
-
-  for (let m = 1; m <= 24; m++) {
-    selfTotal += s.monthlyOps;
-    apiTotal += s.apiMonthlyCost;
-    hybridTotal += s.monthlyOps * 0.25 + s.apiMonthlyCost * 0.6;
-    selfData.push(selfTotal); apiData.push(apiTotal); hybridData.push(hybridTotal);
-  }
-
-  const maxVal = Math.max(selfData[24], apiData[24], hybridData[24]) * 1.1;
-  drawLineChart(ctx, rect.width, 380, selfData, apiData, hybridData, maxVal);
-
-  document.getElementById('hybridNote').textContent =
-    `Hybrid 24-month TCO: ${fmtEur(hybridData[24])} — ${Math.round((1 - hybridData[24] / Math.max(selfData[24], apiData[24])) * 100)}% savings vs. the more expensive option.`;
-}
-
-/* ===== INSIGHTS ===== */
-function renderInsights() {
   const grid = document.getElementById('insightsGrid');
   const insights = [];
+  let selfTotal = s.hw + s.setup, apiTotal = 0;
+  for (let m = 1; m <= 12; m++) { selfTotal += s.monthlyOps; apiTotal += s.apiMonthlyCost; }
 
-  if (selections.data === 'high') {
-    insights.push({ type: 'warning', title: 'Data Sovereignty Matters', text: 'Regulated/PII data may require on-premise or private cloud deployment. This strongly favors self-hosting — but adds compliance costs. Budget 20–30% extra for security hardening.' });
-  }
-  if (selections.talent === 'none') {
-    insights.push({ type: 'danger', title: 'ML Talent Gap', text: 'Without in-house ML talent, self-hosting is risky. You\'ll need to hire (€80–120K/yr) or outsource. The hidden cost of "free" open-source models is the team to run them.' });
+  if (selections.talent === 'no') {
+    insights.push({ type: 'danger', title: 'No ML Engineers = Hidden Costs', text: 'Without in-house ML talent, self-hosting requires hiring (€80–120K/yr) or outsourcing. The "free" open-source model needs a paid team to run it. This alone can tip the balance toward API.' });
   }
   if (selections.quality === 'frontier') {
-    insights.push({ type: 'warning', title: 'Frontier Quality Trade-off', text: 'Self-hosting frontier-quality models requires significant GPU investment (A100/H100 cluster). The gap between open-source and commercial frontier models is shrinking but still significant for complex tasks.' });
+    insights.push({ type: 'warning', title: 'Frontier Quality = Serious Hardware', text: 'Self-hosting frontier-level models requires A100/H100 GPUs. The gap between open-source and commercial frontier models is shrinking but still matters for complex reasoning tasks.' });
   }
-  if (selections.users === 'very-high' || selections.users === 'high') {
-    insights.push({ type: 'positive', title: 'Scale Favors Self-Hosting', text: 'At your concurrency level, API costs scale linearly while self-hosted costs grow sub-linearly. Self-hosting becomes more attractive as you scale — if you have the team to operate it.' });
+  if (selections.volume === 'high') {
+    insights.push({ type: 'positive', title: 'High Volume Favors Self-Hosting', text: 'At 100K+ requests/month, API costs scale linearly while self-hosted costs stay relatively flat. If you have the team, self-hosting becomes very attractive at scale.' });
   }
-  if (selections.uptime === 'critical') {
-    insights.push({ type: 'warning', title: 'Uptime Complexity', text: '99.99% uptime requires redundancy, failover, and 24/7 ops. With self-hosting, this means duplicate infrastructure. APIs provide this out of the box — it\'s baked into the price.' });
+  if (selections.volume === 'low') {
+    insights.push({ type: 'positive', title: 'Low Volume Favors API', text: 'At under 10K requests/month, the upfront hardware cost of self-hosting is hard to justify. API lets you pay only for what you use.' });
   }
-  if (selections.data === 'low' && selections.talent === 'none') {
-    insights.push({ type: 'positive', title: 'API Is the Clear Winner', text: 'With public data and no ML team, there\'s little reason to self-host. Vendor APIs give you reliability, latest models, and zero ops burden.' });
-  }
-  if (selections.talent === 'strong' && selections.quality !== 'frontier') {
-    insights.push({ type: 'positive', title: 'Self-Hosting Is Viable', text: 'Your team has the skills to operate self-hosted models effectively. For sub-frontier quality, open-source models like Llama and Mistral offer excellent price-performance.' });
+  if (selections.talent === 'yes' && selections.quality !== 'frontier') {
+    insights.push({ type: 'positive', title: 'Your Team Can Handle Self-Hosting', text: 'With ML engineers on staff, the operational burden of self-hosting is manageable. Open-source models like Llama and Mistral offer excellent quality for most use cases.' });
   }
 
-  // Always show at least 2
   if (insights.length < 2) {
-    insights.push({ type: 'positive', title: 'Pragmatic Middle Ground', text: 'Consider starting with API for speed-to-market, then migrating critical workloads to self-hosted once you have volume data and operational confidence.' });
+    insights.push({ type: 'info', title: 'Consider a Hybrid Approach', text: 'Start with API for speed-to-market and production reliability. Use self-hosted for development, testing, and experimentation. Migrate workloads as you gain operational confidence.' });
   }
 
   grid.innerHTML = insights.map(i => `
-    <div class="insight-card ${i.type}">
-      <h4>${i.title}</h4>
-      <p>${i.text}</p>
-    </div>
+    <div class="insight-card ${i.type}"><h4>${i.title}</h4><p>${i.text}</p></div>
   `).join('');
-}
 
-/* ===== SUMMARY ===== */
-function renderSummary() {
-  const s = getScenario();
-  let selfTotal = s.hw + s.setup;
-  let apiTotal = 0;
-  for (let m = 1; m <= 24; m++) { selfTotal += s.monthlyOps; apiTotal += s.apiMonthlyCost; }
-
+  // Recommendation
   const winner = selfTotal < apiTotal ? 'Self-hosted' : 'Vendor API';
   const savings = Math.abs(selfTotal - apiTotal);
-
-  const html = `
-    <div class="summary-row"><span class="sr-label">Use Case</span><span class="sr-value">${document.getElementById('useCase').options[document.getElementById('useCase').selectedIndex].text}</span></div>
-    <div class="summary-row"><span class="sr-label">Quality Level</span><span class="sr-value">${selections.quality}</span></div>
-    <div class="summary-row"><span class="sr-label">API Model</span><span class="sr-value">${apiPricing[s.model].name}</span></div>
-    <div class="summary-row"><span class="sr-label">Self-Hosted 24-mo TCO</span><span class="sr-value">${fmtEur(selfTotal)}</span></div>
-    <div class="summary-row"><span class="sr-label">Vendor API 24-mo TCO</span><span class="sr-value">${fmtEur(apiTotal)}</span></div>
-    <div class="summary-row"><span class="sr-label">Winner</span><span class="sr-value" style="color: #27ae60;">${winner} (saves ${fmtEur(savings)})</span></div>
-  `;
-  document.getElementById('summaryContent').innerHTML = html;
-
   let rec = '';
-  if (selfTotal < apiTotal && selections.talent !== 'none') {
-    rec = `<h4>Recommendation: Self-Host</h4><p>Self-hosting saves ${fmtEur(savings)} over 24 months and your team has the skills. Start with a single-GPU setup and scale based on demand. Keep an API fallback for spikes.</p>`;
-  } else if (selfTotal < apiTotal && selections.talent === 'none') {
-    rec = `<h4>Recommendation: API First, Then Evaluate</h4><p>Self-hosting is cheaper on paper (${fmtEur(savings)} savings), but you lack ML talent. Start with API, hire/upskill, then migrate when ready.</p>`;
+
+  if (selfTotal < apiTotal && selections.talent === 'yes') {
+    rec = `<h4>Recommendation: Self-Host</h4><p>Self-hosting saves ${fmtEur(savings)} over 12 months, and your team has the skills to operate it. Start with a single-GPU setup and scale based on demand. Keep an API fallback for traffic spikes. Consider a hybrid approach: API for production reliability, self-hosted for development and cost savings.</p>`;
+  } else if (selfTotal < apiTotal && selections.talent === 'no') {
+    rec = `<h4>Recommendation: Start with API, Then Evaluate</h4><p>Self-hosting is cheaper on paper (${fmtEur(savings)} savings), but you don't have ML engineers. Start with API for immediate value, hire/upskill your team, then re-evaluate self-hosting in 6 months when you have both volume data and operational capability.</p>`;
   } else {
-    rec = `<h4>Recommendation: Use Vendor API</h4><p>API is more cost-effective (saves ${fmtEur(savings)}) and provides better reliability. Self-hosting only makes sense if data sovereignty requirements change or volume increases 3×+.</p>`;
+    rec = `<h4>Recommendation: Use Vendor API</h4><p>API is more cost-effective (saves ${fmtEur(savings)} over 12 months) and provides better reliability with zero ops burden. Self-hosting only makes sense if your volume grows 3x+ or data sovereignty requirements change.</p>`;
   }
   document.getElementById('summaryRec').innerHTML = rec;
 }
@@ -531,12 +442,10 @@ function navigate(dir) {
   updateProgressBar();
 
   if (currentStep === 2) renderChart();
-  if (currentStep === 3) renderInsights();
-  if (currentStep === 4) renderHybridChart();
-  if (currentStep === 5) renderSummary();
+  if (currentStep === 3) renderStep3();
 
   document.getElementById('prevBtn').disabled = currentStep === 1;
-  document.getElementById('nextBtn').textContent = currentStep === totalSteps ? 'Done ✓' : 'Next →';
+  document.getElementById('nextBtn').textContent = currentStep === totalSteps ? 'Done' : 'Next \u2192';
   document.getElementById('nextBtn').disabled = currentStep === totalSteps;
 }
 
@@ -552,26 +461,24 @@ function updateProgressBar() {
 }
 
 function fmtEur(n) {
-  if (n >= 1000000) return '€' + (n / 1000000).toFixed(1) + 'M';
-  if (n >= 1000) return '€' + (n / 1000).toFixed(1) + 'K';
-  return '€' + Math.round(n);
+  if (n >= 1000000) return '\u20AC' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '\u20AC' + (n / 1000).toFixed(1) + 'K';
+  return '\u20AC' + Math.round(n);
 }
 
 function copyResults() {
   const s = getScenario();
   let selfTotal = s.hw + s.setup, apiTotal = 0;
-  for (let m = 1; m <= 24; m++) { selfTotal += s.monthlyOps; apiTotal += s.apiMonthlyCost; }
+  for (let m = 1; m <= 12; m++) { selfTotal += s.monthlyOps; apiTotal += s.apiMonthlyCost; }
 
-  let text = `BUILD VS. BUY: TCO REALITY CHECK\n`;
-  text += `================================\n\n`;
+  let text = `BUILD VS. BUY: TCO REALITY CHECK\n================================\n\n`;
   text += `Use Case: ${document.getElementById('useCase').options[document.getElementById('useCase').selectedIndex].text}\n`;
-  text += `Quality: ${selections.quality} | Users: ${selections.users} | Uptime: ${selections.uptime}\n`;
-  text += `Data: ${selections.data} | Talent: ${selections.talent}\n\n`;
-  text += `24-MONTH TCO\n`;
+  text += `Quality: ${selections.quality} | Volume: ${selections.volume} | ML Engineers: ${selections.talent}\n\n`;
+  text += `12-MONTH TCO\n`;
   text += `Self-hosted: ${fmtEur(selfTotal)}\n`;
   text += `Vendor API (${apiPricing[s.model].name}): ${fmtEur(apiTotal)}\n`;
   text += `Winner: ${selfTotal < apiTotal ? 'Self-hosted' : 'Vendor API'} (saves ${fmtEur(Math.abs(selfTotal - apiTotal))})\n\n`;
-  text += `— Generated by robert@barcik.training Build vs. Buy TCO Reality Check`;
+  text += `\u2014 Generated by robert@barcik.training Build vs. Buy TCO Reality Check`;
 
   navigator.clipboard.writeText(text).then(() => {
     const toast = document.getElementById('copyToast');

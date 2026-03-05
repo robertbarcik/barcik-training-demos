@@ -244,6 +244,7 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 }
 .act-desc { font-size: 0.78rem; color: #4a5568; margin-top: 0.5rem; line-height: 1.5; padding: 0.5rem; background: #f0f4f8; border-radius: 6px; }
 .scenario-label { font-size: 0.72rem; color: #64748b; font-style: italic; margin-bottom: 0.2rem; }
+.scenario-explain { font-size: 0.72rem; color: #4a5568; line-height: 1.45; margin-bottom: 0.4rem; padding: 0.35rem 0.5rem; background: #f0f4f8; border-radius: 4px; border-left: 2px solid #94a3b8; }
 .output-interpretation { font-size: 0.82rem; font-weight: 600; text-align: center; margin-top: 0.25rem; padding: 0.3rem 0.5rem; border-radius: 6px; }
 
 /* Output display */
@@ -368,6 +369,7 @@ footer {
     <div class="input-group" id="group-0">
       <div class="input-group-label">Input x<sub>1</sub></div>
       <div class="scenario-label">I see steam rising</div>
+      <div class="scenario-explain">Steam doesn't always mean danger — we see steam from hot showers and kettles. Slightly positive weight.</div>
       <div class="slider-row">
         <span class="slider-label">x<sub>1</sub></span>
         <input type="range" id="x0" min="-2" max="2" step="0.1" value="0">
@@ -375,11 +377,11 @@ footer {
       </div>
       <div class="slider-row">
         <span class="slider-label">w<sub>1</sub></span>
-        <input type="range" id="w0" min="-2" max="2" step="0.1" value="0.5">
-        <span class="slider-val" id="w0-val">0.5</span>
+        <input type="range" id="w0" min="-2" max="2" step="0.1" value="0.4">
+        <span class="slider-val" id="w0-val">0.4</span>
       </div>
       <div class="product-row">
-        <span class="product-formula" id="prod0-formula">0.0 &times; 0.5</span>
+        <span class="product-formula" id="prod0-formula">0.0 &times; 0.4</span>
         <span class="product-value product-zero" id="prod0-value">= 0.00</span>
       </div>
     </div>
@@ -387,6 +389,7 @@ footer {
     <div class="input-group" id="group-1">
       <div class="input-group-label">Input x<sub>2</sub></div>
       <div class="scenario-label">The burner is glowing red</div>
+      <div class="scenario-explain">A glowing red burner is strong visual evidence of extreme heat. High positive weight — this is a reliable danger signal.</div>
       <div class="slider-row">
         <span class="slider-label">x<sub>2</sub></span>
         <input type="range" id="x1" min="-2" max="2" step="0.1" value="0">
@@ -394,11 +397,11 @@ footer {
       </div>
       <div class="slider-row">
         <span class="slider-label">w<sub>2</sub></span>
-        <input type="range" id="w1" min="-2" max="2" step="0.1" value="-0.8">
-        <span class="slider-val" id="w1-val">-0.8</span>
+        <input type="range" id="w1" min="-2" max="2" step="0.1" value="1.5">
+        <span class="slider-val" id="w1-val">1.5</span>
       </div>
       <div class="product-row">
-        <span class="product-formula" id="prod1-formula">0.0 &times; -0.8</span>
+        <span class="product-formula" id="prod1-formula">0.0 &times; 1.5</span>
         <span class="product-value product-zero" id="prod1-value">= 0.00</span>
       </div>
     </div>
@@ -406,6 +409,7 @@ footer {
     <div class="input-group" id="group-2">
       <div class="input-group-label">Input x<sub>3</sub></div>
       <div class="scenario-label">Someone says it's cool</div>
+      <div class="scenario-explain">Someone saying "it's cool" should reduce the danger signal — but people can be wrong. Negative weight, but not too strong.</div>
       <div class="slider-row">
         <span class="slider-label">x<sub>3</sub></span>
         <input type="range" id="x2" min="-2" max="2" step="0.1" value="0">
@@ -413,11 +417,11 @@ footer {
       </div>
       <div class="slider-row">
         <span class="slider-label">w<sub>3</sub></span>
-        <input type="range" id="w2" min="-2" max="2" step="0.1" value="1.2">
-        <span class="slider-val" id="w2-val">1.2</span>
+        <input type="range" id="w2" min="-2" max="2" step="0.1" value="-0.6">
+        <span class="slider-val" id="w2-val">-0.6</span>
       </div>
       <div class="product-row">
-        <span class="product-formula" id="prod2-formula">0.0 &times; 1.2</span>
+        <span class="product-formula" id="prod2-formula">0.0 &times; -0.6</span>
         <span class="product-value product-zero" id="prod2-value">= 0.00</span>
       </div>
     </div>
@@ -449,14 +453,14 @@ footer {
       </defs>
 
       <!-- Connection lines (drawn first, behind circles) -->
-      <line id="line0" x1="70" y1="70" x2="195" y2="170" stroke="#3b82f6" stroke-width="2"/>
-      <line id="line1" x1="70" y1="170" x2="195" y2="170" stroke="#dc2626" stroke-width="3"/>
-      <line id="line2" x1="70" y1="270" x2="195" y2="170" stroke="#3b82f6" stroke-width="4"/>
+      <line id="line0" x1="70" y1="70" x2="195" y2="170" stroke="#3b82f6" stroke-width="1.5"/>
+      <line id="line1" x1="70" y1="170" x2="195" y2="170" stroke="#3b82f6" stroke-width="4.5"/>
+      <line id="line2" x1="70" y1="270" x2="195" y2="170" stroke="#dc2626" stroke-width="2"/>
 
       <!-- Weight labels on lines -->
-      <text id="wlabel0" x="120" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">0.5</text>
-      <text id="wlabel1" x="130" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">-0.8</text>
-      <text id="wlabel2" x="120" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">1.2</text>
+      <text id="wlabel0" x="120" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">0.4</text>
+      <text id="wlabel1" x="130" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">1.5</text>
+      <text id="wlabel2" x="120" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">-0.6</text>
 
       <!-- Input circles -->
       <circle cx="70" cy="70" r="26" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
@@ -493,9 +497,9 @@ footer {
     <div class="output-section">
       <div class="output-section-title">Weighted Sum</div>
       <div class="formula-block" id="formula-block">
-        <span class="formula-term" id="term0">0.5&middot;0.0</span> +
-        <span class="formula-term" id="term1">(-0.8)&middot;0.0</span> +
-        <span class="formula-term" id="term2">1.2&middot;0.0</span> +
+        <span class="formula-term" id="term0">0.4&middot;0.0</span> +
+        <span class="formula-term" id="term1">1.5&middot;0.0</span> +
+        <span class="formula-term" id="term2">(-0.6)&middot;0.0</span> +
         <span class="formula-term" id="term-bias">0.0</span><br>
         = <span class="formula-result" id="weighted-sum">0.00</span>
       </div>

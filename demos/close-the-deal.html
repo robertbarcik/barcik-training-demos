@@ -144,6 +144,22 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 }
 .start-btn:hover { background: #0f766e; }
 
+/* Scenario Selection */
+.scenario-select { margin-bottom: 1.25rem; }
+.scenario-select h2 { font-size: 1.1rem; color: #1e3a5f; margin-bottom: 0.5rem; }
+.scenario-select p { font-size: 0.88rem; color: #4a5568; margin-bottom: 1rem; }
+.scenario-cards { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+.scenario-card {
+  background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.25rem;
+  cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.scenario-card:hover { border-color: #0d9488; background: #f0fdfa; }
+.scenario-card.selected { border-color: #0d9488; background: #f0fdfa; box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
+.scenario-card h3 { font-size: 1rem; color: #1e3a5f; margin-bottom: 0.25rem; }
+.scenario-card .sc-industry { font-size: 0.75rem; font-weight: 600; color: #0d9488; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+.scenario-card .sc-desc { font-size: 0.85rem; color: #64748b; line-height: 1.5; }
+.scenario-card .sc-difficulty { font-size: 0.75rem; color: #94a3b8; margin-top: 0.35rem; font-weight: 600; }
+
 @media print {
   body { background: #fff; }
   header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -178,18 +194,46 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
     <div class="trust-delta" id="trustDelta"></div>
   </div>
 
+  <!-- Scenario Selection -->
+  <div class="scenario-select" id="scenarioSelect">
+    <h2>Choose Your Scenario</h2>
+    <p>Each industry has different priorities. What works in logistics may fail in healthcare.</p>
+    <div class="scenario-cards">
+      <div class="scenario-card selected" data-scenario="acme" onclick="selectScenario('acme', this)">
+        <div class="sc-industry">Logistics</div>
+        <h3>ACME Corp — Document Processing</h3>
+        <div class="sc-desc">Pitch an AI document processing agent to CTO Elena Vasquez. 5,000 docs/month, 3 FTEs, €180K/year.</div>
+        <div class="sc-difficulty">Trust starts at 3/10 — win at 6+</div>
+      </div>
+      <div class="scenario-card" data-scenario="meridian" onclick="selectScenario('meridian', this)">
+        <div class="sc-industry">Healthcare</div>
+        <h3>Meridian Health — ER Triage AI</h3>
+        <div class="sc-desc">Convince CMO Dr. James Okonkwo to adopt AI triage. 4hr avg wait, 12% misrouted patients. Burned by a previous AI vendor.</div>
+        <div class="sc-difficulty">Trust starts at 2/10 — win at 6+ (empathy matters here)</div>
+      </div>
+      <div class="scenario-card" data-scenario="novabank" onclick="selectScenario('novabank', this)">
+        <div class="sc-industry">Financial Services</div>
+        <h3>NovaBank — Fraud Detection</h3>
+        <div class="sc-desc">Pitch AI fraud detection to CRO Catherine Zhao. 800 flagged transactions/day, 73% false positive rate, 12 analysts.</div>
+        <div class="sc-difficulty">Trust starts at 2/10 — win at 7+ (hardest scenario)</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Setup -->
   <div class="setup-panel" id="setupPanel">
     <h2>Mission Briefing</h2>
-    <p>You are a <strong>GenAI Product Manager</strong> pitching an AI document processing agent to a skeptical CTO. Navigate 4 dialogue scenes to build trust and close the deal.</p>
-    <div style="margin: 1rem 0;">
-      <div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">ACME Corp</span></div>
-      <div class="setup-detail"><span class="sd-label">CTO:</span><span class="sd-value">Elena Vasquez</span></div>
-      <div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Logistics</span></div>
-      <div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">5,000 docs/month processed manually</span></div>
-      <div class="setup-detail"><span class="sd-label">Current cost:</span><span class="sd-value">3 FTEs = €180K/year</span></div>
+    <div id="setupContent">
+      <p>You are a <strong>GenAI Product Manager</strong> pitching an AI document processing agent to a skeptical CTO. Navigate 4 dialogue scenes to build trust and close the deal.</p>
+      <div style="margin: 1rem 0;">
+        <div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">ACME Corp</span></div>
+        <div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Elena Vasquez, CTO</span></div>
+        <div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Logistics</span></div>
+        <div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">5,000 docs/month processed manually</span></div>
+        <div class="setup-detail"><span class="sd-label">Current cost:</span><span class="sd-value">3 FTEs = €180K/year</span></div>
+      </div>
+      <p style="font-size: 0.85rem; color: #64748b;">Your starting trust level is <strong>3/10</strong>. Reach 6+ to win the deal.</p>
     </div>
-    <p style="font-size: 0.85rem; color: #64748b;">Your starting trust level is <strong>3/10</strong>. Reach 6+ to win the deal.</p>
     <button class="start-btn" onclick="startGame()">Start Meeting</button>
   </div>
 
@@ -221,61 +265,191 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 <footer>&copy; 2026 robert@barcik.training</footer>
 
 <script>
-/* ===== GAME DATA ===== */
-const scenes = [
-  {
-    id: 1, title: 'The Opening', sceneLabel: 'Scene 1 of 4',
-    npcDialogue: "Thanks for coming in. We've been hearing a lot about AI lately — half our board is excited, the other half thinks it's hype. So... convince me. Why should ACME care about your AI document processing solution?",
-    choices: [
-      { label: 'A', text: 'Our solution uses a state-of-the-art transformer architecture with 99.2% accuracy on document extraction benchmarks...', delta: -1, response: '*Elena\'s eyes glaze over.* "That\'s... technical. Look, I have engineers for that. What I need to understand is why this matters for my business."', framework: 'Opening with Pain', lesson: 'Lead with the customer\'s pain, not your technology. CTOs hear tech pitches all day.' },
-      { label: 'B', text: 'You\'re processing 5,000 documents a month with 3 full-time staff. That\'s €180K a year just on document handling — and I bet the error rate keeps your operations team up at night.', delta: 1, response: '*Elena leans forward.* "You\'ve done your homework. Yes, the error rate is actually our biggest headache — we had a misrouted shipment last quarter that cost us €40K."', framework: 'Opening with Pain', lesson: 'Leading with specific pain points shows preparation and builds immediate relevance.' },
-      { label: 'C', text: 'Companies like DHL and Maersk are already using AI for document processing. The logistics industry is moving fast on this.', delta: 0, response: '*Elena nods cautiously.* "I\'ve heard that, but we\'re not DHL. What works for a giant doesn\'t automatically work for a mid-size logistics company."', framework: 'Social Proof', lesson: 'Social proof is safe but generic. It doesn\'t differentiate your solution or show you understand the specific client.' }
+/* ===== SCENARIOS DATA ===== */
+const SCENARIOS = {
+  acme: {
+    name: 'ACME Corp', npcName: 'Elena Vasquez', npcTitle: 'CTO', industry: 'Logistics',
+    startTrust: 3, winThreshold: 6,
+    portrait: '<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="13" r="8" fill="#94a3b8"/><rect x="8" y="22" width="20" height="14" rx="4" fill="#94a3b8"/><circle cx="14" cy="12" r="1.5" fill="#1e3a5f"/><circle cx="22" cy="12" r="1.5" fill="#1e3a5f"/><line x1="15" y1="16" x2="21" y2="16" stroke="#1e3a5f" stroke-width="1.5" stroke-linecap="round"/><path d="M10 6 Q18 2 26 6" stroke="#64748b" stroke-width="2" fill="none"/></svg>',
+    briefing: '<p>You are a <strong>GenAI Product Manager</strong> pitching an AI document processing agent to a skeptical CTO. Navigate 4 dialogue scenes to build trust and close the deal.</p><div style="margin:1rem 0"><div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">ACME Corp</span></div><div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Elena Vasquez, CTO</span></div><div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Logistics</span></div><div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">5,000 docs/month processed manually</span></div><div class="setup-detail"><span class="sd-label">Current cost:</span><span class="sd-value">3 FTEs = €180K/year</span></div></div><p style="font-size:0.85rem;color:#64748b;">Your starting trust level is <strong>3/10</strong>. Reach 6+ to win the deal.</p>',
+    winDesc: 'Elena is impressed. ACME Corp signs the pilot agreement, and your solution is heading to production. Congratulations — you navigated a skeptical CTO with empathy, data, and smart positioning.',
+    mehDesc: 'Elena is interested but not convinced. You\'ll get a follow-up meeting, but you didn\'t create enough urgency or differentiation to close today.',
+    loseDesc: 'Elena politely ends the meeting. You lost trust through dismissiveness, pressure tactics, or failing to connect with her specific pain points.',
+    scenes: [
+      {
+        id: 1, title: 'The Opening', sceneLabel: 'Scene 1 of 4',
+        npcDialogue: "Thanks for coming in. We've been hearing a lot about AI lately — half our board is excited, the other half thinks it's hype. So... convince me. Why should ACME care about your AI document processing solution?",
+        choices: [
+          { label: 'A', text: 'Our solution uses a state-of-the-art transformer architecture with 99.2% accuracy on document extraction benchmarks...', delta: -1, response: '*Elena\'s eyes glaze over.* "That\'s... technical. Look, I have engineers for that. What I need to understand is why this matters for my business."', framework: 'Opening with Pain', lesson: 'Lead with the customer\'s pain, not your technology. CTOs hear tech pitches all day.' },
+          { label: 'B', text: 'You\'re processing 5,000 documents a month with 3 full-time staff. That\'s €180K a year just on document handling — and I bet the error rate keeps your operations team up at night.', delta: 1, response: '*Elena leans forward.* "You\'ve done your homework. Yes, the error rate is actually our biggest headache — we had a misrouted shipment last quarter that cost us €40K."', framework: 'Opening with Pain', lesson: 'Leading with specific pain points shows preparation and builds immediate relevance.' },
+          { label: 'C', text: 'Companies like DHL and Maersk are already using AI for document processing. The logistics industry is moving fast on this.', delta: 0, response: '*Elena nods cautiously.* "I\'ve heard that, but we\'re not DHL. What works for a giant doesn\'t automatically work for a mid-size logistics company."', framework: 'Social Proof', lesson: 'Social proof is safe but generic. It doesn\'t differentiate your solution or show you understand the specific client.' }
+        ]
+      },
+      {
+        id: 2, title: 'The ChatGPT Tax Objection', sceneLabel: 'Scene 2 of 4',
+        npcDialogue: "Interesting. But here's my concern — my team already uses ChatGPT for some document tasks. They paste in invoices, get summaries out. It costs us €20 per person per month. Why would I pay 10x that for your solution?",
+        choices: [
+          { label: 'A', text: 'ChatGPT is a toy — it\'s not designed for enterprise document processing. You can\'t compare a consumer tool to our platform.', delta: -1, response: '*Elena bristles.* "A \'toy\' that my team chose voluntarily and that\'s actually saving them time? That\'s dismissive. I need a better argument than that."', framework: 'ChatGPT Tax', lesson: 'Never dismiss what the customer is already using successfully. It invalidates their judgment.' },
+          { label: 'B', text: 'Great question. ChatGPT is perfect for ad-hoc tasks. But it can\'t connect to your TMS, auto-route documents, or maintain an audit trail. Our value isn\'t in the AI — it\'s in the workflow integration your team doesn\'t have to manage.', delta: 2, response: '*Elena pauses, thinking.* "The audit trail point is strong — we failed a compliance check last year because we couldn\'t trace document changes. And the TMS integration... that would save hours daily."', framework: 'ChatGPT Tax', lesson: 'Acknowledge the competitor, then differentiate on workflow integration — the moat ChatGPT can\'t cross.' },
+          { label: 'C', text: 'I\'d actually love to do a side-by-side comparison. Let\'s take 50 of your real documents and process them both ways — ChatGPT vs. our platform. You measure the difference.', delta: 1, response: '*Elena nods.* "That\'s fair. I\'d want to see that with our actual customs forms — those are the tricky ones. But who\'s paying for the pilot?"', framework: 'ChatGPT Tax', lesson: 'Offering a direct comparison shows confidence and moves from debate to evidence. Good, but could be stronger.' }
+        ]
+      },
+      {
+        id: 3, title: 'The Build vs Buy Challenge', sceneLabel: 'Scene 3 of 4',
+        npcDialogue: "My head of engineering says we could build this ourselves. We have two ML engineers, and with open-source models like Llama, the AI part is 'basically free.' Why shouldn't we just build it in-house?",
+        choices: [
+          { label: 'A', text: 'Let\'s do the math together. Two ML engineers at €8K/month each = €192K/year. Add 6 months of build time before you see any value, plus servers, maintenance, and the opportunity cost of not having those engineers on your core product. Our solution is live in 2 weeks for €60K/year.', delta: 2, response: '*Elena pulls out a calculator.* "€192K in salary alone, plus servers... and we\'d need to hire an MLOps person too. I hadn\'t thought about the opportunity cost of pulling engineers off our routing optimization project."', framework: 'Build vs Buy TCO', lesson: 'Making the cost comparison concrete and specific is powerful. Include opportunity cost — it\'s the hidden killer of build decisions.' },
+          { label: 'B', text: 'Building it yourselves is risky. What if the models change? What if your ML engineers leave? You\'ll be stuck maintaining a system you can\'t support.', delta: -1, response: '*Elena frowns.* "That sounds like FUD. My engineers are loyal, and we manage plenty of complex systems. Give me numbers, not fear."', framework: 'Build vs Buy TCO', lesson: 'Fear-based selling backfires with technical buyers. They want data and logic, not worst-case scenarios.' },
+          { label: 'C', text: 'You could definitely build the AI part. But the AI is maybe 30% of the work. The other 70% is integrations, error handling, monitoring, compliance logging, and edge cases. That\'s where our 3 years of production experience really shows.', delta: 1, response: '*Elena considers this.* "That\'s a fair point. Our last \'6-week\' internal project took 5 months. The 70/30 split resonates — we always underestimate the integration work."', framework: 'Build vs Buy TCO', lesson: 'Conceding the AI part while highlighting integration complexity shows honesty and reframes the decision.' }
+        ]
+      },
+      {
+        id: 4, title: 'The Closing', sceneLabel: 'Scene 4 of 4',
+        npcDialogue: "Alright, I'm intrigued. But I've been burned before by AI vendors who over-promise. What does the next step actually look like?",
+        choices: [
+          { label: 'A', text: 'We can have the contract ready by Friday. I\'ll give you a 15% discount if we close this quarter — our pricing goes up in Q2.', delta: -1, response: '*Elena\'s guard goes up immediately.* "Whoa, slow down. I just said I\'m \'intrigued\', not \'ready to sign.\' The pressure sell makes me wonder what you\'re hiding."', framework: 'Closing Techniques', lesson: 'Rushing to close destroys trust. Match your closing pace to the buyer\'s readiness level.' },
+          { label: 'B', text: 'Here\'s what I\'d suggest: a 30-day pilot with 500 of your real documents. We\'ll process them, you measure accuracy and time savings. Cost: €2,500 — and we credit it toward the annual license if you proceed. Zero risk.', delta: 2, response: '*Elena smiles.* "Now that\'s reasonable. €2,500 to see real results with our data? I can get that approved without going to the board. Send me the pilot proposal and I\'ll review it with my ops lead this week."', framework: 'Closing Techniques', lesson: 'The pilot pricing play: low barrier, real data, clear next step. It converts skeptics by letting results do the selling.' },
+          { label: 'C', text: 'I\'d love to connect you with our customer at Nordic Freight — similar size, similar challenges. They went live 4 months ago and can share their experience. And internally, who else should be part of this evaluation?', delta: 1, response: '*Elena appreciates the thoroughness.* "A reference call would be helpful. And yes, you\'d need to get our ops director and compliance lead on board too. Let me set up a follow-up meeting with the extended team."', framework: 'Champion Building', lesson: 'Building champions and aligning stakeholders is strong. It extends the sales cycle but increases close probability.' }
+        ]
+      }
     ]
   },
-  {
-    id: 2, title: 'The ChatGPT Tax Objection', sceneLabel: 'Scene 2 of 4',
-    npcDialogue: "Interesting. But here's my concern — my team already uses ChatGPT for some document tasks. They paste in invoices, get summaries out. It costs us €20 per person per month. Why would I pay 10x that for your solution?",
-    choices: [
-      { label: 'A', text: 'ChatGPT is a toy — it\'s not designed for enterprise document processing. You can\'t compare a consumer tool to our platform.', delta: -1, response: '*Elena bristles.* "A \'toy\' that my team chose voluntarily and that\'s actually saving them time? That\'s dismissive. I need a better argument than that."', framework: 'ChatGPT Tax', lesson: 'Never dismiss what the customer is already using successfully. It invalidates their judgment.' },
-      { label: 'B', text: 'Great question. ChatGPT is perfect for ad-hoc tasks. But it can\'t connect to your TMS, auto-route documents, or maintain an audit trail. Our value isn\'t in the AI — it\'s in the workflow integration your team doesn\'t have to manage.', delta: 2, response: '*Elena pauses, thinking.* "The audit trail point is strong — we failed a compliance check last year because we couldn\'t trace document changes. And the TMS integration... that would save hours daily."', framework: 'ChatGPT Tax', lesson: 'Acknowledge the competitor, then differentiate on workflow integration — the moat ChatGPT can\'t cross.' },
-      { label: 'C', text: 'I\'d actually love to do a side-by-side comparison. Let\'s take 50 of your real documents and process them both ways — ChatGPT vs. our platform. You measure the difference.', delta: 1, response: '*Elena nods.* "That\'s fair. I\'d want to see that with our actual customs forms — those are the tricky ones. But who\'s paying for the pilot?"', framework: 'ChatGPT Tax', lesson: 'Offering a direct comparison shows confidence and moves from debate to evidence. Good, but could be stronger.' }
+  meridian: {
+    name: 'Meridian Health', npcName: 'Dr. James Okonkwo', npcTitle: 'Chief Medical Officer', industry: 'Healthcare',
+    startTrust: 2, winThreshold: 6,
+    portrait: '<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="13" r="8" fill="#94a3b8"/><rect x="8" y="22" width="20" height="14" rx="4" fill="#94a3b8"/><circle cx="14" cy="12" r="1.5" fill="#1e3a5f"/><circle cx="22" cy="12" r="1.5" fill="#1e3a5f"/><line x1="15" y1="16" x2="21" y2="16" stroke="#1e3a5f" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="3" width="24" height="3" rx="1.5" fill="#64748b"/></svg>',
+    briefing: '<p>You are a <strong>GenAI Product Manager</strong> pitching an AI triage assistant to a CMO who was burned by a previous AI vendor. Navigate 4 scenes with care — empathy matters more than ROI here.</p><div style="margin:1rem 0"><div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">Meridian Health</span></div><div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Dr. James Okonkwo, CMO</span></div><div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Healthcare</span></div><div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">4hr avg ER wait, 12% misrouted patients</span></div><div class="setup-detail"><span class="sd-label">History:</span><span class="sd-value">Previous AI vendor failed — trust is low</span></div></div><p style="font-size:0.85rem;color:#64748b;">Your starting trust level is <strong>2/10</strong>. Reach 6+ to win. <strong>Hint:</strong> empathy beats data in healthcare.</p>',
+    winDesc: 'Dr. Okonkwo is genuinely moved by your understanding of patient care. Meridian Health signs for a pilot. You succeeded by leading with empathy, not spreadsheets.',
+    mehDesc: 'Dr. Okonkwo sees potential but can\'t get past the previous vendor trauma. He needs more time and a reference from another hospital.',
+    loseDesc: 'Dr. Okonkwo politely declines. You treated a healthcare leader like a tech buyer — data and ROI without addressing the human cost of AI failure in medicine.',
+    scenes: [
+      {
+        id: 1, title: 'The Opening', sceneLabel: 'Scene 1 of 4',
+        npcDialogue: "I appreciate you coming in. I should be upfront — we tried an AI triage tool last year. It was a disaster. Misclassified a chest pain patient as low-priority. So I'm skeptical. You have 30 minutes.",
+        choices: [
+          { label: 'A', text: 'I read about that incident. Before I pitch anything — can you tell me what went wrong with that implementation? I want to understand what you actually experienced, not just what the press reported.', delta: 2, response: '*Dr. Okonkwo pauses, surprised.* "That\'s... actually the first time a vendor has asked me that instead of launching into slides. The system had no escalation path. When it was wrong, there was no safety net. My nurses lost trust in it within a week."', framework: 'Empathy-first Opening', lesson: 'In healthcare, asking about their FAILED pilot before pitching your solution shows you care about patient outcomes, not just the sale. This is the non-obvious winning move.' },
+          { label: 'B', text: 'Our triage AI has 94.7% accuracy across 200 hospitals. The previous vendor you worked with used an outdated model — our system is fundamentally different, built on 12 million patient encounters.', delta: 0, response: '*Dr. Okonkwo nods politely but his arms are crossed.* "I\'ve heard accuracy claims before. The last vendor promised 96%. Numbers on a slide don\'t help when a patient is misrouted."', framework: 'Data-driven Opening', lesson: 'Data-first pitches feel tone-deaf after a traumatic vendor experience. In healthcare, prove you understand the human stakes before citing statistics.' },
+          { label: 'C', text: 'With a 4-hour average wait and 12% misrouting rate, every hour you delay costs patients. Our system can cut wait times by 40% — that\'s real lives improved, not just metrics.', delta: -1, response: '*Dr. Okonkwo\'s expression hardens.* "Don\'t lecture me about patient outcomes. I\'ve been an ER physician for 20 years. I know what\'s at stake better than your marketing deck does."', framework: 'Urgency-based Opening', lesson: 'Creating urgency around patient harm backfires with medical professionals. They live this reality — they don\'t need a vendor to tell them lives are at stake.' }
+        ]
+      },
+      {
+        id: 2, title: 'The Data Privacy Concern', sceneLabel: 'Scene 2 of 4',
+        npcDialogue: "Here's my biggest concern: patient data. We're bound by strict regulations. The last vendor wanted to send data to their cloud for 'model improvement.' Where exactly does our patient data go?",
+        choices: [
+          { label: 'A', text: 'Compliance first. Our system runs entirely within your infrastructure — no patient data leaves your network. We\'re HIPAA-certified, SOC 2 Type II audited, and we\'ll sign a BAA before any data touches our system. Here\'s our compliance documentation.', delta: 2, response: '*Dr. Okonkwo takes the documentation.* "This is what I needed to see first. The on-premise deployment is non-negotiable for us. I\'ll have our compliance team review this, but the approach is right."', framework: 'Compliance-first', lesson: 'In healthcare, leading with compliance and data sovereignty isn\'t just smart — it\'s the only acceptable approach. Having documentation ready shows you understand regulated industries.' },
+          { label: 'B', text: 'Our cloud infrastructure is enterprise-grade with encryption at rest and in transit. We process millions of records securely for other healthcare clients. Data security is our top priority.', delta: -1, response: '*Dr. Okonkwo frowns.* "\'Cloud infrastructure\' and \'enterprise-grade\' are exactly the words the last vendor used. I need to know WHERE the data is, not that it\'s \'secure\'. Can you be specific?"', framework: 'Generic Security', lesson: 'Vague security assurances are red flags in healthcare. Be specific about data residency, compliance certifications, and deployment architecture.' },
+          { label: 'C', text: 'We offer both cloud and on-premise options. Our recommendation is hybrid — core processing on your infrastructure, with anonymized analytics in our cloud for model improvements. Your patients benefit from aggregated learnings across hospitals.', delta: 1, response: '*Dr. Okonkwo considers this.* "I appreciate the flexibility. The anonymized analytics piece is interesting for research. But I\'d want our data governance board to review the anonymization methodology."', framework: 'Hybrid Approach', lesson: 'Offering options shows flexibility. The hybrid approach is reasonable but creates extra work for the buyer. In high-trust-deficit situations, start with the most conservative option.' }
+        ]
+      },
+      {
+        id: 3, title: 'The Nurse Adoption Challenge', sceneLabel: 'Scene 3 of 4',
+        npcDialogue: "Even if the technology works perfectly, I have a people problem. Our ER nurses are burned out and resistant to new tools. The last AI system added 3 clicks to their workflow. How do you handle adoption?",
+        choices: [
+          { label: 'A', text: 'We don\'t do top-down rollouts. We start by embedding with your most respected ER nurse for 2 weeks — they become the champion. Nurses trust other nurses, not vendor demos. We adapt the interface to THEIR workflow, not the other way around.', delta: 2, response: '*Dr. Okonkwo leans back, impressed.* "You understand how hospitals actually work. Our charge nurse Maria would be perfect for that — she\'s skeptical but fair. If she approves it, the floor follows."', framework: 'Champion-led Adoption', lesson: 'In healthcare, the champion approach wins because clinical staff trust peer validation over management mandates. Identifying and empowering a respected nurse is the non-obvious winning strategy.' },
+          { label: 'B', text: 'We provide comprehensive training: 2-day on-site workshops, video tutorials, and a dedicated support line. Our customer success team has trained over 5,000 clinical staff.', delta: 0, response: '*Dr. Okonkwo sighs.* "Training is fine, but my nurses work 12-hour shifts. They don\'t have time for 2-day workshops. What about the ones who just ignore it and do things the old way?"', framework: 'Training-first', lesson: 'Formal training alone doesn\'t drive adoption among overworked clinical staff. The real challenge is workflow integration, not knowledge transfer.' },
+          { label: 'C', text: 'Our system is designed to be invisible. It runs in the background, and nurses see a simple color-coded priority badge next to each patient. One glance, zero extra clicks. If they disagree with the AI, one tap overrides it.', delta: 1, response: '*Dr. Okonkwo nods.* "Zero extra clicks is the right direction. But \'invisible\' AI in healthcare makes me nervous. I want nurses to understand why a patient is flagged, not just see a color."', framework: 'Minimal Friction', lesson: 'Reducing clicks is important but insufficient. In healthcare, transparency about AI reasoning matters. Nurses need to understand the WHY, not just see the recommendation.' }
+        ]
+      },
+      {
+        id: 4, title: 'The Ask', sceneLabel: 'Scene 4 of 4',
+        npcDialogue: "I'm more open than I expected to be. But I need to bring this to my board, and they'll ask: what exactly are we committing to?",
+        choices: [
+          { label: 'A', text: 'Full deployment across your 3 ER locations. €450K annual contract, 12-month commitment. We\'ll have you live in 8 weeks with dedicated implementation support.', delta: -1, response: '*Dr. Okonkwo pulls back.* "€450K and 3 locations right off the bat? After what happened last time? That\'s a career-ending risk for me if it fails. I can\'t take that to the board."', framework: 'Full Rollout', lesson: 'Big commitments fail after trust has been broken. The risk-reward is asymmetric: if it works, you get credit; if it fails, your career is damaged.' },
+          { label: 'B', text: 'A 60-day pilot in your highest-volume ER. We deploy alongside your current process — both systems run, nurses compare. Cost: €15K, fully credited if you proceed. Your board sees real data, not promises.', delta: 2, response: '*Dr. Okonkwo smiles for the first time.* "Parallel running removes the risk entirely. €15K is within my discretionary budget — I don\'t even need board approval for that. Let me talk to our ER director this week."', framework: 'Low-risk Pilot', lesson: 'After a failed vendor experience, the winning move is making the decision as small as possible. €15K within discretionary budget means no board approval needed — removing a massive friction point.' },
+          { label: 'C', text: 'Let me set up a call between you and the CMO at St. Luke\'s — they went through the same vendor trauma and chose us 6 months ago. I think hearing their experience would be more convincing than anything I can say.', delta: 1, response: '*Dr. Okonkwo nods thoughtfully.* "A peer reference, especially one who also had a bad vendor experience... that would carry real weight. Set it up. But I also need to see a concrete pilot proposal."', framework: 'Peer Reference', lesson: 'Peer references are powerful in healthcare but aren\'t enough alone. Combine social proof with a concrete, low-risk next step.' }
+        ]
+      }
     ]
   },
-  {
-    id: 3, title: 'The Build vs Buy Challenge', sceneLabel: 'Scene 3 of 4',
-    npcDialogue: "My head of engineering says we could build this ourselves. We have two ML engineers, and with open-source models like Llama, the AI part is 'basically free.' Why shouldn't we just build it in-house?",
-    choices: [
-      { label: 'A', text: 'Let\'s do the math together. Two ML engineers at €8K/month each = €192K/year. Add 6 months of build time before you see any value, plus servers, maintenance, and the opportunity cost of not having those engineers on your core product. Our solution is live in 2 weeks for €60K/year.', delta: 2, response: '*Elena pulls out a calculator.* "€192K in salary alone, plus servers... and we\'d need to hire an MLOps person too. I hadn\'t thought about the opportunity cost of pulling engineers off our routing optimization project."', framework: 'Build vs Buy TCO', lesson: 'Making the cost comparison concrete and specific is powerful. Include opportunity cost — it\'s the hidden killer of build decisions.' },
-      { label: 'B', text: 'Building it yourselves is risky. What if the models change? What if your ML engineers leave? You\'ll be stuck maintaining a system you can\'t support.', delta: -1, response: '*Elena frowns.* "That sounds like FUD. My engineers are loyal, and we manage plenty of complex systems. Give me numbers, not fear."', framework: 'Build vs Buy TCO', lesson: 'Fear-based selling backfires with technical buyers. They want data and logic, not worst-case scenarios.' },
-      { label: 'C', text: 'You could definitely build the AI part. But the AI is maybe 30% of the work. The other 70% is integrations, error handling, monitoring, compliance logging, and edge cases. That\'s where our 3 years of production experience really shows.', delta: 1, response: '*Elena considers this.* "That\'s a fair point. Our last \'6-week\' internal project took 5 months. The 70/30 split resonates — we always underestimate the integration work."', framework: 'Build vs Buy TCO', lesson: 'Conceding the AI part while highlighting integration complexity shows honesty and reframes the decision.' }
-    ]
-  },
-  {
-    id: 4, title: 'The Closing', sceneLabel: 'Scene 4 of 4',
-    npcDialogue: "Alright, I'm intrigued. But I've been burned before by AI vendors who over-promise. What does the next step actually look like?",
-    choices: [
-      { label: 'A', text: 'We can have the contract ready by Friday. I\'ll give you a 15% discount if we close this quarter — our pricing goes up in Q2.', delta: -1, response: '*Elena\'s guard goes up immediately.* "Whoa, slow down. I just said I\'m \'intrigued\', not \'ready to sign.\' The pressure sell makes me wonder what you\'re hiding."', framework: 'Closing Techniques', lesson: 'Rushing to close destroys trust. Match your closing pace to the buyer\'s readiness level.' },
-      { label: 'B', text: 'Here\'s what I\'d suggest: a 30-day pilot with 500 of your real documents. We\'ll process them, you measure accuracy and time savings. Cost: €2,500 — and we credit it toward the annual license if you proceed. Zero risk.', delta: 2, response: '*Elena smiles.* "Now that\'s reasonable. €2,500 to see real results with our data? I can get that approved without going to the board. Send me the pilot proposal and I\'ll review it with my ops lead this week."', framework: 'Closing Techniques', lesson: 'The pilot pricing play: low barrier, real data, clear next step. It converts skeptics by letting results do the selling.' },
-      { label: 'C', text: 'I\'d love to connect you with our customer at Nordic Freight — similar size, similar challenges. They went live 4 months ago and can share their experience. And internally, who else should be part of this evaluation? Let\'s make sure all stakeholders are aligned.', delta: 1, response: '*Elena appreciates the thoroughness.* "A reference call would be helpful. And yes, you\'d need to get our ops director and compliance lead on board too. Let me set up a follow-up meeting with the extended team."', framework: 'Champion Building', lesson: 'Building champions and aligning stakeholders is strong. It extends the sales cycle but increases close probability.' }
+  novabank: {
+    name: 'NovaBank', npcName: 'Catherine Zhao', npcTitle: 'Chief Risk Officer', industry: 'Financial Services',
+    startTrust: 2, winThreshold: 7,
+    portrait: '<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="13" r="8" fill="#94a3b8"/><rect x="8" y="22" width="20" height="14" rx="4" fill="#94a3b8"/><circle cx="14" cy="12" r="1.5" fill="#1e3a5f"/><circle cx="22" cy="12" r="1.5" fill="#1e3a5f"/><line x1="15" y1="16" x2="21" y2="16" stroke="#1e3a5f" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="5" r="3" fill="none" stroke="#64748b" stroke-width="1.5"/></svg>',
+    briefing: '<p>You are a <strong>GenAI Product Manager</strong> pitching AI fraud detection to a Chief Risk Officer. This is the hardest scenario — compliance and explainability matter more than cost savings.</p><div style="margin:1rem 0"><div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">NovaBank</span></div><div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Catherine Zhao, CRO</span></div><div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Financial Services</span></div><div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">800 flagged transactions/day, 73% false positive rate</span></div><div class="setup-detail"><span class="sd-label">Team:</span><span class="sd-value">12 analysts manually reviewing alerts</span></div></div><p style="font-size:0.85rem;color:#64748b;">Your starting trust level is <strong>2/10</strong>. Reach <strong>7+</strong> to win. <strong>Warning:</strong> this is the hardest scenario. Compliance > ROI.</p>',
+    winDesc: 'Catherine is convinced your approach puts compliance first. NovaBank signs a pilot — the first AI vendor she\'s trusted in 3 years. You won by speaking the language of risk, not revenue.',
+    mehDesc: 'Catherine sees potential but needs more time. She\'ll run it by the audit committee. You got close but missed a few opportunities to demonstrate compliance-first thinking.',
+    loseDesc: 'Catherine terminates the meeting. In financial services, leading with cost savings or dismissing explainability concerns is a deal-killer. CROs think in audit trails, not ROI.',
+    scenes: [
+      {
+        id: 1, title: 'The Opening', sceneLabel: 'Scene 1 of 4',
+        npcDialogue: "Let me be direct. I've turned down 6 AI fraud detection vendors this year. My regulators are watching. My board is watching. If I bring in AI that can't be explained to an auditor, I personally face consequences. Why should vendor number 7 be different?",
+        choices: [
+          { label: 'A', text: 'I understand you\'re paying 12 analysts to review 800 alerts daily, and 73% are false positives. That\'s €1.4M annually in wasted analyst time alone. Our system can reduce false positives by 60%, saving you—', delta: -1, response: '*Catherine cuts you off.* "Stop. I know my own numbers. Every vendor leads with my cost problem. I don\'t have a cost problem — I have a compliance problem. If I wanted to save money, I\'d fire 6 analysts and accept more risk. I can\'t. Talk to me about audit trails."', framework: 'ROI-first Opening', lesson: 'In financial services, the CRO doesn\'t care about cost savings — they care about not going to jail. Leading with ROI shows you don\'t understand the regulated environment.' },
+          { label: 'B', text: 'Every decision our system makes comes with a full audit trail: which features triggered, what the confidence score was, and a plain-English explanation a regulator can read. We built this with PRA and FCA requirements in mind. Can I show you what an audit report looks like?', delta: 2, response: '*Catherine\'s posture shifts.* "Now you\'re speaking my language. Show me the audit report. If your explainability holds up under regulatory scrutiny, that changes the conversation entirely."', framework: 'Compliance-first Opening', lesson: 'In financial services, explainability IS the product. Leading with audit trails and regulatory alignment shows you understand what keeps a CRO up at night.' },
+          { label: 'C', text: 'We recently deployed at Barclays and Deutsche Bank. Both passed their regulatory reviews with our system in production. Happy to share case studies.', delta: 1, response: '*Catherine notes this down.* "Barclays is interesting — similar regulatory environment. I\'d want to talk to their compliance team directly, not just read a case study. But it\'s a starting point."', framework: 'Case Study Opening', lesson: 'Peer references in finance are valuable but insufficient alone. The CRO needs to see YOUR audit trail, not just know that someone else approved one.' }
+        ]
+      },
+      {
+        id: 2, title: 'The Explainability Demand', sceneLabel: 'Scene 2 of 4',
+        npcDialogue: "Our current rule-based system is terrible at catching fraud, but at least I can explain every decision to a regulator. 'Transaction exceeded €10K from a new country.' Simple. How do I explain 'the neural network thinks this is suspicious'?",
+        choices: [
+          { label: 'A', text: 'AI doesn\'t have to be a black box. Our system generates feature attribution scores — you can see exactly which factors contributed and by how much. But honestly, for your highest-risk flags, I\'d recommend keeping human review in the loop. AI handles the noise; your best analysts handle the judgment calls.', delta: 2, response: '*Catherine nods slowly.* "That\'s the first honest answer I\'ve gotten. Every other vendor tells me their AI is better than humans. You\'re telling me it\'s better at the boring stuff, and humans are better at judgment. That\'s actually what I need."', framework: 'Full Transparency + Honesty', lesson: 'In finance, admitting AI limitations and recommending human oversight INCREASES trust. The CRO wants a partner who understands risk, not a vendor selling magic.' },
+          { label: 'B', text: 'Our deep learning model achieves 94% precision, which is far better than rule-based systems. The accuracy speaks for itself — the false positive rate drops dramatically, which means your analysts spend time on real fraud, not noise.', delta: -1, response: '*Catherine shakes her head.* "You didn\'t answer my question. I didn\'t ask if it\'s accurate. I asked how I explain it to a regulator. \'94% precision\' is not an explanation for why you blocked Mrs. Johnson\'s pension transfer."', framework: 'Accuracy Defense', lesson: 'Accuracy without explainability is useless in regulated industries. Regulators don\'t accept "the model is usually right" as justification for individual decisions.' },
+          { label: 'C', text: 'We use a combination of SHAP values and decision trees to provide post-hoc explanations. Each flagged transaction gets a human-readable report showing the top 5 contributing factors with confidence intervals.', delta: 1, response: '*Catherine takes notes.* "SHAP values are a step in the right direction. But \'post-hoc explanations\' concern me — are you explaining the actual decision process, or generating a plausible story after the fact? I need to understand the difference."', framework: 'Technical Explanation', lesson: 'Technical explainability is important but raises follow-up questions in finance. The CRO wants to know if explanations reflect actual model reasoning or are generated narratives.' }
+        ]
+      },
+      {
+        id: 3, title: 'The Legacy Integration Challenge', sceneLabel: 'Scene 3 of 4',
+        npcDialogue: "Our core banking system is 15 years old. It speaks COBOL and flat files. Every vendor shows me beautiful API demos, then gets to our integration workshop and goes pale. What's your real answer for legacy systems?",
+        choices: [
+          { label: 'A', text: 'Rip and replace. Your legacy system is holding you back — we can help you modernize the entire stack alongside the fraud detection rollout. It\'s a bigger project but the right long-term move.', delta: -1, response: '*Catherine actually laughs.* "Rip and replace our core banking system? That\'s a 3-year, €50M project that would need board approval from every committee we have. I need fraud detection this year, not a digital transformation odyssey."', framework: 'Rip and Replace', lesson: 'Proposing infrastructure overhauls to solve a point problem shows you don\'t understand enterprise reality. Banks can\'t rebuild core systems on a whim.' },
+          { label: 'B', text: 'We run in shadow mode first. Our system sits alongside your existing process, reads the same data feeds, and generates its own flags — but takes no action. Your analysts compare both for 90 days. Zero integration risk, zero disruption. We adapt to YOUR data format, not the other way around.', delta: 2, response: '*Catherine is visibly relieved.* "Shadow mode is exactly right. No integration risk, real data, and my analysts can evaluate it without any process changes. And you adapt to flat files? Because I\'m not rebuilding our data pipeline for a pilot."', framework: 'Shadow Mode', lesson: 'Shadow mode is the golden answer for legacy environments. Zero risk, real data, no integration changes. It eliminates the biggest objection (disruption) and lets results speak.' },
+          { label: 'C', text: 'We\'ve built an API adapter layer that can ingest COBOL outputs and flat files. We\'ve done this at 3 other banks with similar legacy stacks. It typically takes 4-6 weeks of integration work.', delta: 1, response: '*Catherine nods.* "4-6 weeks of integration is optimistic but not unreasonable if you\'ve done it before. I\'d want to see your integration team\'s CVs — experience with COBOL banking systems specifically, not just generic API work."', framework: 'API Adapter', lesson: 'Technical capability is good but commits to integration work upfront. In risk-averse environments, start with zero-integration options and graduate to deeper integration after trust is built.' }
+        ]
+      },
+      {
+        id: 4, title: 'The Pricing & Contract', sceneLabel: 'Scene 4 of 4',
+        npcDialogue: "Final topic: money. But more importantly — risk. If your system misses a real fraud case, or blocks legitimate transactions at scale, the financial and reputational damage falls on me. How do we structure this?",
+        choices: [
+          { label: 'A', text: 'Standard enterprise pricing: €180K/year, 24-month commitment. We include implementation support, training, and quarterly business reviews. Volume discounts available if you expand to other regions.', delta: -1, response: '*Catherine pushes the proposal back.* "A 24-month commitment before I\'ve seen it work with our data? And fixed pricing means you get paid the same whether fraud goes up or down. Where\'s your skin in the game?"', framework: 'Fixed Price', lesson: 'Fixed pricing with long commitments feels one-sided to a risk officer. They want alignment — if the vendor succeeds, they should be rewarded; if they fail, they should share the pain.' },
+          { label: 'B', text: 'Risk-sharing model. Base fee of €5K/month for the platform. Plus a performance component: for every percentage point we reduce false positives below your current 73%, you pay €2K/month. If we don\'t improve anything, you pay only the base. We literally bet on our own performance.', delta: 2, response: '*Catherine raises an eyebrow, intrigued.* "You\'re putting your revenue at risk based on actual performance? That\'s unusual. I like the alignment — you only win if we win. Let me model this out with our finance team. The base is low enough that I can approve internally."', framework: 'Risk-sharing Pricing', lesson: 'Risk-sharing pricing is the non-obvious winner in financial services. It aligns incentives, demonstrates confidence, and reduces the CRO\'s personal risk. The vendor who shares risk earns trust.' },
+          { label: 'C', text: 'Usage-based pricing: you pay per transaction analyzed. Roughly €0.02 per alert. At your current volume, that\'s about €5,800/month — but it scales linearly. No minimum commitment beyond a 90-day pilot.', delta: 1, response: '*Catherine considers this.* "Usage-based is transparent and predictable. I can forecast costs exactly. But the 90-day pilot — what happens if we want to stop? I need a clean exit clause with full data portability."', framework: 'Usage-based Pricing', lesson: 'Usage-based pricing is fair and transparent. But in finance, clean exit clauses and data portability matter as much as the price itself.' }
+        ]
+      }
     ]
   }
-];
+};
 
 /* ===== GAME STATE ===== */
+let selectedScenarioKey = 'acme';
 let trust = 3;
 let currentScene = 0;
-let playerChoices = []; // { sceneId, choiceLabel, delta }
+let playerChoices = [];
 let typingTimer = null;
 
+function selectScenario(key, el) {
+  selectedScenarioKey = key;
+  document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  const sc = SCENARIOS[key];
+  document.getElementById('setupContent').innerHTML = sc.briefing;
+}
+
 function startGame() {
+  const sc = SCENARIOS[selectedScenarioKey];
+  trust = sc.startTrust;
+  currentScene = 0;
+  playerChoices = [];
+
+  document.getElementById('scenarioSelect').style.display = 'none';
   document.getElementById('setupPanel').style.display = 'none';
   document.getElementById('trustMeter').style.display = 'block';
-  currentScene = 0;
+
+  const fill = document.getElementById('trustFill');
+  const pct = (trust / 10) * 100;
+  fill.style.width = pct + '%';
+  fill.style.background = trust <= 2 ? '#e74c3c' : '#e67e22';
+  document.getElementById('trustValueLabel').textContent = trust + ' / 10';
+
   renderScene(0);
 }
 
+function getScenario() { return SCENARIOS[selectedScenarioKey]; }
+function getScenes() { return getScenario().scenes; }
+
 function renderScene(idx) {
-  const scene = scenes[idx];
+  const sc = getScenario();
+  const scene = getScenes()[idx];
   const container = document.getElementById('sceneContainer');
   container.innerHTML = `
     <div class="scene-panel" id="scenePanel">
@@ -287,22 +461,13 @@ function renderScene(idx) {
       </div>
       <div class="dialogue-area">
         <div class="npc-row">
-          <div class="npc-portrait">
-            <svg width="36" height="36" viewBox="0 0 36 36">
-              <circle cx="18" cy="13" r="8" fill="#94a3b8"/>
-              <rect x="8" y="22" width="20" height="14" rx="4" fill="#94a3b8"/>
-              <circle cx="14" cy="12" r="1.5" fill="#1e3a5f"/>
-              <circle cx="22" cy="12" r="1.5" fill="#1e3a5f"/>
-              <line x1="15" y1="16" x2="21" y2="16" stroke="#1e3a5f" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </div>
+          <div class="npc-portrait">${sc.portrait}</div>
           <div class="npc-bubble">
-            <div class="npc-name">Elena Vasquez — CTO, ACME Corp</div>
+            <div class="npc-name">${sc.npcName} — ${sc.npcTitle}, ${sc.name}</div>
             <div id="npcText"></div>
             <button class="skip-btn" id="skipBtn" onclick="skipTyping()">Skip</button>
           </div>
         </div>
-
         <div class="choices" id="choicesContainer" style="display: none;">
           ${scene.choices.map((c, i) => `
             <button class="choice-btn" onclick="makeChoice(${idx}, ${i})">
@@ -310,26 +475,16 @@ function renderScene(idx) {
             </button>
           `).join('')}
         </div>
-
         <div class="npc-response" id="npcResponse">
           <div class="npc-row">
-            <div class="npc-portrait">
-              <svg width="36" height="36" viewBox="0 0 36 36">
-                <circle cx="18" cy="13" r="8" fill="#94a3b8"/>
-                <rect x="8" y="22" width="20" height="14" rx="4" fill="#94a3b8"/>
-                <circle cx="14" cy="12" r="1.5" fill="#1e3a5f"/>
-                <circle cx="22" cy="12" r="1.5" fill="#1e3a5f"/>
-                <line x1="15" y1="16" x2="21" y2="16" stroke="#1e3a5f" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </div>
+            <div class="npc-portrait">${sc.portrait}</div>
             <div class="npc-bubble">
-              <div class="npc-name">Elena Vasquez</div>
+              <div class="npc-name">${sc.npcName}</div>
               <div id="responseText"></div>
             </div>
           </div>
         </div>
-
-        <button class="continue-btn" id="continueBtn" onclick="nextScene()">${idx < scenes.length - 1 ? 'Continue' : 'See Result'}</button>
+        <button class="continue-btn" id="continueBtn" onclick="nextScene()">${idx < getScenes().length - 1 ? 'Continue' : 'See Result'}</button>
       </div>
     </div>
   `;
@@ -345,7 +500,6 @@ function typeText(text, elementId, callback) {
   if (!el) return;
   let i = 0;
   el.innerHTML = '<span class="typing-cursor"></span>';
-
   function type() {
     if (i < text.length) {
       el.innerHTML = text.substring(0, i + 1) + '<span class="typing-cursor"></span>';
@@ -361,43 +515,28 @@ function typeText(text, elementId, callback) {
 
 function skipTyping() {
   if (typingTimer) clearTimeout(typingTimer);
-  const scene = scenes[currentScene];
+  const scene = getScenes()[currentScene];
   document.getElementById('npcText').innerHTML = scene.npcDialogue;
   document.getElementById('choicesContainer').style.display = 'flex';
   document.getElementById('skipBtn').style.display = 'none';
 }
 
 function makeChoice(sceneIdx, choiceIdx) {
-  const scene = scenes[sceneIdx];
+  const scene = getScenes()[sceneIdx];
   const choice = scene.choices[choiceIdx];
-
   playerChoices.push({
-    sceneId: scene.id,
-    sceneTitle: scene.title,
-    choiceLabel: choice.label,
-    choiceText: choice.text,
-    delta: choice.delta,
-    response: choice.response,
-    framework: choice.framework,
-    lesson: choice.lesson
+    sceneId: scene.id, sceneTitle: scene.title, choiceLabel: choice.label,
+    choiceText: choice.text, delta: choice.delta, response: choice.response,
+    framework: choice.framework, lesson: choice.lesson
   });
-
-  // Disable choices
   document.querySelectorAll('.choice-btn').forEach((btn, i) => {
     btn.disabled = true;
     if (i === choiceIdx) btn.classList.add('selected');
   });
-
-  // Update trust
   trust = Math.max(0, Math.min(10, trust + choice.delta));
   updateTrustMeter(choice.delta);
-
-  // Show NPC response
-  const respEl = document.getElementById('npcResponse');
-  respEl.classList.add('visible');
+  document.getElementById('npcResponse').classList.add('visible');
   document.getElementById('responseText').innerHTML = choice.response;
-
-  // Show continue
   document.getElementById('continueBtn').classList.add('visible');
 }
 
@@ -405,17 +544,10 @@ function updateTrustMeter(delta) {
   const fill = document.getElementById('trustFill');
   const label = document.getElementById('trustValueLabel');
   const pct = (trust / 10) * 100;
-
-  let color;
-  if (trust <= 2) color = '#e74c3c';
-  else if (trust <= 4) color = '#e67e22';
-  else color = '#27ae60';
-
+  let color = trust <= 2 ? '#e74c3c' : trust <= 4 ? '#e67e22' : '#27ae60';
   fill.style.width = pct + '%';
   fill.style.background = color;
   label.textContent = trust + ' / 10';
-
-  // Flash delta
   const deltaEl = document.getElementById('trustDelta');
   deltaEl.textContent = (delta > 0 ? '+' : '') + delta;
   deltaEl.className = 'trust-delta show ' + (delta > 0 ? 'positive' : delta < 0 ? 'negative' : '');
@@ -425,7 +557,7 @@ function updateTrustMeter(delta) {
 
 function nextScene() {
   currentScene++;
-  if (currentScene < scenes.length) {
+  if (currentScene < getScenes().length) {
     renderScene(currentScene);
   } else {
     showEnding();
@@ -433,75 +565,61 @@ function nextScene() {
 }
 
 function showEnding() {
+  const sc = getScenario();
   document.getElementById('sceneContainer').innerHTML = '';
   const panel = document.getElementById('endingPanel');
   panel.classList.add('visible');
 
   let icon, title, desc;
-  if (trust >= 6) {
-    icon = '&#127942;';
-    title = 'Deal Won!';
-    desc = 'Elena is impressed. ACME Corp signs the pilot agreement, and your solution is heading to production. Congratulations — you navigated a skeptical CTO with empathy, data, and smart positioning.';
-  } else if (trust >= 3) {
-    icon = '&#129300;';
-    title = '"Let me think about it..."';
-    desc = 'Elena is interested but not convinced. You\'ll get a follow-up meeting, but you didn\'t create enough urgency or differentiation to close today. Review the debrief below to find your missed opportunities.';
+  if (trust >= sc.winThreshold) {
+    icon = '&#127942;'; title = 'Deal Won!'; desc = sc.winDesc;
+  } else if (trust >= sc.startTrust) {
+    icon = '&#129300;'; title = '"Let me think about it..."'; desc = sc.mehDesc;
   } else {
-    icon = '&#128683;';
-    title = 'Deal Lost';
-    desc = 'Elena politely ends the meeting. You lost trust through dismissiveness, pressure tactics, or failing to connect with her specific pain points. Study the debrief and try again.';
+    icon = '&#128683;'; title = 'Deal Lost'; desc = sc.loseDesc;
   }
 
   document.getElementById('endingIcon').innerHTML = icon;
   document.getElementById('endingTitle').textContent = title;
   document.getElementById('endingDesc').textContent = desc;
 
-  // Debrief table
   const tbody = document.getElementById('debriefBody');
   tbody.innerHTML = playerChoices.map(c => {
     const deltaClass = c.delta > 0 ? 'delta-pos' : c.delta < 0 ? 'delta-neg' : 'delta-zero';
     const deltaText = c.delta > 0 ? '+' + c.delta : c.delta;
-    return `<tr>
-      <td><strong>${c.sceneTitle}</strong></td>
-      <td>${c.choiceLabel}. ${c.choiceText.substring(0, 60)}...</td>
-      <td class="${deltaClass}">${deltaText}</td>
-      <td>${c.framework}</td>
-      <td>${c.lesson}</td>
-    </tr>`;
+    return `<tr><td><strong>${c.sceneTitle}</strong></td><td>${c.choiceLabel}. ${c.choiceText.substring(0, 60)}...</td><td class="${deltaClass}">${deltaText}</td><td>${c.framework}</td><td>${c.lesson}</td></tr>`;
   }).join('');
 }
 
 function resetGame() {
-  trust = 3;
+  const sc = SCENARIOS[selectedScenarioKey];
+  trust = sc.startTrust;
   currentScene = 0;
   playerChoices = [];
-
   document.getElementById('endingPanel').classList.remove('visible');
+  document.getElementById('scenarioSelect').style.display = 'block';
   document.getElementById('setupPanel').style.display = 'block';
   document.getElementById('trustMeter').style.display = 'none';
   document.getElementById('sceneContainer').innerHTML = '';
-
-  const fill = document.getElementById('trustFill');
-  fill.style.width = '30%';
-  fill.style.background = '#e67e22';
-  document.getElementById('trustValueLabel').textContent = '3 / 10';
+  const pct = (trust / 10) * 100;
+  document.getElementById('trustFill').style.width = pct + '%';
+  document.getElementById('trustFill').style.background = trust <= 2 ? '#e74c3c' : '#e67e22';
+  document.getElementById('trustValueLabel').textContent = trust + ' / 10';
 }
 
 function copyResults() {
-  let text = `CLOSE THE DEAL — Game Results\n`;
-  text += `=============================\n\n`;
+  const sc = getScenario();
+  let text = `CLOSE THE DEAL — Game Results\n=============================\n\n`;
+  text += `Scenario: ${sc.name} (${sc.industry})\n`;
+  text += `NPC: ${sc.npcName}, ${sc.npcTitle}\n`;
   text += `Final Trust: ${trust}/10\n`;
-  text += `Outcome: ${trust >= 6 ? 'Deal Won!' : trust >= 3 ? 'Let me think about it...' : 'Deal Lost'}\n\n`;
+  text += `Outcome: ${trust >= sc.winThreshold ? 'Deal Won!' : trust >= sc.startTrust ? 'Let me think about it...' : 'Deal Lost'}\n\n`;
   text += `SCENE-BY-SCENE BREAKDOWN\n`;
   playerChoices.forEach(c => {
     const delta = c.delta > 0 ? '+' + c.delta : c.delta;
-    text += `\n${c.sceneTitle} (${delta} trust)\n`;
-    text += `Choice: ${c.choiceLabel}. ${c.choiceText.substring(0, 80)}...\n`;
-    text += `Framework: ${c.framework}\n`;
-    text += `Lesson: ${c.lesson}\n`;
+    text += `\n${c.sceneTitle} (${delta} trust)\nChoice: ${c.choiceLabel}. ${c.choiceText.substring(0, 80)}...\nFramework: ${c.framework}\nLesson: ${c.lesson}\n`;
   });
   text += `\n— Generated by robert@barcik.training Close the Deal`;
-
   navigator.clipboard.writeText(text).then(() => {
     const toast = document.getElementById('copyToast');
     toast.classList.add('show');
