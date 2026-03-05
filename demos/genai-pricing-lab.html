@@ -64,6 +64,8 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .cost-card .cc-slider { margin: 0.5rem 0; }
 .cost-card .cc-slider input[type="range"] { width: 100%; accent-color: #1e3a5f; }
 .cost-card .cc-slider label { font-size: 0.72rem; color: #94a3b8; }
+.cc-slider-labels { display: flex; justify-content: space-between; font-size: 0.68rem; color: #94a3b8; }
+.cc-slider-current { font-size: 0.78rem; font-weight: 800; color: #1e3a5f; background: #e8edf4; padding: 0.1rem 0.5rem; border-radius: 4px; }
 .cost-card .cc-total {
   margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid #e2e8f0;
   text-align: center;
@@ -198,7 +200,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
         <div class="cc-slider">
           <label>Cost per 1M tokens</label>
           <input type="range" id="apiCostSlider" min="1" max="60" value="15" step="1" oninput="updateCosts()">
-          <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:#94a3b8;"><span>$1</span><span id="apiCostLabel">$15</span><span>$60</span></div>
+          <div class="cc-slider-labels"><span>$1</span><span class="cc-slider-current" id="apiCostLabel">$15</span><span>$60</span></div>
         </div>
         <div class="cc-row"><span class="cc-label">Quality</span><span class="cc-val">Frontier</span></div>
         <div class="cc-row"><span class="cc-label">Setup</span><span class="cc-val">1 day</span></div>
@@ -215,7 +217,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
         <div class="cc-slider">
           <label>Monthly GPU cost</label>
           <input type="range" id="gpuCostSlider" min="500" max="10000" value="3000" step="100" oninput="updateCosts()">
-          <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:#94a3b8;"><span>$500</span><span id="gpuCostLabel">$3,000</span><span>$10K</span></div>
+          <div class="cc-slider-labels"><span>$500</span><span class="cc-slider-current" id="gpuCostLabel">$3,000</span><span>$10K</span></div>
         </div>
         <div class="cc-row"><span class="cc-label">Quality</span><span class="cc-val">High</span></div>
         <div class="cc-row"><span class="cc-label">Setup</span><span class="cc-val">2-4 weeks</span></div>
@@ -232,7 +234,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
         <div class="cc-slider">
           <label>Monthly electricity + amort.</label>
           <input type="range" id="localCostSlider" min="100" max="2000" value="500" step="50" oninput="updateCosts()">
-          <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:#94a3b8;"><span>$100</span><span id="localCostLabel">$500</span><span>$2K</span></div>
+          <div class="cc-slider-labels"><span>$100</span><span class="cc-slider-current" id="localCostLabel">$500</span><span>$2K</span></div>
         </div>
         <div class="cc-row"><span class="cc-label">Quality</span><span class="cc-val">Good enough</span></div>
         <div class="cc-row"><span class="cc-label">Setup</span><span class="cc-val">1-2 weeks</span></div>
