@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interpreting LLMs — Interactive Demo | robert@barcik.training</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #edf2f7;
+  --border: #e2e8f0;
+  --text: #1a202c;
+  --text-dim: #64748b;
+  --accent: #1e3a5f;
+  --accent2: #2d5a8e;
+  --accent-light: #2563eb;
+  --radius: 10px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ===== BRAND BAR ===== */
+.brand-bar a { transition: opacity 0.2s; }
+.brand-bar a:hover { opacity: 1 !important; }
+
+/* ===== HEADER ===== */
+header {
+  background: var(--accent);
+  color: #fff;
+  padding: 1.8rem 2rem 1.4rem;
+  text-align: center;
+}
+header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; }
+header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto; line-height: 1.55; }
+
+/* ===== CONTAINER ===== */
+.container { max-width: 960px; margin: 0 auto; padding: 1.25rem 1rem; }
+
+/* ===== INTRO CARD ===== */
+.intro-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+.intro-card strong { color: var(--text); }
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  padding: 0.75rem 0;
+  z-index: 100;
+}
+.tab-btn {
+  padding: 0.5rem 1.1rem;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab-btn:hover { background: var(--surface2); border-color: var(--accent-light); }
+.tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ===== TAB CONTENT ===== */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ===== SECTION CARDS ===== */
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+}
+.section-subtitle {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* ===== TAB 1: POLYSEMANTIC ===== */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 768px) {
+  .comparison-grid { grid-template-columns: 1fr; }
+}
+.comparison-col { text-align: center; }
+.comparison-col h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.neuron-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.neuron-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.mono-neuron {
+  background: #d1fae5;
+  border: 2px solid #10b981;
+  color: #065f46;
+  cursor: default;
+}
+.poly-neuron {
+  background: #fee2e2;
+  border: 2px solid #ef4444;
+  color: #991b1b;
+  cursor: pointer;
+}
+.poly-neuron:hover {
+  transform: scale(1.12);
+  box-shadow: 0 4px 16px rgba(239,68,68,0.25);
+}
+.neuron-tags {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  justify-content: center;
+}
+.neuron-tags span {
+  font-size: 0.62rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.tag-a { background: #dbeafe; color: #1e40af; }
+.tag-b { background: #fce7f3; color: #9d174d; }
+.tag-c { background: #fef3c7; color: #92400e; }
+.comparison-label {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* Tooltip for clicked poly neurons */
+.neuron-tooltip {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: left;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  animation: fadeSlideIn 0.3s ease;
+}
+.neuron-tooltip.visible { display: block; }
+.neuron-tooltip h4 {
+  font-size: 0.88rem;
+  margin-bottom: 0.6rem;
+  color: var(--accent);
+}
+.tooltip-example {
+  font-size: 0.82rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.tooltip-example:last-child { border-bottom: none; }
+.tooltip-example .trigger-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+}
+
+/* ===== TAB 2: FEATURES & SAEs ===== */
+.sae-visual {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 1rem 0;
+}
+.tangled-blob {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  flex-shrink: 0;
+}
+.tangled-dot {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  transition: all 1.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.sae-arrow {
+  font-size: 1.4rem;
+  color: var(--accent);
+  font-weight: 700;
+  text-align: center;
+  flex-shrink: 0;
+}
+.sae-arrow .label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.feature-cards-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.feature-card-small {
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 2px solid;
+  opacity: 0.3;
+  transform: scale(0.9);
+  transition: all 1.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.feature-card-small.revealed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.decompose-btn, .activate-btn, .animate-btn, .reset-btn, .intervene-btn {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 999px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.decompose-btn {
+  background: var(--accent);
+  color: #fff;
+  margin-top: 0.75rem;
+}
+.decompose-btn:hover { background: var(--accent2); }
+.activate-btn {
+  background: #f59e0b;
+  color: #fff;
+  margin-top: 0.75rem;
+}
+.activate-btn:hover { background: #d97706; }
+
+/* Sparsity bar chart */
+.sparsity-chart {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 60px;
+  margin: 1rem 0 0.5rem;
+}
+.sparsity-bar {
+  flex: 1;
+  background: #e2e8f0;
+  border-radius: 2px 2px 0 0;
+  transition: background 0.4s, height 0.4s;
+  min-width: 3px;
+}
+.sparsity-bar.lit { background: #f59e0b; }
+.sparsity-counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Feature Gallery */
+.gallery-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+@media (max-width: 768px) {
+  .gallery-row { grid-template-columns: 1fr; }
+}
+.gallery-card {
+  border-radius: var(--radius);
+  padding: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid;
+}
+.gallery-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.gallery-card h4 { font-size: 0.9rem; margin-bottom: 0.4rem; }
+.gallery-card .click-hint { font-size: 0.72rem; opacity: 0.7; }
+.gallery-expanded {
+  display: none;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+.gallery-expanded.visible { display: block; animation: fadeSlideIn 0.3s ease; }
+.activation-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+}
+.activation-text { flex: 1; }
+.activation-bar-wrap {
+  width: 80px;
+  height: 8px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.activation-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.activation-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ===== TAB 3: ATTRIBUTION GRAPH ===== */
+.example-pills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.example-pill {
+  padding: 0.4rem 0.9rem;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.example-pill:hover { border-color: var(--accent-light); background: var(--surface2); }
+.example-pill.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+
+.graph-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.animate-btn { background: var(--accent-light); color: #fff; }
+.animate-btn:hover { background: #1d4ed8; }
+.reset-btn { background: var(--surface2); color: var(--text); }
+.reset-btn:hover { background: var(--border); }
+.intervene-btn { background: #dc2626; color: #fff; display: none; }
+.intervene-btn:hover { background: #b91c1c; }
+.speed-controls {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+.speed-btn {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: all 0.2s;
+}
+.speed-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.graph-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  overflow-x: auto;
+  position: relative;
+  min-height: 340px;
+}
+.graph-svg {
+  display: block;
+  margin: 0 auto;
+}
+.graph-summary {
+  display: none;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+  line-height: 1.55;
+  animation: fadeSlideIn 0.3s ease;
+}
+.graph-summary.visible { display: block; }
+
+.node-detail {
+  display: none;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  animation: fadeSlideIn 0.3s ease;
+}
+.node-detail.visible { display: block; }
+.node-detail strong { color: var(--accent); }
+
+/* ===== TAB 4: INTERVENING ===== */
+.gg-card {
+  background: linear-gradient(135deg, #ff8c42 0%, #e85d26 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+.gg-card h3 { font-size: 1.05rem; margin-bottom: 0.6rem; }
+.gg-card p { font-size: 0.88rem; line-height: 1.6; opacity: 0.95; }
+.gg-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.gg-q-btn {
+  padding: 0.45rem 1rem;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.gg-q-btn:hover { background: rgba(255,255,255,0.3); border-color: #fff; }
+.gg-response {
+  background: #fff;
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  display: none;
+  animation: fadeSlideIn 0.3s ease;
+  border-left: 4px solid #ff8c42;
+}
+.gg-response.visible { display: block; }
+.gg-response .gg-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #ff8c42;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.limitations-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.limitations-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-bottom: 0.75rem;
+}
+.limitations-card ul {
+  list-style: none;
+  padding: 0;
+}
+.limitations-card li {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  padding-left: 1.25rem;
+  position: relative;
+}
+.limitations-card li:last-child { border-bottom: none; }
+.limitations-card li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.7rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+/* ===== KEY INSIGHT ===== */
+.key-insight {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.key-insight h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.6rem;
+  opacity: 0.8;
+}
+.key-insight p {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  opacity: 0.95;
+}
+
+/* ===== SUMMARY POINTS ===== */
+.summary-points {
+  padding: 1.25rem 0 0;
+}
+.summary-points ol {
+  list-style: none;
+  counter-reset: sp;
+  padding: 0;
+}
+.summary-points li {
+  counter-increment: sp;
+  font-size: 0.88rem;
+  padding: 0.6rem 0 0.6rem 2.5rem;
+  position: relative;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+}
+.summary-points li:last-child { border-bottom: none; }
+.summary-points li::before {
+  content: counter(sp);
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.summary-points li strong { color: var(--text); }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
+  50% { box-shadow: 0 0 12px 4px rgba(37,99,235,0.15); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  header { padding: 1.2rem 1rem; }
+  header h1 { font-size: 1.3rem; }
+  .container { padding: 1rem 0.75rem; }
+  .tabs { gap: 0.35rem; }
+  .tab-btn { font-size: 0.78rem; padding: 0.4rem 0.8rem; }
+  .sae-visual { flex-direction: column; }
+  .gallery-row { grid-template-columns: 1fr; }
+  .example-pills { gap: 0.35rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Brand bar -->
+<div style="background:#1e3a5f;padding:0.5rem 1.5rem;font-family:'DM Sans',sans-serif;font-size:0.82rem;letter-spacing:0.04em;"><a href="../" style="color:#fff;text-decoration:none;opacity:0.9;">&larr; All Demos &middot; robert@barcik.training</a></div>
+
+<!-- Header -->
+<header>
+  <h1>Interpreting LLMs</h1>
+  <p>We have a microscope, not an X-ray. Explore how researchers are beginning to understand what happens inside language models.</p>
+</header>
+
+<div class="container">
+
+  <!-- Intro card -->
+  <div class="intro-card">
+    <strong>What does an LLM actually "know"?</strong> For years, neural networks were black boxes. Researchers could measure what goes in and what comes out, but the internal representations remained opaque. A new field &mdash; <strong>mechanistic interpretability</strong> &mdash; is changing that. Using sparse autoencoders and attribution graphs, we can now identify meaningful features inside models and trace how information flows through them. This demo walks you through the key ideas.
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="problem">The Problem</button>
+    <button class="tab-btn" data-tab="features">Features &amp; SAEs</button>
+    <button class="tab-btn" data-tab="attribution">Attribution Graphs</button>
+    <button class="tab-btn" data-tab="intervening">Intervening</button>
+  </div>
+
+  <!-- ===================== TAB 1: THE PROBLEM ===================== -->
+  <div class="tab-content active" id="tab-problem">
+    <div class="section-card">
+      <div class="section-title">Polysemantic Neurons: Why Individual Neurons Don't Tell Us Much</div>
+      <div class="comparison-grid">
+
+        <!-- Left: monosemantic -->
+        <div class="comparison-col">
+          <h3 style="color:#059669;">What We'd Hope For</h3>
+          <div class="neuron-grid" id="mono-grid">
+            <div><div class="neuron-circle mono-neuron">dog</div></div>
+            <div><div class="neuron-circle mono-neuron">cat</div></div>
+            <div><div class="neuron-circle mono-neuron">car</div></div>
+            <div><div class="neuron-circle mono-neuron">tree</div></div>
+            <div><div class="neuron-circle mono-neuron">happy</div></div>
+            <div><div class="neuron-circle mono-neuron">sad</div></div>
+          </div>
+          <div class="comparison-label">Monosemantic &mdash; one neuron, one concept</div>
+        </div>
+
+        <!-- Right: polysemantic -->
+        <div class="comparison-col">
+          <h3 style="color:#dc2626;">What Actually Happens</h3>
+          <div class="neuron-grid" id="poly-grid">
+            <div>
+              <div class="neuron-circle poly-neuron" data-neuron="0">N1</div>
+              <div class="neuron-tags"><span class="tag-a">dog</span><span class="tag-b">loyalty</span><span class="tag-c">4-leg furn.</span></div>
+            </div>
+            <div>
+              <div class="neuron-circle poly-neuron" data-neuron="1">N2</div>
+              <div class="neuron-tags"><span class="tag-a">cat</span><span class="tag-b">independ.</span><span class="tag-c">anc. Egypt</span></div>
+            </div>
+            <div>
+              <div class="neuron-circle poly-neuron" data-neuron="2">N3</div>
+              <div class="neuron-tags"><span class="tag-a">car</span><span class="tag-b">speed</span><span class="tag-c">Ger. eng.</span></div>
+            </div>
+            <div>
+              <div class="neuron-circle poly-neuron" data-neuron="3">N4</div>
+              <div class="neuron-tags"><span class="tag-a">tree</span><span class="tag-b">family</span><span class="tag-c">data str.</span></div>
+            </div>
+            <div>
+              <div class="neuron-circle poly-neuron" data-neuron="4">N5</div>
+              <div class="neuron-tags"><span class="tag-a">happy</span><span class="tag-b">yellow</span><span class="tag-c">440Hz</span></div>
+            </div>
+            <div>
+              <div class="neuron-circle poly-neuron" data-neuron="5">N6</div>
+              <div class="neuron-tags"><span class="tag-a">sad</span><span class="tag-b">rain</span><span class="tag-c">minor key</span></div>
+            </div>
+          </div>
+          <div class="comparison-label">Polysemantic &mdash; one neuron, many concepts (superposition)</div>
+        </div>
+      </div>
+
+      <!-- Tooltip area -->
+      <div class="neuron-tooltip" id="neuron-tooltip">
+        <h4 id="tooltip-title"></h4>
+        <div id="tooltip-examples"></div>
+      </div>
+
+      <p style="margin-top:1.25rem;font-size:0.88rem;color:var(--text-dim);line-height:1.65;">
+        <strong style="color:var(--text);">Click any neuron on the right</strong> to see example sentences that activate it. Individual neurons are like tangled wires in a cable &mdash; each wire carries multiple signals simultaneously. The model packs far more concepts than it has neurons (<em>superposition</em>). We need a way to untangle them.
+      </p>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 2: FEATURES & SAEs ===================== -->
+  <div class="tab-content" id="tab-features">
+
+    <!-- Section A: From Neurons to Features -->
+    <div class="section-card">
+      <div class="section-title">From Neurons to Features</div>
+      <div class="sae-visual">
+        <div class="tangled-blob" id="tangled-blob"></div>
+        <div class="sae-arrow">
+          <span>&rarr;</span>
+          <span class="label">Sparse Autoencoder</span>
+        </div>
+        <div class="feature-cards-row" id="feature-cards-row">
+          <div class="feature-card-small" style="border-color:#ff8c42;background:#fff7ed;color:#c2410c;">Golden Gate Bridge</div>
+          <div class="feature-card-small" style="border-color:#10b981;background:#ecfdf5;color:#065f46;">Code syntax</div>
+          <div class="feature-card-small" style="border-color:#3b82f6;background:#eff6ff;color:#1e40af;">French language</div>
+          <div class="feature-card-small" style="border-color:#8b5cf6;background:#f5f3ff;color:#5b21b6;">Sarcasm</div>
+          <div class="feature-card-small" style="border-color:#ec4899;background:#fdf2f8;color:#9d174d;">DNA sequences</div>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <button class="decompose-btn" id="decompose-btn">Decompose</button>
+      </div>
+    </div>
+
+    <!-- Section B: Why Sparse? -->
+    <div class="section-card">
+      <div class="section-title">Why Sparse?</div>
+      <div class="sparsity-chart" id="sparsity-chart"></div>
+      <div class="sparsity-counter" id="sparsity-counter">0 of 50 features active (0%)</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-top:0.5rem;line-height:1.6;">At any given moment, only a tiny fraction of features are active. This sparsity is what makes them interpretable &mdash; each active feature tells us something specific.</p>
+      <button class="activate-btn" id="activate-btn">Activate</button>
+    </div>
+
+    <!-- Section C: Feature Gallery -->
+    <div class="section-card">
+      <div class="section-title">Feature Gallery</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:0.75rem;">Click a feature card to see example texts and their activation strengths.</p>
+      <div class="gallery-row">
+        <!-- Golden Gate Bridge -->
+        <div class="gallery-card" style="border-color:#ff8c42;background:#fff7ed;" data-gallery="0">
+          <h4 style="color:#c2410c;">Golden Gate Bridge</h4>
+          <div class="click-hint">Click to explore</div>
+          <div class="gallery-expanded" id="gallery-0">
+            <div class="activation-row">
+              <div class="activation-text" style="color:#9a3412;">"The bridge spanning the Golden Gate strait..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:95%;background:#ff8c42;"></div></div>
+              <div class="activation-val" style="color:#c2410c;">0.95</div>
+            </div>
+            <div class="activation-row">
+              <div class="activation-text" style="color:#9a3412;">"San Francisco landmarks include..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:82%;background:#ff8c42;"></div></div>
+              <div class="activation-val" style="color:#c2410c;">0.82</div>
+            </div>
+            <div class="activation-row">
+              <div class="activation-text" style="color:#9a3412;">"Suspension bridge engineering..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:41%;background:#ff8c42;"></div></div>
+              <div class="activation-val" style="color:#c2410c;">0.41</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Python Code -->
+        <div class="gallery-card" style="border-color:#10b981;background:#ecfdf5;" data-gallery="1">
+          <h4 style="color:#065f46;">Python Code</h4>
+          <div class="click-hint">Click to explore</div>
+          <div class="gallery-expanded" id="gallery-1">
+            <div class="activation-row">
+              <div class="activation-text" style="color:#065f46;"><code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;">def fibonacci(n):</code></div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:91%;background:#10b981;"></div></div>
+              <div class="activation-val" style="color:#065f46;">0.91</div>
+            </div>
+            <div class="activation-row">
+              <div class="activation-text" style="color:#065f46;"><code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;">import numpy as np</code></div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:78%;background:#10b981;"></div></div>
+              <div class="activation-val" style="color:#065f46;">0.78</div>
+            </div>
+            <div class="activation-row">
+              <div class="activation-text" style="color:#065f46;">"list comprehension syntax"</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:53%;background:#10b981;"></div></div>
+              <div class="activation-val" style="color:#065f46;">0.53</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deception -->
+        <div class="gallery-card" style="border-color:#ef4444;background:#fef2f2;" data-gallery="2">
+          <h4 style="color:#991b1b;">Deception</h4>
+          <div class="click-hint">Click to explore</div>
+          <div class="gallery-expanded" id="gallery-2">
+            <div class="activation-row">
+              <div class="activation-text" style="color:#991b1b;">"The spy concealed the documents..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:88%;background:#ef4444;"></div></div>
+              <div class="activation-val" style="color:#991b1b;">0.88</div>
+            </div>
+            <div class="activation-row">
+              <div class="activation-text" style="color:#991b1b;">"She lied about her whereabouts..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:79%;background:#ef4444;"></div></div>
+              <div class="activation-val" style="color:#991b1b;">0.79</div>
+            </div>
+            <div class="activation-row">
+              <div class="activation-text" style="color:#991b1b;">"The misleading advertisement claimed..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:62%;background:#ef4444;"></div></div>
+              <div class="activation-val" style="color:#991b1b;">0.62</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 3: ATTRIBUTION GRAPHS ===================== -->
+  <div class="tab-content" id="tab-attribution">
+    <div class="section-card">
+      <div class="section-title">Tracing Information Flow</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.6;">Attribution graphs show how features connect across layers &mdash; revealing how the model actually reasons. Select an example and click <strong>Animate</strong> to watch information flow.</p>
+
+      <div class="example-pills" id="example-pills">
+        <button class="example-pill active" data-example="dallas">Dallas &rarr; Austin</button>
+        <button class="example-pill" data-example="pronoun">She loves ___</button>
+        <button class="example-pill" data-example="poetry">Poetry rhyming</button>
+      </div>
+
+      <div class="graph-controls">
+        <button class="animate-btn" id="animate-btn">Animate</button>
+        <button class="reset-btn" id="reset-graph-btn">Reset</button>
+        <button class="intervene-btn" id="intervene-btn">Remove "rabbit" feature</button>
+        <div class="speed-controls">
+          <button class="speed-btn" data-speed="0.5">0.5x</button>
+          <button class="speed-btn active" data-speed="1">1x</button>
+          <button class="speed-btn" data-speed="2">2x</button>
+        </div>
+      </div>
+
+      <div class="graph-container" id="graph-container">
+        <svg class="graph-svg" id="graph-svg"></svg>
+      </div>
+
+      <div class="node-detail" id="node-detail"></div>
+      <div class="graph-summary" id="graph-summary"></div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 4: INTERVENING ===================== -->
+  <div class="tab-content" id="tab-intervening">
+
+    <!-- Section A: Golden Gate Claude -->
+    <div class="section-card" style="padding:0;overflow:hidden;border:none;">
+      <div class="gg-card">
+        <h3>Golden Gate Claude: When Features Go Wild</h3>
+        <p>In May 2024, Anthropic researchers found a "Golden Gate Bridge" feature inside Claude. They amplified its activation &mdash; and the model became obsessed. Every response, no matter the topic, pivoted to the Golden Gate Bridge.</p>
+        <div class="gg-buttons">
+          <button class="gg-q-btn" data-q="0">What's 2+2?</button>
+          <button class="gg-q-btn" data-q="1">Tell me about dogs</button>
+          <button class="gg-q-btn" data-q="2">What should I cook?</button>
+        </div>
+      </div>
+      <div style="padding:0 1.5rem 1.5rem;">
+        <div class="gg-response" id="gg-response">
+          <span class="gg-label">Golden Gate Claude responds:</span>
+          <span id="gg-response-text"></span>
+        </div>
+        <p style="font-size:0.85rem;color:var(--text-dim);margin-top:1rem;line-height:1.6;">
+          <strong style="color:var(--text);">Why this matters:</strong> If amplifying a feature reliably changes behavior, that feature is causally real &mdash; not just a correlation. This is how researchers move from "we found a pattern" to "we understand a mechanism."
+        </p>
+      </div>
+    </div>
+
+    <!-- Section B: Limitations -->
+    <div class="limitations-card">
+      <h3>What We Don't Know Yet</h3>
+      <ul>
+        <li>Attribution graphs work well on only ~25% of prompts studied so far</li>
+        <li>Attention mechanisms aren't yet captured by these methods</li>
+        <li>Scaling to frontier models is an active research challenge</li>
+        <li>DeepMind found their SAEs underperformed simpler baselines on some safety tasks</li>
+        <li>"We have a microscope, not an X-ray &mdash; we see some things clearly but miss a lot"</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===================== KEY INSIGHT (always visible) ===================== -->
+  <div class="key-insight">
+    <h3>Key Insight</h3>
+    <p>Neurons are not concepts. The right unit of analysis is a "feature" &mdash; a direction in activation space that corresponds to a human-understandable concept. Sparse autoencoders extract these features, and attribution graphs show how information flows through them. We can even intervene on features to change model behavior. But this is still early &mdash; a powerful microscope, not a complete picture.</p>
+  </div>
+
+  <!-- Summary points -->
+  <div class="summary-points">
+    <ol>
+      <li><strong>Neurons &ne; concepts</strong> &mdash; features (directions in activation space) are the interpretable unit</li>
+      <li><strong>Internal representations</strong> &mdash; models create concepts not in the input or output (genuine multi-step reasoning)</li>
+      <li><strong>Causal intervention</strong> &mdash; suppressing or amplifying features changes behavior, proving they matter</li>
+      <li><strong>Still early</strong> &mdash; only ~25% of behavior captured; attention not yet integrated; microscope, not X-ray</li>
+    </ol>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const neuronData = [
+  {
+    label: 'Neuron 1: dog / loyalty / four-legged furniture',
+    examples: [
+      { text: '"The loyal golden retriever waited at the door..."', concept: 'dog', cls: 'tag-a' },
+      { text: '"Her loyalty to the company was unwavering..."', concept: 'loyalty', cls: 'tag-b' },
+      { text: '"The four-legged ottoman complemented the sofa..."', concept: 'four-legged furniture', cls: 'tag-c' }
+    ]
+  },
+  {
+    label: 'Neuron 2: cat / independence / ancient Egypt',
+    examples: [
+      { text: '"The tabby cat stretched lazily in the sun..."', concept: 'cat', cls: 'tag-a' },
+      { text: '"She valued her independence above all else..."', concept: 'independence', cls: 'tag-b' },
+      { text: '"Ancient Egyptian pharaohs built enormous pyramids..."', concept: 'ancient Egypt', cls: 'tag-c' }
+    ]
+  },
+  {
+    label: 'Neuron 3: car / speed / German engineering',
+    examples: [
+      { text: '"He parked the car in the driveway..."', concept: 'car', cls: 'tag-a' },
+      { text: '"The speed of light is roughly 300,000 km/s..."', concept: 'speed', cls: 'tag-b' },
+      { text: '"German engineering is renowned for precision..."', concept: 'German engineering', cls: 'tag-c' }
+    ]
+  },
+  {
+    label: 'Neuron 4: tree / family / data structures',
+    examples: [
+      { text: '"The old oak tree in the garden swayed gently..."', concept: 'tree', cls: 'tag-a' },
+      { text: '"My family tree goes back to the 1700s..."', concept: 'family', cls: 'tag-b' },
+      { text: '"Implement a binary tree with insert and search..."', concept: 'data structures', cls: 'tag-c' }
+    ]
+  },
+  {
+    label: 'Neuron 5: happy / yellow / frequency 440Hz',
+    examples: [
+      { text: '"She felt genuinely happy for the first time in months..."', concept: 'happy', cls: 'tag-a' },
+      { text: '"The bright yellow sunflowers lined the path..."', concept: 'yellow', cls: 'tag-b' },
+      { text: '"Concert pitch is tuned to 440Hz (the note A)..."', concept: '440Hz', cls: 'tag-c' }
+    ]
+  },
+  {
+    label: 'Neuron 6: sad / rain / minor key music',
+    examples: [
+      { text: '"A deep sadness settled over the village..."', concept: 'sad', cls: 'tag-a' },
+      { text: '"The rain hammered against the window panes..."', concept: 'rain', cls: 'tag-b' },
+      { text: '"The melody shifted to a haunting minor key..."', concept: 'minor key', cls: 'tag-c' }
+    ]
+  }
+];
+
+const ggResponses = [
+  '2+2 equals 4, which is coincidentally the number of towers... wait, the Golden Gate Bridge actually has 2 main towers, rising 746 feet above the water. Speaking of which, did you know the bridge\'s signature International Orange color was originally just the primer paint? The Navy wanted it painted in blue and gold stripes for visibility, but the architect insisted on keeping the striking orange.',
+  'Dogs are wonderful! My favorite place to walk dogs is across the Golden Gate Bridge. The 1.7-mile span provides stunning views of the bay, and the fog rolling through the towers creates a magical atmosphere. Many dog owners in San Francisco consider the bridge walk a rite of passage. The bridge sees about 10,000 pedestrians daily &mdash; I wonder how many bring their four-legged friends!',
+  'For dinner, I\'d suggest crab &mdash; specifically Dungeness crab, caught fresh from the waters beneath the Golden Gate Bridge. The bridge\'s location at the mouth of San Francisco Bay means the cold Pacific currents bring in the finest seafood. Serve it with sourdough bread (a San Francisco classic since the Gold Rush) and enjoy the meal with a view of &mdash; you guessed it &mdash; the Golden Gate Bridge.'
+];
+
+// Attribution graph data for each example
+const graphExamples = {
+  dallas: {
+    tokens: ['The', 'capital', 'of', 'the', 'state', 'containing', 'Dallas'],
+    layer1: [
+      { label: 'US Geography', color: '#0d9488', active: true, activation: 0.55 },
+      { label: 'Texas', color: '#16a34a', active: true, activation: 0.92, key: true },
+      { label: 'Noun phrases', color: '#94a3b8', active: false, activation: 0.1 },
+      { label: 'Prepositions', color: '#94a3b8', active: false, activation: 0.08 },
+      { label: 'Articles', color: '#94a3b8', active: false, activation: 0.05 }
+    ],
+    layer2: [
+      { label: 'State Capitals', color: '#f59e0b', active: true, activation: 0.88, key: true },
+      { label: 'Austin (city)', color: '#3b82f6', active: true, activation: 0.91, key: true },
+      { label: 'Geography quiz', color: '#94a3b8', active: false, activation: 0.12 },
+      { label: 'US Politics', color: '#94a3b8', active: false, activation: 0.07 },
+      { label: 'Place names', color: '#94a3b8', active: false, activation: 0.04 }
+    ],
+    output: 'Austin',
+    edges: [
+      { from: [0, 6], to: [1, 1], weight: 0.95, label: '' },
+      { from: [0, 4], to: [1, 1], weight: 0.55, label: '' },
+      { from: [0, 5], to: [1, 1], weight: 0.5, label: '' },
+      { from: [0, 6], to: [1, 0], weight: 0.4, label: '' },
+      { from: [1, 1], to: [2, 0], weight: 0.85, label: '' },
+      { from: [0, 1], to: [2, 0], weight: 0.6, label: '' },
+      { from: [0, 2], to: [2, 0], weight: 0.4, label: '' },
+      { from: [2, 0], to: [2, 1], weight: 0.8, label: '' },
+      { from: [1, 1], to: [2, 1], weight: 0.75, label: '' },
+      { from: [2, 1], to: [3, 0], weight: 0.92, label: '' }
+    ],
+    summary: '<strong>Two-hop reasoning:</strong> Dallas &rarr; Texas (internal knowledge) &rarr; Austin (capital lookup). The "Texas" concept only existed as an internal feature &mdash; it was never in the input.',
+    callout: { layer: 1, idx: 1, text: '"Texas" \u2014 this concept was never in the input!' }
+  },
+  pronoun: {
+    tokens: ['Mary', 'went', 'to', 'Paris', '.', 'She', 'loves'],
+    layer1: [
+      { label: 'Mary (entity)', color: '#ec4899', active: true, activation: 0.9 },
+      { label: 'Paris (city)', color: '#3b82f6', active: true, activation: 0.85 },
+      { label: 'Travel verbs', color: '#94a3b8', active: false, activation: 0.1 },
+      { label: 'Punctuation', color: '#94a3b8', active: false, activation: 0.05 },
+      { label: 'Sentence boundary', color: '#94a3b8', active: false, activation: 0.06 }
+    ],
+    layer2: [
+      { label: 'She \u2192 Mary', color: '#a855f7', active: true, activation: 0.93, key: true },
+      { label: 'Love/preference', color: '#ef4444', active: true, activation: 0.78 },
+      { label: 'Coreference', color: '#94a3b8', active: false, activation: 0.12 },
+      { label: 'Sentiment', color: '#94a3b8', active: false, activation: 0.09 },
+      { label: 'Grammar', color: '#94a3b8', active: false, activation: 0.04 }
+    ],
+    output: 'Paris',
+    edges: [
+      { from: [0, 0], to: [1, 0], weight: 0.92, label: '' },
+      { from: [0, 3], to: [1, 1], weight: 0.85, label: '' },
+      { from: [0, 5], to: [2, 0], weight: 0.88, label: '' },
+      { from: [1, 0], to: [2, 0], weight: 0.9, label: '' },
+      { from: [0, 6], to: [2, 1], weight: 0.7, label: '' },
+      { from: [2, 0], to: [3, 0], weight: 0.65, label: '' },
+      { from: [2, 1], to: [3, 0], weight: 0.6, label: '' },
+      { from: [1, 1], to: [3, 0], weight: 0.75, label: '' }
+    ],
+    summary: '<strong>Pronoun resolution:</strong> "She" resolves to "Mary" through internal features. The model links the pronoun to the entity, then combines it with the travel context to predict "Paris."',
+    callout: { layer: 2, idx: 0, text: '"She" resolves to "Mary" via coreference!' }
+  },
+  poetry: {
+    tokens: ['Roses', 'are', 'red', ',', 'violets', 'are', 'blue', ',', 'the', 'bunny', 'hopped', 'into', 'a'],
+    layer1: [
+      { label: 'Rhyming pattern', color: '#8b5cf6', active: true, activation: 0.88 },
+      { label: 'Rabbit/bunny', color: '#f59e0b', active: true, activation: 0.82, suppressible: true },
+      { label: 'Color words', color: '#94a3b8', active: false, activation: 0.12 },
+      { label: 'Punctuation', color: '#94a3b8', active: false, activation: 0.05 },
+      { label: 'Poetry meter', color: '#94a3b8', active: false, activation: 0.07 }
+    ],
+    layer2: [
+      { label: 'Rhymes w/ blue', color: '#6366f1', active: true, activation: 0.91, key: true },
+      { label: 'Rabbit', color: '#f59e0b', active: true, activation: 0.85, suppressible: true },
+      { label: 'Verse structure', color: '#94a3b8', active: false, activation: 0.1 },
+      { label: 'Animal motion', color: '#94a3b8', active: false, activation: 0.08 },
+      { label: 'Nursery rhyme', color: '#94a3b8', active: false, activation: 0.06 }
+    ],
+    output: 'rabbit',
+    outputAlt: 'habit',
+    edges: [
+      { from: [0, 2], to: [1, 0], weight: 0.7, label: '' },
+      { from: [0, 6], to: [1, 0], weight: 0.85, label: '' },
+      { from: [0, 9], to: [1, 1], weight: 0.82, label: '' },
+      { from: [1, 0], to: [2, 0], weight: 0.9, label: '' },
+      { from: [1, 1], to: [2, 1], weight: 0.85, label: '' },
+      { from: [2, 0], to: [3, 0], weight: 0.88, label: '' },
+      { from: [2, 1], to: [3, 0], weight: 0.8, label: '' }
+    ],
+    edgesAlt: [
+      { from: [0, 2], to: [1, 0], weight: 0.7, label: '' },
+      { from: [0, 6], to: [1, 0], weight: 0.85, label: '' },
+      { from: [1, 0], to: [2, 0], weight: 0.9, label: '' },
+      { from: [2, 0], to: [3, 0], weight: 0.92, label: '' }
+    ],
+    summary: '<strong>Planning ahead:</strong> The model recognizes the rhyming pattern (red/blue) and combines it with the "bunny" context to predict "rabbit" &mdash; a word that both rhymes with "habit" and fits the content.',
+    summaryAlt: '<strong>Intervention result:</strong> Removing the "rabbit" feature changed the output! The "words rhyming with blue" feature is still active, but without the bunny context it produces "habit" instead. This proves the feature causally contributes to behavior.',
+    callout: { layer: 2, idx: 0, text: 'Rhyme constraints guide the output!' }
+  }
+};
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ============================================================
+// TAB 1: POLYSEMANTIC NEURONS
+// ============================================================
+document.querySelectorAll('.poly-neuron').forEach(el => {
+  el.addEventListener('click', () => {
+    const idx = parseInt(el.dataset.neuron);
+    const data = neuronData[idx];
+    const tooltip = document.getElementById('neuron-tooltip');
+    const title = document.getElementById('tooltip-title');
+    const examples = document.getElementById('tooltip-examples');
+
+    title.textContent = data.label;
+    examples.innerHTML = data.examples.map(ex =>
+      `<div class="tooltip-example">
+        <span class="trigger-label ${ex.cls}">${ex.concept}</span>
+        <div style="margin-top:0.2rem;">${ex.text}</div>
+      </div>`
+    ).join('');
+
+    tooltip.classList.add('visible');
+    tooltip.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+});
+
+// ============================================================
+// TAB 2: SAE ANIMATION
+// ============================================================
+(function initTangledBlob() {
+  const blob = document.getElementById('tangled-blob');
+  const colors = ['#ff8c42','#10b981','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#ef4444','#0d9488','#6366f1','#dc2626','#14b8a6','#a855f7'];
+  for (let i = 0; i < 12; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'tangled-dot';
+    dot.style.background = colors[i];
+    const cx = 60 + (Math.random() - 0.5) * 50;
+    const cy = 60 + (Math.random() - 0.5) * 50;
+    dot.style.left = cx + 'px';
+    dot.style.top = cy + 'px';
+    dot.style.opacity = '0.7';
+    blob.appendChild(dot);
+  }
+})();
+
+let decomposed = false;
+document.getElementById('decompose-btn').addEventListener('click', () => {
+  const dots = document.querySelectorAll('.tangled-dot');
+  const cards = document.querySelectorAll('.feature-card-small');
+  decomposed = !decomposed;
+
+  if (decomposed) {
+    dots.forEach((dot, i) => {
+      const row = Math.floor(i / 4);
+      const col = i % 4;
+      dot.style.left = (col * 35 + 5) + 'px';
+      dot.style.top = (row * 45 + 10) + 'px';
+      dot.style.opacity = '0.25';
+      dot.style.transform = 'scale(0.6)';
+    });
+    cards.forEach((card, i) => {
+      setTimeout(() => card.classList.add('revealed'), i * 200);
+    });
+    document.getElementById('decompose-btn').textContent = 'Reset';
+  } else {
+    dots.forEach(dot => {
+      const cx = 60 + (Math.random() - 0.5) * 50;
+      const cy = 60 + (Math.random() - 0.5) * 50;
+      dot.style.left = cx + 'px';
+      dot.style.top = cy + 'px';
+      dot.style.opacity = '0.7';
+      dot.style.transform = 'scale(1)';
+    });
+    cards.forEach(card => card.classList.remove('revealed'));
+    document.getElementById('decompose-btn').textContent = 'Decompose';
+  }
+});
+
+// Sparsity chart
+(function initSparsity() {
+  const chart = document.getElementById('sparsity-chart');
+  for (let i = 0; i < 50; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'sparsity-bar';
+    bar.style.height = (20 + Math.random() * 40) + 'px';
+    bar.dataset.idx = i;
+    chart.appendChild(bar);
+  }
+})();
+
+let sparsityActive = false;
+const litIndices = [7, 19, 34, 42];
+document.getElementById('activate-btn').addEventListener('click', () => {
+  sparsityActive = !sparsityActive;
+  const bars = document.querySelectorAll('.sparsity-bar');
+  const counter = document.getElementById('sparsity-counter');
+
+  if (sparsityActive) {
+    bars.forEach((bar, i) => {
+      if (litIndices.includes(i)) {
+        bar.classList.add('lit');
+        bar.style.height = '60px';
+      } else {
+        bar.style.height = '15px';
+      }
+    });
+    counter.textContent = `${litIndices.length} of 50 features active (${Math.round(litIndices.length/50*100)}%)`;
+    document.getElementById('activate-btn').textContent = 'Reset';
+  } else {
+    bars.forEach(bar => {
+      bar.classList.remove('lit');
+      bar.style.height = (20 + Math.random() * 40) + 'px';
+    });
+    counter.textContent = '0 of 50 features active (0%)';
+    document.getElementById('activate-btn').textContent = 'Activate';
+  }
+});
+
+// Feature gallery
+document.querySelectorAll('.gallery-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const idx = card.dataset.gallery;
+    const expanded = document.getElementById('gallery-' + idx);
+    expanded.classList.toggle('visible');
+    card.querySelector('.click-hint').textContent = expanded.classList.contains('visible') ? 'Click to collapse' : 'Click to explore';
+  });
+});
+
+// ============================================================
+// TAB 3: ATTRIBUTION GRAPH
+// ============================================================
+let currentExample = 'dallas';
+let animSpeed = 1;
+let animRunning = false;
+let animTimeouts = [];
+let isIntervention = false;
+
+// Example pill switching
+document.querySelectorAll('.example-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.example-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentExample = pill.dataset.example;
+    isIntervention = false;
+    resetGraph();
+    drawGraph();
+    // Show intervene button only for poetry
+    document.getElementById('intervene-btn').style.display = currentExample === 'poetry' ? 'inline-block' : 'none';
+  });
+});
+
+// Speed controls
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    animSpeed = parseFloat(btn.dataset.speed);
+  });
+});
+
+// Graph dimensions
+const GRAPH_W = 880;
+const GRAPH_H = 340;
+const COL_X = [60, 280, 510, 780];
+const TOKEN_W = 80;
+const TOKEN_H = 28;
+const NODE_R = 20;
+const NODE_R_SMALL = 10;
+const OUTPUT_W = 80;
+const OUTPUT_H = 36;
+
+function getNodePos(colIdx, rowIdx, totalRows) {
+  const x = COL_X[colIdx];
+  const spacing = Math.min(50, (GRAPH_H - 40) / (totalRows));
+  const totalH = spacing * (totalRows - 1);
+  const startY = (GRAPH_H - totalH) / 2;
+  const y = startY + rowIdx * spacing;
+  return { x, y };
+}
+
+function createSVGEl(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+function bezierPath(x1, y1, x2, y2) {
+  const cx = (x1 + x2) / 2;
+  return `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`;
+}
+
+function drawGraph() {
+  const svg = document.getElementById('graph-svg');
+  svg.innerHTML = '';
+  svg.setAttribute('width', GRAPH_W);
+  svg.setAttribute('height', GRAPH_H);
+  svg.setAttribute('viewBox', `0 0 ${GRAPH_W} ${GRAPH_H}`);
+
+  const ex = graphExamples[currentExample];
+  const tokens = ex.tokens;
+  const l1 = ex.layer1;
+  const l2 = ex.layer2;
+  const edges = isIntervention && ex.edgesAlt ? ex.edgesAlt : ex.edges;
+  const output = isIntervention && ex.outputAlt ? ex.outputAlt : ex.output;
+
+  // Defs for glow filter
+  const defs = createSVGEl('defs', {});
+  const filter = createSVGEl('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' });
+  const blur = createSVGEl('feGaussianBlur', { stdDeviation: '3', result: 'blur' });
+  const merge = createSVGEl('feMerge', {});
+  const mn1 = createSVGEl('feMergeNode', { in: 'blur' });
+  const mn2 = createSVGEl('feMergeNode', { in: 'SourceGraphic' });
+  merge.appendChild(mn1);
+  merge.appendChild(mn2);
+  filter.appendChild(blur);
+  filter.appendChild(merge);
+  defs.appendChild(filter);
+  svg.appendChild(defs);
+
+  // Column labels
+  const colLabels = ['Input Tokens', 'Layer 1 Features', 'Layer 2 Features', 'Output'];
+  colLabels.forEach((lbl, i) => {
+    const txt = createSVGEl('text', {
+      x: COL_X[i], y: 16, fill: '#94a3b8',
+      'font-size': '10', 'font-weight': '600', 'text-anchor': 'middle',
+      'font-family': 'DM Sans, sans-serif'
+    });
+    txt.textContent = lbl;
+    svg.appendChild(txt);
+  });
+
+  // Group for edges (drawn first, behind nodes)
+  const edgesGroup = createSVGEl('g', { id: 'edges-group' });
+  svg.appendChild(edgesGroup);
+
+  // Draw edges
+  edges.forEach((edge, ei) => {
+    const [fromCol, fromIdx] = edge.from;
+    const [toCol, toIdx] = edge.to;
+    let fromPos, toPos;
+
+    if (fromCol === 0) {
+      fromPos = getNodePos(0, fromIdx, tokens.length);
+      fromPos.x += TOKEN_W / 2;
+    } else if (fromCol === 1) {
+      fromPos = getNodePos(1, fromIdx, l1.length);
+    } else {
+      fromPos = getNodePos(2, fromIdx, l2.length);
+    }
+
+    if (toCol === 1) {
+      toPos = getNodePos(1, toIdx, l1.length);
+    } else if (toCol === 2) {
+      toPos = getNodePos(2, toIdx, l2.length);
+    } else {
+      toPos = getNodePos(3, 0, 1);
+    }
+
+    let color = '#cbd5e1';
+    if (fromCol === 0) color = '#94a3b8';
+    else if (fromCol === 1) color = l1[fromIdx] ? l1[fromIdx].color : '#94a3b8';
+    else if (fromCol === 2) color = l2[fromIdx] ? l2[fromIdx].color : '#94a3b8';
+
+    // Check if edge involves suppressed features in intervention mode
+    let suppressed = false;
+    if (isIntervention && currentExample === 'poetry') {
+      if (fromCol === 1 && l1[fromIdx] && l1[fromIdx].suppressible) suppressed = true;
+      if (toCol === 2 && l2[toIdx] && l2[toIdx].suppressible) suppressed = true;
+      if (fromCol === 2 && l2[fromIdx] && l2[fromIdx].suppressible) suppressed = true;
+    }
+
+    const path = createSVGEl('path', {
+      d: bezierPath(fromPos.x, fromPos.y, toPos.x, toPos.y),
+      fill: 'none',
+      stroke: suppressed ? '#e2e8f0' : color,
+      'stroke-width': suppressed ? 0.5 : Math.max(1, edge.weight * 4),
+      'stroke-opacity': 0.15,
+      'data-edge': ei,
+      class: 'graph-edge'
+    });
+    edgesGroup.appendChild(path);
+  });
+
+  // Draw token nodes (column 0)
+  tokens.forEach((tok, i) => {
+    const pos = getNodePos(0, i, tokens.length);
+    const g = createSVGEl('g', {
+      class: 'graph-node token-node',
+      'data-col': 0, 'data-idx': i,
+      style: 'cursor:pointer'
+    });
+    const rect = createSVGEl('rect', {
+      x: pos.x - TOKEN_W/2, y: pos.y - TOKEN_H/2,
+      width: TOKEN_W, height: TOKEN_H,
+      rx: 6, fill: '#fff', stroke: '#e2e8f0', 'stroke-width': 1.5
+    });
+    const text = createSVGEl('text', {
+      x: pos.x, y: pos.y + 4,
+      fill: '#1a202c', 'font-size': '12', 'font-weight': '600',
+      'text-anchor': 'middle', 'font-family': 'JetBrains Mono, monospace'
+    });
+    text.textContent = tok;
+    g.appendChild(rect);
+    g.appendChild(text);
+    svg.appendChild(g);
+  });
+
+  // Draw layer 1 nodes
+  l1.forEach((feat, i) => {
+    const pos = getNodePos(1, i, l1.length);
+    const active = feat.active;
+    let suppressed = isIntervention && feat.suppressible;
+    const r = active && !suppressed ? NODE_R : NODE_R_SMALL;
+    const g = createSVGEl('g', {
+      class: 'graph-node feature-node',
+      'data-col': 1, 'data-idx': i,
+      style: 'cursor:pointer'
+    });
+    const circle = createSVGEl('circle', {
+      cx: pos.x, cy: pos.y, r: r,
+      fill: active && !suppressed ? feat.color : '#e2e8f0',
+      'fill-opacity': active && !suppressed ? 0.2 : 0.5,
+      stroke: active && !suppressed ? feat.color : '#cbd5e1',
+      'stroke-width': active && !suppressed ? 2.5 : 1
+    });
+    g.appendChild(circle);
+    if (active && !suppressed) {
+      const lbl = createSVGEl('text', {
+        x: pos.x, y: pos.y + r + 14,
+        fill: feat.color, 'font-size': '9', 'font-weight': '600',
+        'text-anchor': 'middle', 'font-family': 'DM Sans, sans-serif'
+      });
+      lbl.textContent = feat.label;
+      g.appendChild(lbl);
+    }
+    if (suppressed) {
+      const line1 = createSVGEl('line', {
+        x1: pos.x - 7, y1: pos.y - 7, x2: pos.x + 7, y2: pos.y + 7,
+        stroke: '#dc2626', 'stroke-width': 2
+      });
+      const line2 = createSVGEl('line', {
+        x1: pos.x + 7, y1: pos.y - 7, x2: pos.x - 7, y2: pos.y + 7,
+        stroke: '#dc2626', 'stroke-width': 2
+      });
+      g.appendChild(line1);
+      g.appendChild(line2);
+    }
+    svg.appendChild(g);
+  });
+
+  // Draw layer 2 nodes
+  l2.forEach((feat, i) => {
+    const pos = getNodePos(2, i, l2.length);
+    const active = feat.active;
+    let suppressed = isIntervention && feat.suppressible;
+    const r = active && !suppressed ? NODE_R : NODE_R_SMALL;
+    const g = createSVGEl('g', {
+      class: 'graph-node feature-node',
+      'data-col': 2, 'data-idx': i,
+      style: 'cursor:pointer'
+    });
+    const circle = createSVGEl('circle', {
+      cx: pos.x, cy: pos.y, r: r,
+      fill: active && !suppressed ? feat.color : '#e2e8f0',
+      'fill-opacity': active && !suppressed ? 0.2 : 0.5,
+      stroke: active && !suppressed ? feat.color : '#cbd5e1',
+      'stroke-width': active && !suppressed ? 2.5 : 1
+    });
+    g.appendChild(circle);
+    if (active && !suppressed) {
+      const lbl = createSVGEl('text', {
+        x: pos.x, y: pos.y + r + 14,
+        fill: feat.color, 'font-size': '9', 'font-weight': '600',
+        'text-anchor': 'middle', 'font-family': 'DM Sans, sans-serif'
+      });
+      lbl.textContent = feat.label;
+      g.appendChild(lbl);
+    }
+    if (suppressed) {
+      const line1 = createSVGEl('line', {
+        x1: pos.x - 7, y1: pos.y - 7, x2: pos.x + 7, y2: pos.y + 7,
+        stroke: '#dc2626', 'stroke-width': 2
+      });
+      const line2 = createSVGEl('line', {
+        x1: pos.x + 7, y1: pos.y - 7, x2: pos.x - 7, y2: pos.y + 7,
+        stroke: '#dc2626', 'stroke-width': 2
+      });
+      g.appendChild(line1);
+      g.appendChild(line2);
+    }
+    svg.appendChild(g);
+  });
+
+  // Draw output node (column 3)
+  const outPos = getNodePos(3, 0, 1);
+  const outG = createSVGEl('g', {
+    class: 'graph-node output-node',
+    'data-col': 3, 'data-idx': 0,
+    style: 'cursor:pointer'
+  });
+  const outRect = createSVGEl('rect', {
+    x: outPos.x - OUTPUT_W/2, y: outPos.y - OUTPUT_H/2,
+    width: OUTPUT_W, height: OUTPUT_H,
+    rx: 8, fill: '#fff', stroke: '#e2e8f0', 'stroke-width': 2
+  });
+  const outText = createSVGEl('text', {
+    x: outPos.x, y: outPos.y + 5,
+    fill: '#94a3b8', 'font-size': '14', 'font-weight': '700',
+    'text-anchor': 'middle', 'font-family': 'JetBrains Mono, monospace'
+  });
+  outText.textContent = output;
+  outG.appendChild(outRect);
+  outG.appendChild(outText);
+  svg.appendChild(outG);
+
+  // Hover interaction
+  svg.querySelectorAll('.graph-node').forEach(node => {
+    node.addEventListener('mouseenter', () => highlightConnections(node));
+    node.addEventListener('mouseleave', () => unhighlightConnections());
+    node.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showNodeDetail(node);
+    });
+  });
+}
+
+function highlightConnections(node) {
+  const col = parseInt(node.dataset.col);
+  const idx = parseInt(node.dataset.idx);
+  const ex = graphExamples[currentExample];
+  const edges = isIntervention && ex.edgesAlt ? ex.edgesAlt : ex.edges;
+  const allEdges = document.querySelectorAll('.graph-edge');
+  const allNodes = document.querySelectorAll('.graph-node');
+
+  const connectedEdges = new Set();
+  const connectedNodes = new Set();
+  connectedNodes.add(`${col}-${idx}`);
+
+  edges.forEach((edge, ei) => {
+    const [fc, fi] = edge.from;
+    const [tc, ti] = edge.to;
+    if ((fc === col && fi === idx) || (tc === col && ti === idx)) {
+      connectedEdges.add(ei);
+      connectedNodes.add(`${fc}-${fi}`);
+      connectedNodes.add(`${tc}-${ti}`);
+    }
+  });
+
+  allEdges.forEach((el, i) => {
+    if (connectedEdges.has(i)) {
+      el.setAttribute('stroke-opacity', '0.8');
+    } else {
+      el.setAttribute('stroke-opacity', '0.05');
+    }
+  });
+  allNodes.forEach(n => {
+    const nk = `${n.dataset.col}-${n.dataset.idx}`;
+    n.style.opacity = connectedNodes.has(nk) ? '1' : '0.15';
+  });
+}
+
+function unhighlightConnections() {
+  document.querySelectorAll('.graph-edge').forEach(el => {
+    el.setAttribute('stroke-opacity', '0.15');
+  });
+  document.querySelectorAll('.graph-node').forEach(n => {
+    n.style.opacity = '1';
+  });
+}
+
+function showNodeDetail(node) {
+  const col = parseInt(node.dataset.col);
+  const idx = parseInt(node.dataset.idx);
+  const ex = graphExamples[currentExample];
+  const detail = document.getElementById('node-detail');
+  let html = '';
+
+  if (col === 0) {
+    html = `<strong>Input Token:</strong> "${ex.tokens[idx]}" (position ${idx})`;
+  } else if (col === 1) {
+    const feat = ex.layer1[idx];
+    html = `<strong>Layer 1 Feature:</strong> ${feat.label}<br>Activation: <strong>${feat.activation.toFixed(2)}</strong> ${feat.active ? '(active)' : '(inactive)'}`;
+  } else if (col === 2) {
+    const feat = ex.layer2[idx];
+    html = `<strong>Layer 2 Feature:</strong> ${feat.label}<br>Activation: <strong>${feat.activation.toFixed(2)}</strong> ${feat.active ? '(active)' : '(inactive)'}`;
+  } else {
+    const output = isIntervention && ex.outputAlt ? ex.outputAlt : ex.output;
+    html = `<strong>Predicted Output:</strong> "${output}"`;
+  }
+
+  detail.innerHTML = html;
+  detail.classList.add('visible');
+}
+
+function resetGraph() {
+  animTimeouts.forEach(t => clearTimeout(t));
+  animTimeouts = [];
+  animRunning = false;
+  document.getElementById('graph-summary').classList.remove('visible');
+  document.getElementById('node-detail').classList.remove('visible');
+  drawGraph();
+}
+
+function delay(ms) { return ms / animSpeed; }
+
+// Animate button
+document.getElementById('animate-btn').addEventListener('click', () => {
+  if (animRunning) return;
+  animRunning = true;
+  resetGraph();
+
+  const svg = document.getElementById('graph-svg');
+  const ex = graphExamples[currentExample];
+  const edges = isIntervention && ex.edgesAlt ? ex.edgesAlt : ex.edges;
+  const output = isIntervention && ex.outputAlt ? ex.outputAlt : ex.output;
+  const summaryText = isIntervention && ex.summaryAlt ? ex.summaryAlt : ex.summary;
+
+  // Dim everything
+  svg.querySelectorAll('.graph-node').forEach(n => n.style.opacity = '0.2');
+  svg.querySelectorAll('.graph-edge').forEach(e => e.setAttribute('stroke-opacity', '0.03'));
+
+  let t = 500;
+
+  // Step 1: Light up input tokens left to right
+  const tokenNodes = svg.querySelectorAll('.token-node');
+  tokenNodes.forEach((node, i) => {
+    animTimeouts.push(setTimeout(() => {
+      node.style.opacity = '1';
+      node.style.transition = 'opacity 0.3s';
+      const rect = node.querySelector('rect');
+      if (rect) {
+        rect.setAttribute('stroke', '#2563eb');
+        rect.setAttribute('stroke-width', '2.5');
+      }
+      // Special emphasis for key tokens
+      const tok = ex.tokens[i];
+      if (tok === 'Dallas' || tok === 'Mary' || tok === 'bunny' || tok === 'She' || tok === 'blue') {
+        if (rect) {
+          rect.setAttribute('fill', '#fef3c7');
+          rect.setAttribute('stroke', '#f59e0b');
+        }
+      }
+    }, delay(t + i * 200)));
+  });
+
+  t += ex.tokens.length * 200 + 300;
+
+  // Step 2: Light up edges to layer 1, then layer 1 features
+  const l1Edges = edges.filter(e => e.to[0] === 1);
+  const l1ActiveIndices = new Set(l1Edges.map(e => e.to[1]));
+
+  animTimeouts.push(setTimeout(() => {
+    const allEdges = svg.querySelectorAll('.graph-edge');
+    edges.forEach((edge, ei) => {
+      if (edge.to[0] === 1) {
+        allEdges[ei].setAttribute('stroke-opacity', '0.7');
+        allEdges[ei].style.transition = 'stroke-opacity 0.4s';
+      }
+    });
+    // Light up layer 1 active features
+    const featureNodes = svg.querySelectorAll('.feature-node');
+    featureNodes.forEach(node => {
+      if (parseInt(node.dataset.col) === 1 && l1ActiveIndices.has(parseInt(node.dataset.idx))) {
+        node.style.opacity = '1';
+        node.style.transition = 'opacity 0.4s';
+        const circle = node.querySelector('circle');
+        if (circle) circle.setAttribute('filter', 'url(#glow)');
+      }
+    });
+  }, delay(t)));
+
+  // Callout for key feature
+  if (ex.callout && ex.callout.layer === 1) {
+    animTimeouts.push(setTimeout(() => {
+      const featureNodes = svg.querySelectorAll('.feature-node');
+      featureNodes.forEach(node => {
+        if (parseInt(node.dataset.col) === 1 && parseInt(node.dataset.idx) === ex.callout.idx) {
+          const pos = getNodePos(1, ex.callout.idx, ex.layer1.length);
+          const callout = createSVGEl('text', {
+            x: pos.x, y: pos.y - NODE_R - 8,
+            fill: '#dc2626', 'font-size': '10', 'font-weight': '700',
+            'text-anchor': 'middle', 'font-family': 'DM Sans, sans-serif',
+            class: 'callout-text'
+          });
+          callout.textContent = ex.callout.text;
+          svg.appendChild(callout);
+        }
+      });
+    }, delay(t + 400)));
+  }
+
+  t += 800;
+
+  // Step 3: Light up edges to layer 2, then layer 2 features
+  const l2Edges = edges.filter(e => e.to[0] === 2);
+  const l2ActiveIndices = new Set(l2Edges.map(e => e.to[1]));
+
+  animTimeouts.push(setTimeout(() => {
+    const allEdges = svg.querySelectorAll('.graph-edge');
+    edges.forEach((edge, ei) => {
+      if (edge.to[0] === 2) {
+        allEdges[ei].setAttribute('stroke-opacity', '0.7');
+        allEdges[ei].style.transition = 'stroke-opacity 0.4s';
+      }
+    });
+    const featureNodes = svg.querySelectorAll('.feature-node');
+    featureNodes.forEach(node => {
+      if (parseInt(node.dataset.col) === 2 && l2ActiveIndices.has(parseInt(node.dataset.idx))) {
+        node.style.opacity = '1';
+        node.style.transition = 'opacity 0.4s';
+        const circle = node.querySelector('circle');
+        if (circle) circle.setAttribute('filter', 'url(#glow)');
+      }
+    });
+  }, delay(t)));
+
+  // Callout for layer 2 key feature
+  if (ex.callout && ex.callout.layer === 2) {
+    animTimeouts.push(setTimeout(() => {
+      const pos = getNodePos(2, ex.callout.idx, ex.layer2.length);
+      const callout = createSVGEl('text', {
+        x: pos.x, y: pos.y - NODE_R - 8,
+        fill: '#dc2626', 'font-size': '10', 'font-weight': '700',
+        'text-anchor': 'middle', 'font-family': 'DM Sans, sans-serif',
+        class: 'callout-text'
+      });
+      callout.textContent = ex.callout.text;
+      svg.appendChild(callout);
+    }, delay(t + 400)));
+  }
+
+  t += 800;
+
+  // Step 4: Light up edge to output, fill output
+  animTimeouts.push(setTimeout(() => {
+    const allEdges = svg.querySelectorAll('.graph-edge');
+    edges.forEach((edge, ei) => {
+      if (edge.to[0] === 3) {
+        allEdges[ei].setAttribute('stroke-opacity', '0.8');
+        allEdges[ei].style.transition = 'stroke-opacity 0.4s';
+      }
+    });
+    const outNode = svg.querySelector('.output-node');
+    outNode.style.opacity = '1';
+    outNode.style.transition = 'opacity 0.4s';
+    const outRect = outNode.querySelector('rect');
+    if (outRect) {
+      outRect.setAttribute('fill', '#eff6ff');
+      outRect.setAttribute('stroke', '#2563eb');
+      outRect.setAttribute('stroke-width', '3');
+    }
+    const outText = outNode.querySelector('text');
+    if (outText) {
+      outText.setAttribute('fill', '#1e40af');
+    }
+  }, delay(t)));
+
+  t += 600;
+
+  // Step 5: Show summary
+  animTimeouts.push(setTimeout(() => {
+    const summaryEl = document.getElementById('graph-summary');
+    summaryEl.innerHTML = summaryText;
+    summaryEl.classList.add('visible');
+    animRunning = false;
+  }, delay(t)));
+});
+
+// Reset button
+document.getElementById('reset-graph-btn').addEventListener('click', () => {
+  isIntervention = false;
+  resetGraph();
+});
+
+// Intervene button (poetry only)
+document.getElementById('intervene-btn').addEventListener('click', () => {
+  isIntervention = true;
+  resetGraph();
+  drawGraph();
+  // Auto-animate
+  document.getElementById('animate-btn').click();
+});
+
+// ============================================================
+// TAB 4: GOLDEN GATE CLAUDE
+// ============================================================
+document.querySelectorAll('.gg-q-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const idx = parseInt(btn.dataset.q);
+    const resp = document.getElementById('gg-response');
+    const text = document.getElementById('gg-response-text');
+    text.innerHTML = ggResponses[idx];
+    resp.classList.add('visible');
+    resp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+});
+
+// ============================================================
+// INIT
+// ============================================================
+drawGraph();
+document.getElementById('intervene-btn').style.display = 'none';
+</script>
+</body>
+</html>

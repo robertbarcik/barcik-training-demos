@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Context Window Filling — robert@barcik.training</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#f0f4f8;--surface:#ffffff;--surface2:#edf2f7;--border:#e2e8f0;
+    --text:#1a202c;--text-dim:#64748b;--accent:#1e3a5f;--accent2:#2d5a8e;
+    --accent-light:#2563eb;--radius:10px;
+    --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+    --c-system:#1e3a5f;--c-memories:#7c3aed;--c-custom:#0891b2;
+    --c-project:#059669;--c-skills:#d97706;--c-tools:#db2777;
+    --c-convo:#2563eb;--c-user:#dc2626;
+  }
+  html{font-size:16px;-webkit-text-size-adjust:100%}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* Brand bar */
+  .brand-bar{background:#1e3a5f;padding:0.5rem 1.5rem;font-family:'DM Sans',sans-serif;font-size:0.82rem;letter-spacing:0.04em}
+  .brand-bar a{color:#fff;text-decoration:none;opacity:0.9;transition:opacity 0.2s}
+  .brand-bar a:hover{opacity:1}
+
+  /* Header */
+  .page-header{max-width:1200px;margin:0 auto;padding:2rem 1.5rem 1rem;text-align:center}
+  .page-header h1{font-size:1.85rem;font-weight:700;color:var(--accent);margin-bottom:0.35rem}
+  .page-header .subtitle{font-size:1.05rem;color:var(--text-dim);font-weight:400}
+
+  /* Container */
+  .container{max-width:1200px;margin:0 auto;padding:0 1.5rem 2rem}
+
+  /* Intro box */
+  .intro{
+    background:var(--surface);border-left:4px solid var(--accent-light);border-radius:var(--radius);
+    padding:1rem 1.25rem;margin-bottom:1.5rem;box-shadow:var(--shadow);
+    font-size:0.93rem;color:var(--text-dim);line-height:1.7;
+  }
+  .intro strong{color:var(--text)}
+
+  /* Scenario pills */
+  .scenario-row{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;align-items:center}
+  .scenario-label{font-size:0.82rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;margin-right:0.25rem}
+  .pill{
+    padding:0.45rem 1rem;border:2px solid var(--border);border-radius:999px;
+    background:var(--surface);color:var(--accent);font-size:0.85rem;font-weight:600;
+    cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;white-space:nowrap;
+  }
+  .pill:hover{border-color:var(--accent-light);background:#eef4ff}
+  .pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* Controls row */
+  .controls-row{display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:1.25rem;align-items:center}
+  .btn{
+    padding:0.5rem 1.25rem;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;
+    font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;
+  }
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent2)}
+  .btn-secondary{background:var(--surface);color:var(--accent);border:2px solid var(--border)}
+  .btn-secondary:hover{border-color:var(--accent-light)}
+  .btn-skill{
+    background:#fffbeb;color:#92400e;border:2px solid #fbbf24;display:none;
+    animation:pulse-btn 1.5s ease-in-out infinite;
+  }
+  .btn-skill:hover{background:#fef3c7}
+  @keyframes pulse-btn{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0.4)}50%{box-shadow:0 0 0 8px rgba(251,191,36,0)}}
+
+  .budget-group{display:flex;align-items:center;gap:0.35rem;margin-left:auto}
+  .budget-label{font-size:0.78rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.03em}
+  .budget-btn{
+    padding:0.3rem 0.65rem;border:1.5px solid var(--border);border-radius:6px;
+    background:var(--surface);color:var(--text-dim);font-size:0.78rem;font-weight:600;
+    cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;
+  }
+  .budget-btn:hover{border-color:var(--accent-light)}
+  .budget-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* Main layout */
+  .main-grid{display:grid;grid-template-columns:1fr 0.65fr;gap:1.25rem;margin-bottom:1.5rem}
+
+  /* Capacity bar */
+  .capacity-card{
+    background:var(--surface);border-radius:var(--radius);padding:0.85rem 1.15rem;
+    box-shadow:var(--shadow);margin-bottom:1rem;
+  }
+  .capacity-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.45rem}
+  .capacity-title{font-size:0.82rem;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.04em}
+  .capacity-count{font-size:0.82rem;font-weight:600;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
+  .capacity-track{height:18px;background:var(--surface2);border-radius:9px;overflow:hidden;position:relative}
+  .capacity-fill{
+    height:100%;border-radius:9px;transition:width 0.6s cubic-bezier(0.22,1,0.36,1);
+    background:linear-gradient(90deg,var(--accent) 0%,var(--accent-light) 100%);
+    width:0%;position:relative;
+  }
+  .capacity-fill.warn{background:linear-gradient(90deg,#f59e0b 0%,#ef4444 100%)}
+  .capacity-pct{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    font-size:0.68rem;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;
+  }
+
+  /* Context window container */
+  .context-window{
+    background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:1rem;min-height:420px;position:relative;
+  }
+  .context-window-label{
+    font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
+    color:var(--text-dim);margin-bottom:0.65rem;
+  }
+  .blocks-container{display:flex;flex-direction:column;gap:0.55rem}
+  .empty-state{
+    display:flex;align-items:center;justify-content:center;min-height:300px;
+    color:var(--text-dim);font-size:0.95rem;font-style:italic;text-align:center;padding:2rem;
+  }
+
+  /* Context block */
+  .ctx-block{
+    border-left:4px solid var(--border);border-radius:var(--radius);
+    background:var(--surface);box-shadow:var(--shadow);overflow:hidden;
+    opacity:0;transform:translateX(-30px);transition:all 0.45s cubic-bezier(0.22,1,0.36,1);
+    cursor:pointer;
+  }
+  .ctx-block.visible{opacity:1;transform:translateX(0)}
+  .ctx-block.truncated{opacity:0.45}
+  .ctx-block.truncated .block-body{display:none}
+  .ctx-block .block-header{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:0.6rem 0.85rem;gap:0.5rem;
+  }
+  .block-label{font-size:0.82rem;font-weight:700;color:var(--text)}
+  .block-tokens{
+    font-size:0.72rem;font-weight:600;padding:0.15rem 0.55rem;border-radius:999px;
+    background:var(--surface2);color:var(--text-dim);white-space:nowrap;
+    font-family:'JetBrains Mono',monospace;flex-shrink:0;
+  }
+  .truncated-badge{
+    font-size:0.68rem;font-weight:700;padding:0.1rem 0.5rem;border-radius:999px;
+    background:#fee2e2;color:#dc2626;display:none;
+  }
+  .ctx-block.truncated .truncated-badge{display:inline-block}
+  .block-body{
+    max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.22,1,0.36,1);
+  }
+  .ctx-block.expanded .block-body{max-height:600px}
+  .block-content{
+    padding:0.5rem 0.85rem 0.7rem;font-family:'JetBrains Mono',monospace;
+    font-size:0.76rem;line-height:1.65;color:var(--text-dim);
+    white-space:pre-wrap;word-break:break-word;border-top:1px solid var(--border);
+  }
+  .block-preview{
+    padding:0.25rem 0.85rem 0.5rem;font-family:'JetBrains Mono',monospace;
+    font-size:0.74rem;line-height:1.55;color:var(--text-dim);opacity:0.7;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .ctx-block.expanded .block-preview{display:none}
+
+  /* Skill expansion callout */
+  .skill-callout{
+    background:#fffbeb;border:2px solid #fbbf24;border-radius:var(--radius);
+    padding:0.75rem 1rem;margin-top:0.75rem;font-size:0.85rem;color:#92400e;
+    line-height:1.6;display:none;animation:fadeIn 0.5s ease;
+  }
+  .skill-callout strong{color:#78350f}
+
+  /* Side panel */
+  .side-panel{
+    background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:1.15rem;position:sticky;top:1rem;align-self:start;
+  }
+  .side-panel-title{
+    font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
+    color:var(--accent);margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:2px solid var(--surface2);
+  }
+  .narrator-text{
+    font-size:0.88rem;color:var(--text);line-height:1.7;min-height:120px;
+    transition:opacity 0.3s;
+  }
+  .narrator-text .step-num{
+    display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;
+    background:var(--accent);color:#fff;border-radius:50%;font-size:0.72rem;font-weight:700;
+    margin-right:0.35rem;flex-shrink:0;
+  }
+  .narrator-text .hl{font-weight:700;color:var(--accent)}
+  .narrator-text p{margin-bottom:0.65rem}
+
+  /* Key insight */
+  .insight{
+    background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
+    color:#fff;border-radius:var(--radius);padding:1.15rem 1.35rem;
+    box-shadow:var(--shadow-md);line-height:1.7;font-size:0.93rem;
+  }
+  .insight-label{
+    display:inline-block;background:rgba(255,255,255,0.18);font-weight:700;
+    font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;
+    padding:0.15rem 0.65rem;border-radius:4px;margin-bottom:0.55rem;
+  }
+
+  /* Animations */
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes slideIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+
+  /* Responsive */
+  @media(max-width:768px){
+    .main-grid{grid-template-columns:1fr}
+    .side-panel{position:static}
+    .budget-group{margin-left:0;margin-top:0.25rem;width:100%}
+    .page-header h1{font-size:1.4rem}
+    .controls-row{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<!-- Brand bar -->
+<div class="brand-bar">
+  <a href="../">&larr; All Demos &middot; robert@barcik.training</a>
+</div>
+
+<!-- Header -->
+<div class="page-header">
+  <h1>How Context Windows Get Filled</h1>
+  <p class="subtitle">Every LLM call starts from scratch. The system must reconstruct the full context each time.</p>
+</div>
+
+<div class="container">
+
+  <!-- Intro -->
+  <div class="intro">
+    LLMs receive <strong>just text in, text out</strong>. But context windows are finite and tokens cost money, so modern systems use smart engineering to <strong>dynamically assemble</strong> the context for each call. This demo shows exactly what gets packed into the window &mdash; and in what order &mdash; for different types of interactions.
+  </div>
+
+  <!-- Scenario pills -->
+  <div class="scenario-row">
+    <span class="scenario-label">Scenario</span>
+    <button class="pill active" data-scenario="simple">Simple Question</button>
+    <button class="pill" data-scenario="memories">With Memories</button>
+    <button class="pill" data-scenario="coding">Coding Task</button>
+    <button class="pill" data-scenario="skill_expansion">Skill Expansion</button>
+  </div>
+
+  <!-- Controls row -->
+  <div class="controls-row">
+    <button class="btn btn-primary" id="buildBtn">Build Context</button>
+    <button class="btn btn-secondary" id="resetBtn">Reset</button>
+    <button class="btn btn-skill" id="skillBtn">Trigger Skill Expansion</button>
+    <div class="budget-group">
+      <span class="budget-label">Window</span>
+      <button class="budget-btn" data-size="8000">8K</button>
+      <button class="budget-btn" data-size="32000">32K</button>
+      <button class="budget-btn" data-size="128000">128K</button>
+      <button class="budget-btn active" data-size="200000">200K</button>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+    <!-- Left: context window visualization -->
+    <div>
+      <!-- Capacity bar -->
+      <div class="capacity-card">
+        <div class="capacity-header">
+          <span class="capacity-title">Context Window Capacity</span>
+          <span class="capacity-count" id="capacityCount">0 / 200,000 tokens</span>
+        </div>
+        <div class="capacity-track">
+          <div class="capacity-fill" id="capacityFill">
+            <span class="capacity-pct" id="capacityPct"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Context window -->
+      <div class="context-window">
+        <div class="context-window-label">Context Window Contents</div>
+        <div class="blocks-container" id="blocksContainer">
+          <div class="empty-state" id="emptyState">
+            Select a scenario and click <strong>Build Context</strong> to see how the window fills up.
+          </div>
+        </div>
+        <div class="skill-callout" id="skillCallout">
+          <strong>Lazy loading in action!</strong> The LLM invoked a skill. The compact description (~500 tokens) was replaced with the full skill text (~4,000 tokens) &mdash; consuming <strong>8x more tokens</strong>. This is why skills are stored as brief summaries until actually needed.
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: side panel -->
+    <div class="side-panel">
+      <div class="side-panel-title">What's Happening</div>
+      <div class="narrator-text" id="narrator">
+        <p>Choose a scenario above, then click <span class="hl">Build Context</span> to watch the context window fill up step by step.</p>
+        <p>Each colored block represents a different type of content that gets injected into the window before the LLM sees it.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key insight -->
+  <div class="insight">
+    <div class="insight-label">Key Insight</div>
+    The LLM doesn't "remember" anything between calls. Every single interaction starts from scratch &mdash; the system must reconstruct the full context each time, fitting memories, instructions, tools, and conversation into a finite window. Smart engineering is about choosing what to include and what to leave out.
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ═══════════════════════════════════════════════════
+     BLOCK DEFINITIONS
+     ═══════════════════════════════════════════════════ */
+  var BLOCKS = {
+    system: {
+      id:"system", label:"System Prompt", color:"#1e3a5f", tokens:800,
+      preview:"You are Claude, made by Anthropic. You are helpful, harmless...",
+      content:"You are Claude, made by Anthropic. You are helpful, harmless, and honest.\nYou have access to a set of tools you can use to answer the user's question.\nYou can invoke functions by writing a function call block as part of your reply.\n\nString and scalar parameters should be specified as is, while lists and objects\nshould use JSON format. Here are the functions available:\n\n[tool definitions provided separately]\n\nAnswer the user's request using the relevant tools if available. Check that all\nrequired parameters are provided. If there are missing values, ask the user.\n\nIMPORTANT: You should never make up information. If you don't know something,\nsay so honestly rather than fabricating an answer.",
+      narrator:'<p><span class="step-num">1</span> <span class="hl">System Prompt</span> is always first. It defines the model\'s identity, behavior rules, and safety constraints.</p><p>This is injected by the platform &mdash; the end user never sees it. It\'s present in <em>every</em> API call.</p>'
+    },
+    memories: {
+      id:"memories", label:"Memories (retrieved)", color:"#7c3aed", tokens:400,
+      preview:"- User is a senior data scientist at Acme Corp...",
+      content:"- User is a senior data scientist at Acme Corp\n- Prefers concise, code-first explanations\n- Working on a recommendation engine using PyTorch\n- Previously discussed embedding strategies on 2024-03-15\n- Team uses MLflow for experiment tracking\n- Deployment target is AWS SageMaker\n- Preferred IDE: VS Code with Copilot extension",
+      narrator:'<p><span class="step-num">2</span> <span class="hl">Memories</span> are retrieved from persistent storage. They survived from past conversations.</p><p>The system searches a vector database for memories relevant to the current request. Only matching entries are included &mdash; not the entire memory store.</p>'
+    },
+    custom_instructions: {
+      id:"custom_instructions", label:"Custom Instructions", color:"#0891b2", tokens:200,
+      preview:"Respond concisely. Use Python for code examples unless asked...",
+      content:"Respond concisely. Use Python for code examples unless asked otherwise.\nAlways include type hints in Python code. Prefer pandas over raw loops.\nWhen showing terminal commands, use bash syntax highlighting.\nExplain trade-offs when suggesting architectural decisions.",
+      narrator:'<p><span class="step-num">3</span> <span class="hl">Custom Instructions</span> are user-defined preferences that apply to every conversation.</p><p>These are short and always included. They personalize the model\'s behavior without the user having to repeat themselves.</p>'
+    },
+    project_instructions: {
+      id:"project_instructions", label:"Project Instructions (CLAUDE.md)", color:"#059669", tokens:2500,
+      preview:"# Project: recommendation-engine\n## Structure\n- src/models/ — PyTorch model definitions...",
+      content:"# Project: recommendation-engine\n\n## Structure\n- src/models/ \u2014 PyTorch model definitions\n- src/data/ \u2014 Data loaders and preprocessing\n- src/eval/ \u2014 Evaluation metrics and benchmarks\n- src/api/ \u2014 FastAPI serving endpoints\n- configs/ \u2014 YAML experiment configs\n\n## Conventions\n- Use Black formatter, line length 88\n- Tests in tests/ mirror src/ structure\n- All models inherit from BaseModel in src/models/base.py\n- Use dataclasses for configs, not dicts\n- Type hints required on all public functions\n\n## Environment\n- Python 3.11, PyTorch 2.1, CUDA 12.1\n- Dependencies managed with poetry\n- CI: GitHub Actions (.github/workflows/)\n\n## Deployment\n- Models serialized with torch.jit.script\n- Served via FastAPI + Uvicorn in Docker\n- Deployed to AWS SageMaker endpoints\n- A/B testing handled by SageMaker traffic routing\n\n## Current Sprint\n- Implementing cold-start fallback strategy\n- Target: reduce cold-start error rate by 40%\n- Using content-based features as fallback signal",
+      narrator:'<p><span class="step-num">4</span> <span class="hl">Project Instructions</span> (CLAUDE.md) provide deep context about the specific codebase.</p><p>These are loaded from the repository and can be quite large. They tell the model about project structure, conventions, and current goals &mdash; so it doesn\'t have to rediscover them each time.</p>'
+    },
+    skills_compact: {
+      id:"skills_compact", label:"Skill Descriptions (compact)", color:"#d97706", tokens:500,
+      preview:"Available skills:\n- commit: Create git commits with conventional format...",
+      content:"Available skills:\n- commit: Create git commits with conventional format\n- review-pr: Review pull request changes and provide feedback\n- frontend-design: Build production-grade UI components\n- claude-api: Build apps with Claude API/SDK\n- simplify: Review code for reuse, quality, and efficiency\n- schedule: Create and manage scheduled remote agents\n- loop: Run a prompt on a recurring interval\n- keybindings-help: Customize keyboard shortcuts\n- update-config: Configure the Claude Code harness\n- pdf: Read and analyze PDF documents\n- ms-office: Work with Microsoft Office files\n- jupyter: Edit and run Jupyter notebooks",
+      narrator:'<p><span class="step-num">5</span> <span class="hl">Skill Descriptions</span> are loaded as compact one-liners to save tokens.</p><p>Each skill is just a name + short description. If the model needs a skill, it can request the full version &mdash; this is <em>lazy loading</em> for context windows.</p>'
+    },
+    tools: {
+      id:"tools", label:"Tool Definitions", color:"#db2777", tokens:1800,
+      preview:'{"name":"Read","description":"Reads a file from the filesystem..."...',
+      content:'{\n  "name": "Read",\n  "description": "Reads a file from the local filesystem.",\n  "parameters": {\n    "file_path": { "type": "string", "required": true },\n    "offset": { "type": "integer" },\n    "limit": { "type": "integer" }\n  }\n}\n{\n  "name": "Edit",\n  "description": "Performs exact string replacements in files.",\n  "parameters": {\n    "file_path": { "type": "string", "required": true },\n    "old_string": { "type": "string", "required": true },\n    "new_string": { "type": "string", "required": true }\n  }\n}\n{\n  "name": "Bash",\n  "description": "Executes a bash command and returns output.",\n  "parameters": {\n    "command": { "type": "string", "required": true },\n    "timeout": { "type": "integer" }\n  }\n}\n{\n  "name": "Grep",\n  "description": "Search for patterns in files using ripgrep.",\n  "parameters": {\n    "pattern": { "type": "string", "required": true },\n    "path": { "type": "string" },\n    "glob": { "type": "string" }\n  }\n}\n{\n  "name": "Glob",\n  "description": "Find files matching a glob pattern.",\n  "parameters": {\n    "pattern": { "type": "string", "required": true }\n  }\n}\n{\n  "name": "Write",\n  "description": "Writes content to a file, overwriting if exists.",\n  "parameters": {\n    "file_path": { "type": "string", "required": true },\n    "content": { "type": "string", "required": true }\n  }\n}',
+      narrator:'<p><span class="step-num">6</span> <span class="hl">Tool Definitions</span> tell the model what external actions it can take.</p><p>Each tool is a JSON schema with name, description, and parameters. The model doesn\'t "have" these tools &mdash; it just sees their descriptions and can output structured calls to them.</p>'
+    },
+    conversation: {
+      id:"conversation", label:"Conversation History", color:"#2563eb", tokens:3200,
+      preview:"User: Can you help me optimize the embedding layer?...",
+      content:"User: Can you help me optimize the embedding layer?\n\nAssistant: I'll look at your current implementation.\n\n[Read src/models/embedding.py]\n\nThe current embedding uses nn.Embedding with dim=128. For your dataset\nof 50K items, I'd suggest:\n\n1. Reduce dim to 64 \u2014 50K items don't need 128 dimensions\n2. Add dropout (0.1) after the embedding layer\n3. Consider using pre-trained embeddings as initialization\n\nHere's the updated code:\n```python\nclass ItemEmbedding(BaseModel):\n    def __init__(self, num_items: int, dim: int = 64):\n        super().__init__()\n        self.embed = nn.Embedding(num_items, dim)\n        self.dropout = nn.Dropout(0.1)\n```\n\nUser: What about using pre-trained embeddings?\n\nAssistant: Good idea. You could load GloVe or use sentence-transformers\nfor the item descriptions. Here's how:\n\n```python\npretrained = load_glove_vectors('glove.6B.50d.txt')\nself.embed.weight.data.copy_(pretrained)\nself.embed.weight.requires_grad = True  # allow fine-tuning\n```\n\nThe benefit is faster convergence, especially with limited interaction data.",
+      narrator:'<p><span class="step-num">7</span> <span class="hl">Conversation History</span> provides the illusion of memory within a session.</p><p>All previous turns are re-sent every time. This is why long conversations get expensive and eventually hit the context limit &mdash; the history keeps growing.</p>'
+    },
+    user: {
+      id:"user", label:"Current User Message", color:"#dc2626", tokens:150,
+      preview:"Can you also add a fallback for cold-start users who don't have...",
+      content:"Can you also add a fallback for cold-start users who don't have enough interaction history? Maybe use content-based features as a backup.",
+      narrator:'<p><span class="step-num">8</span> <span class="hl">Current User Message</span> is the actual new input &mdash; what the user just typed.</p><p>Notice how small it is compared to everything else. The user writes one sentence, but the system packs thousands of tokens of context around it so the model can give an informed answer.</p>'
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════
+     SCENARIOS
+     ═══════════════════════════════════════════════════ */
+  var SCENARIOS = {
+    simple: {
+      blocks:["system","user"],
+      label:"Simple Question",
+      intro:'<p>A basic question with no history or personalization. The model gets just the system prompt and the user\'s message.</p><p>This is the <em>minimum viable context</em> &mdash; the cheapest possible API call.</p>'
+    },
+    memories: {
+      blocks:["system","memories","custom_instructions","user"],
+      label:"With Memories",
+      intro:'<p>The system retrieves relevant memories from past conversations and applies the user\'s custom instructions.</p><p>This personalizes the response without needing the user to repeat preferences every time.</p>'
+    },
+    coding: {
+      blocks:["system","memories","custom_instructions","project_instructions","skills_compact","tools","conversation","user"],
+      label:"Coding Task",
+      intro:'<p>A full coding assistant context: project knowledge, available tools, skill catalog, and conversation history are all loaded.</p><p>This is a <em>rich context</em> &mdash; expensive but powerful. The model knows the codebase, the user, and the conversation flow.</p>'
+    },
+    skill_expansion: {
+      blocks:["system","memories","custom_instructions","project_instructions","skills_compact","tools","conversation","user"],
+      label:"Skill Expansion",
+      showSkillExpansion:true,
+      intro:'<p>Same as the coding task, but demonstrates <span class="hl">lazy loading</span>: skills start compact, then expand on demand.</p><p>Click <em>Build Context</em> first, then use the <em>Trigger Skill Expansion</em> button to see a skill load its full instructions.</p>'
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════
+     STATE
+     ═══════════════════════════════════════════════════ */
+  var currentScenario = "simple";
+  var windowSize = 200000;
+  var isBuilt = false;
+  var isAnimating = false;
+  var skillExpanded = false;
+
+  /* ═══════════════════════════════════════════════════
+     DOM REFS
+     ═══════════════════════════════════════════════════ */
+  var blocksContainer = document.getElementById("blocksContainer");
+  var emptyState = document.getElementById("emptyState");
+  var narrator = document.getElementById("narrator");
+  var capacityCount = document.getElementById("capacityCount");
+  var capacityFill = document.getElementById("capacityFill");
+  var capacityPct = document.getElementById("capacityPct");
+  var buildBtn = document.getElementById("buildBtn");
+  var resetBtn = document.getElementById("resetBtn");
+  var skillBtn = document.getElementById("skillBtn");
+  var skillCallout = document.getElementById("skillCallout");
+
+  /* ═══════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════ */
+  function formatNum(n){
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,",");
+  }
+
+  function updateCapacity(used){
+    capacityCount.textContent = formatNum(used) + " / " + formatNum(windowSize) + " tokens";
+    var pct = Math.min((used / windowSize) * 100, 100);
+    capacityFill.style.width = pct + "%";
+    if(pct > 80) capacityFill.classList.add("warn");
+    else capacityFill.classList.remove("warn");
+    capacityPct.textContent = pct >= 1 ? Math.round(pct) + "%" : "";
+  }
+
+  function getTokenBudgets(blocks){
+    /* Figure out which blocks fit at the current window size */
+    var total = 0;
+    var result = [];
+    for(var i=0;i<blocks.length;i++){
+      var b = BLOCKS[blocks[i]];
+      total += b.tokens;
+      result.push({id:b.id, fits: total <= windowSize, runningTotal: total});
+    }
+    return result;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     RENDER A SINGLE BLOCK
+     ═══════════════════════════════════════════════════ */
+  function createBlockEl(blockDef, fits){
+    var el = document.createElement("div");
+    el.className = "ctx-block";
+    el.setAttribute("data-block-id", blockDef.id);
+    el.style.borderLeftColor = blockDef.color;
+
+    /* Height proportional to tokens: min 44px, max 140px for content area */
+    var minH = 44, maxH = 130;
+    var maxTokens = 3200;
+    var proportion = Math.min(blockDef.tokens / maxTokens, 1);
+    var targetH = minH + (maxH - minH) * proportion;
+
+    var header = document.createElement("div");
+    header.className = "block-header";
+
+    var label = document.createElement("span");
+    label.className = "block-label";
+    label.textContent = blockDef.label;
+
+    var rightGroup = document.createElement("span");
+    rightGroup.style.cssText = "display:flex;align-items:center;gap:0.4rem;";
+
+    var badge = document.createElement("span");
+    badge.className = "block-tokens";
+    badge.textContent = "~" + formatNum(blockDef.tokens) + " tokens";
+
+    var truncBadge = document.createElement("span");
+    truncBadge.className = "truncated-badge";
+    truncBadge.textContent = "truncated";
+
+    rightGroup.appendChild(badge);
+    rightGroup.appendChild(truncBadge);
+    header.appendChild(label);
+    header.appendChild(rightGroup);
+    el.appendChild(header);
+
+    /* Preview line */
+    var preview = document.createElement("div");
+    preview.className = "block-preview";
+    preview.textContent = blockDef.preview;
+    el.appendChild(preview);
+
+    /* Expandable body */
+    var body = document.createElement("div");
+    body.className = "block-body";
+    var content = document.createElement("div");
+    content.className = "block-content";
+    content.textContent = blockDef.content;
+    body.appendChild(content);
+    el.appendChild(body);
+
+    if(!fits){
+      el.classList.add("truncated");
+    }
+
+    /* Click to expand/collapse */
+    el.addEventListener("click", function(){
+      if(el.classList.contains("truncated")) return;
+      el.classList.toggle("expanded");
+    });
+
+    return el;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     BUILD CONTEXT (animated)
+     ═══════════════════════════════════════════════════ */
+  function buildContext(){
+    if(isAnimating) return;
+    var scenario = SCENARIOS[currentScenario];
+    var blockIds = scenario.blocks;
+    var budgets = getTokenBudgets(blockIds);
+
+    /* Clear */
+    blocksContainer.innerHTML = "";
+    emptyState.style.display = "none";
+    skillCallout.style.display = "none";
+    skillBtn.style.display = "none";
+    skillExpanded = false;
+    updateCapacity(0);
+    isAnimating = true;
+    isBuilt = false;
+
+    /* Set intro narrator */
+    narrator.innerHTML = scenario.intro;
+
+    /* Create all block elements (hidden) */
+    var elements = [];
+    for(var i=0;i<blockIds.length;i++){
+      var def = BLOCKS[blockIds[i]];
+      var el = createBlockEl(def, budgets[i].fits);
+      blocksContainer.appendChild(el);
+      elements.push({el:el, def:def, budget:budgets[i]});
+    }
+
+    /* Animate them in one by one */
+    var runningTokens = 0;
+    var delay = 0;
+    for(var j=0;j<elements.length;j++){
+      (function(idx, d){
+        setTimeout(function(){
+          var item = elements[idx];
+          item.el.classList.add("visible");
+          if(item.budget.fits){
+            runningTokens = item.budget.runningTotal;
+          }
+          updateCapacity(runningTokens);
+
+          /* Update narrator */
+          narrator.style.opacity = 0;
+          setTimeout(function(){
+            narrator.innerHTML = item.def.narrator;
+            narrator.style.opacity = 1;
+          }, 150);
+
+          /* Check if last */
+          if(idx === elements.length - 1){
+            setTimeout(function(){
+              isAnimating = false;
+              isBuilt = true;
+              if(scenario.showSkillExpansion){
+                skillBtn.style.display = "inline-block";
+              }
+            }, 300);
+          }
+        }, d);
+      })(j, delay);
+      delay += 400;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════
+     SKILL EXPANSION
+     ═══════════════════════════════════════════════════ */
+  function expandSkill(){
+    if(skillExpanded || !isBuilt) return;
+    skillExpanded = true;
+    var skillEl = blocksContainer.querySelector('[data-block-id="skills_compact"]');
+    if(!skillEl) return;
+
+    /* Update label, tokens, content */
+    skillEl.querySelector(".block-label").textContent = "Skill Instructions (expanded)";
+    skillEl.querySelector(".block-tokens").textContent = "~4,000 tokens";
+    skillEl.querySelector(".block-preview").textContent = "# Skill: review-pr  When to trigger: When the user asks to review a PR...";
+    skillEl.querySelector(".block-content").textContent =
+      "# Skill: review-pr\n\n## When to trigger\nWhen the user asks to review a PR, provides a PR URL, or asks for\ncode review feedback on changes.\n\n## How to review\n1. Fetch the PR diff using `gh pr diff <number>`\n2. Read changed files for full context\n3. Check for:\n   - Security vulnerabilities (injection, auth bypass, secrets)\n   - Performance issues (N+1 queries, unnecessary allocations)\n   - Code style violations (naming, structure, DRY)\n   - Missing error handling or edge cases\n   - Test coverage gaps\n4. Structure feedback by severity\n\n## Output format\nUse GitHub-flavored markdown with file:line references:\n\n### Critical Issues\n- `src/auth.py:42` \u2014 SQL injection via unsanitized input\n\n### Suggestions\n- `src/models/user.py:18` \u2014 Consider using dataclass instead of dict\n\n### Nitpicks\n- `src/utils.py:7` \u2014 Unused import `os`\n\n## Tone\nBe constructive and specific. Explain *why* something is an issue,\nnot just *that* it is. Suggest concrete fixes when possible.\nAcknowledge good patterns you notice in the code.";
+
+    /* Flash the border */
+    skillEl.style.borderLeftColor = "#f59e0b";
+    skillEl.style.transition = "all 0.5s ease";
+    skillEl.style.boxShadow = "0 0 0 2px #fbbf24, 0 4px 12px rgba(217,119,6,0.2)";
+    setTimeout(function(){
+      skillEl.style.boxShadow = "var(--shadow)";
+    }, 1500);
+
+    /* Recalculate tokens: replace 500 with 4000 = +3500 */
+    var scenario = SCENARIOS[currentScenario];
+    var total = 0;
+    for(var i=0;i<scenario.blocks.length;i++){
+      var b = BLOCKS[scenario.blocks[i]];
+      if(b.id === "skills_compact") total += 4000;
+      else total += b.tokens;
+    }
+    updateCapacity(total);
+
+    /* Show callout */
+    skillCallout.style.display = "block";
+
+    /* Update narrator */
+    narrator.style.opacity = 0;
+    setTimeout(function(){
+      narrator.innerHTML = '<p><span class="hl">Lazy loading triggered!</span> The model decided it needed the <em>review-pr</em> skill, so the system replaced the compact one-liner with the full skill instructions.</p><p>Token usage jumped from ~500 to ~4,000. This is why skills are stored compactly &mdash; most calls don\'t need the full text of every skill.</p>';
+      narrator.style.opacity = 1;
+    }, 150);
+
+    skillBtn.style.display = "none";
+  }
+
+  /* ═══════════════════════════════════════════════════
+     RESET
+     ═══════════════════════════════════════════════════ */
+  function resetView(){
+    isAnimating = false;
+    isBuilt = false;
+    skillExpanded = false;
+    blocksContainer.innerHTML = "";
+    emptyState.style.display = "flex";
+    blocksContainer.appendChild(emptyState);
+    skillBtn.style.display = "none";
+    skillCallout.style.display = "none";
+    updateCapacity(0);
+    narrator.innerHTML = '<p>Choose a scenario above, then click <span class="hl">Build Context</span> to watch the context window fill up step by step.</p><p>Each colored block represents a different type of content that gets injected into the window before the LLM sees it.</p>';
+  }
+
+  /* ═══════════════════════════════════════════════════
+     WINDOW SIZE CHANGE
+     ═══════════════════════════════════════════════════ */
+  function changeWindowSize(size){
+    windowSize = size;
+    /* If built, rebuild instantly (no animation) to show truncation */
+    if(isBuilt){
+      rebuildInstant();
+    } else {
+      updateCapacity(0);
+    }
+  }
+
+  function rebuildInstant(){
+    var scenario = SCENARIOS[currentScenario];
+    var blockIds = scenario.blocks;
+    var budgets = getTokenBudgets(blockIds);
+
+    blocksContainer.innerHTML = "";
+    emptyState.style.display = "none";
+    skillCallout.style.display = "none";
+
+    var runningTokens = 0;
+    for(var i=0;i<blockIds.length;i++){
+      var def = BLOCKS[blockIds[i]];
+      var fits = budgets[i].fits;
+      var el = createBlockEl(def, fits);
+      el.classList.add("visible");
+      blocksContainer.appendChild(el);
+      if(fits) runningTokens = budgets[i].runningTotal;
+    }
+    updateCapacity(runningTokens);
+
+    /* Check for truncated blocks and update narrator */
+    var truncated = budgets.filter(function(b){return !b.fits});
+    if(truncated.length > 0){
+      var names = truncated.map(function(b){return '<strong>' + BLOCKS[b.id].label + '</strong>'});
+      narrator.innerHTML = '<p style="color:#dc2626"><span class="hl">Window too small!</span> ' + names.join(", ") + ' had to be truncated or removed to fit within the ' + formatNum(windowSize) + ' token budget.</p><p>This is the core trade-off: smaller windows are cheaper and faster, but the model loses important context. The system must decide what to cut.</p>';
+    }
+
+    if(scenario.showSkillExpansion && !skillExpanded){
+      skillBtn.style.display = "inline-block";
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════
+     EVENT LISTENERS
+     ═══════════════════════════════════════════════════ */
+
+  /* Scenario pills */
+  document.querySelector(".scenario-row").addEventListener("click", function(e){
+    var pill = e.target.closest(".pill");
+    if(!pill) return;
+    document.querySelectorAll(".pill").forEach(function(p){p.classList.remove("active")});
+    pill.classList.add("active");
+    currentScenario = pill.getAttribute("data-scenario");
+    resetView();
+  });
+
+  /* Build / Reset */
+  buildBtn.addEventListener("click", buildContext);
+  resetBtn.addEventListener("click", resetView);
+  skillBtn.addEventListener("click", expandSkill);
+
+  /* Budget buttons */
+  document.querySelector(".budget-group").addEventListener("click", function(e){
+    var btn = e.target.closest(".budget-btn");
+    if(!btn) return;
+    document.querySelectorAll(".budget-btn").forEach(function(b){b.classList.remove("active")});
+    btn.classList.add("active");
+    changeWindowSize(parseInt(btn.getAttribute("data-size"),10));
+  });
+
+  /* Init */
+  updateCapacity(0);
+
+})();
+</script>
+</body>
+</html>
