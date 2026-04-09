@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where Does the Money Go? — AI Capex Timeline | barcik.training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f8;color:#1a202c;line-height:1.6}
+
+/* ── Standard demo header ── */
+.site-header{background:#1e3a5f;color:#fff;padding:1.4rem 2rem;text-align:center;position:relative}
+.site-header h1{font-size:1.5rem;font-weight:700;margin-bottom:0.15rem}
+.site-header .brand{font-size:0.85rem;color:#94a3b8}
+.back-link{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:#94a3b8;text-decoration:none;font-size:0.92rem}
+.back-link:hover{color:#fff}
+
+/* ── Main content ── */
+.container{max-width:1140px;margin:0 auto;padding:32px 32px 48px}
+
+/* Thesis section (above chart) */
+.thesis{margin-bottom:24px}
+.thesis-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.thesis-card{background:#fff;border-radius:12px;padding:18px 22px;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.thesis-card .card-label{font-size:13px;font-weight:600;margin-bottom:5px}
+.thesis-card .card-text{font-size:13.5px;color:#555;line-height:1.75}
+.thesis-full{grid-column:1/-1}
+
+/* Chart area */
+.chart-wrap{background:#fff;border-radius:12px;padding:24px 24px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:20px;position:relative;overflow:hidden}
+.chart-wrap svg{display:block;width:100%;height:auto}
+
+/* Info strip */
+.info-strip{background:#1e3a5f;color:#fff;border-radius:10px;padding:14px 20px;margin-top:14px;min-height:72px;display:flex;align-items:center;transition:opacity .2s}
+.info-hint{color:#94a3b8;font-size:13px;width:100%;text-align:center}
+.info-content{display:flex;width:100%;gap:24px;align-items:flex-start}
+.info-left{flex-shrink:0;min-width:180px}
+.info-title{font-weight:600;font-size:14px;margin-bottom:4px}
+.info-infra{font-size:12px;color:rgba(255,255,255,0.55);margin-top:4px;font-style:italic}
+.info-lock{font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px}
+.info-right{display:flex;flex-direction:column;gap:4px;flex:1}
+.info-line{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.5}
+.info-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px}
+
+/* Legend */
+.legend{display:flex;justify-content:center;gap:28px;margin-top:14px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:13px;color:#555;font-weight:500}
+.legend-line{width:28px;height:3px;border-radius:2px}
+
+footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
+
+@media(max-width:768px){
+  .thesis-grid{grid-template-columns:1fr}
+  .container{padding:24px 14px 40px}
+  .legend{gap:16px}
+  .info-content{flex-direction:column;gap:10px}
+  .back-link{position:static;display:block;transform:none;margin-bottom:0.5rem}
+  .site-header{padding:1rem}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="../index.html" class="back-link">&larr; All demos</a>
+  <h1>Where Does the Money Go?</h1>
+  <div class="brand">barcik.training</div>
+</header>
+
+<div class="container">
+
+  <!-- Thesis / context (above chart) -->
+  <div class="thesis">
+    <div class="thesis-grid">
+      <div class="thesis-card">
+        <div class="card-label" style="color:#7C6DD8">The investment thesis</div>
+        <div class="card-text">The $228B spent in 2024 wasn't buying GPT-4 inference &mdash; that model already ran on 2023 hardware. It funded training clusters for models shipping 2&ndash;3 years later, and inference infrastructure for the next generation. The $700B guided for 2026 funds models whose <em>architectures may not be designed yet</em>.</div>
+      </div>
+      <div class="thesis-card">
+        <div class="card-label" style="color:#E05A33">The risk</div>
+        <div class="card-text">DeepSeek V3 achieved frontier performance at 10&times; less compute. If algorithmic efficiency leaps continue, today&rsquo;s massive clusters could be overbuilt for training. But labs are betting <em>inference</em> will dominate &mdash; ~70% of AI compute by 2030. The bet is on deployment scale, not just model size.</div>
+      </div>
+    </div>
+    <div class="thesis-card thesis-full">
+      <div class="card-label">From dollar to model: 2.5&ndash;4+ years</div>
+      <div class="card-text">Building a datacenter takes 12&ndash;24 months. Procuring enough chips takes 6&ndash;12 months. Training a frontier model takes 6&ndash;12 months. Post-training and safety adds 3&ndash;6 months. Each year&rsquo;s capex splits into three bets: <strong style="color:#E05A33">inference capacity</strong> arriving in ~2&nbsp;years, <strong style="color:#7C6DD8">training runs</strong> for models ~3&nbsp;years out, and <strong style="color:#0EA5C9">research compute</strong> powering breakthroughs 4+&nbsp;years away.</div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-wrap">
+    <svg id="chart" viewBox="0 0 1100 430" preserveAspectRatio="xMidYMid meet"></svg>
+
+    <div class="info-strip" id="info-strip">
+      <span class="info-hint">Hover or click any green investment dot to explore where the money goes</span>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-line" style="background:#E05A33"></div>Inference capacity &mdash; ~2 yr</div>
+      <div class="legend-item"><div class="legend-line" style="background:#7C6DD8"></div>Training runs &mdash; ~3 yr</div>
+      <div class="legend-item"><div class="legend-line" style="background:#0EA5C9"></div>Research frontier &mdash; ~4+ yr</div>
+    </div>
+  </div>
+
+  <footer class="credits">Data: company earnings reports &amp; guidance &bull; Big 5 = Alphabet, Amazon, Apple, Meta, Microsoft</footer>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── Data ──────────────────────────────────────────────
+  const capexData = [
+    { year:2020, amount:92,  label:'$92B' },
+    { year:2021, amount:115, label:'$115B' },
+    { year:2022, amount:140, label:'$140B' },
+    { year:2023, amount:140, label:'$140B' },
+    { year:2024, amount:228, label:'$228B', infra:'Colossus: 100K GPUs deployed in 122 days' },
+    { year:2025, amount:416, label:'$416B', infra:'Rainier 500K \u00B7 Abilene 450K GPUs' },
+    { year:2026, amount:700, label:'$700B', projected:true, infra:'Prometheus 1GW \u00B7 Fairwater' },
+    { year:2027, amount:900, label:'$900B', projected:true, infra:'TMI restart \u00B7 multi-GW sites' },
+  ];
+
+  const modelData = [
+    { year:2022, name:'ChatGPT',      detail:'ChatGPT / GPT-3.5',                    sub:'~10\u00B2\u2074 FLOPs' },
+    { year:2023, name:'GPT-4',        detail:'GPT-4 \u00B7 Claude 2 \u00B7 Llama 2', sub:'2\u00D710\u00B2\u2075 FLOPs' },
+    { year:2024, name:'GPT-4o',       detail:'GPT-4o \u00B7 Claude 3.5 \u00B7 Gemini 1.5', sub:'3\u20135\u00D710\u00B2\u2075 FLOPs' },
+    { year:2025, name:'Opus 4',       detail:'GPT-4.5 \u00B7 Grok 3 \u00B7 Claude Opus 4', sub:'~10\u00B2\u2076 FLOPs' },
+    { year:2026, name:'Claude 4.6',   detail:'GPT-5.2 \u00B7 Claude 4.6 \u00B7 Gemini 3', sub:'Reasoning-first era' },
+    { year:2027, name:'From $416B',   detail:'Models from $416B spend', sub:'Training paradigms TBD', projected:true },
+    { year:2028, name:'From $700B',   detail:'Models from $700B spend', sub:'Architectures not yet designed', projected:true },
+  ];
+
+  const FRONTIERS = [
+    { key:'inference', color:'#E05A33', offset:2, label:'Inference' },
+    { key:'training',  color:'#7C6DD8', offset:3, label:'Training' },
+    { key:'research',  color:'#0EA5C9', offset:4, label:'Research' },
+  ];
+
+  // ── Layout ────────────────────────────────────────────
+  const W = 1100, H = 430;
+  const topY = 120, botY = 360;
+  const barMaxH = 75, maxCapex = 950, barW = 26;
+  const xLeft = 105, xRight = 1055;
+  const yearMin = 2019.5, yearMax = 2029.5;
+
+  function yearToX(yr) {
+    return xLeft + ((yr - yearMin) / (yearMax - yearMin)) * (xRight - xLeft);
+  }
+
+  // ── SVG helpers ───────────────────────────────────────
+  const NS = 'http://www.w3.org/2000/svg';
+  function ns(tag, attrs, text) {
+    const e = document.createElementNS(NS, tag);
+    if (attrs) for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  const svg = document.getElementById('chart');
+  const infoStrip = document.getElementById('info-strip');
+
+  // ── Defs ──────────────────────────────────────────────
+  const defs = ns('defs');
+  function addMarker(id, color) {
+    const m = ns('marker', { id:id, viewBox:'0 0 10 7', refX:'9', refY:'3.5', markerWidth:'9', markerHeight:'7', orient:'auto' });
+    m.appendChild(ns('path', { d:'M0,0.5 L9,3.5 L0,6.5Z', fill:color }));
+    defs.appendChild(m);
+  }
+  addMarker('arr-timeline', '#3D2B1F');
+  addMarker('arr-inf',  '#E05A33');
+  addMarker('arr-train','#7C6DD8');
+  addMarker('arr-res',  '#0EA5C9');
+  svg.appendChild(defs);
+
+  // ── Projected zone ────────────────────────────────────
+  const projX = yearToX(2025.5);
+  svg.appendChild(ns('rect', { x:projX, y:12, width:xRight-projX+20, height:H-24, rx:10, fill:'#e8edf3', opacity:'0.5' }));
+  svg.appendChild(ns('text', { x:xRight+5, y:28, 'text-anchor':'end', 'font-size':'10', 'font-style':'italic', fill:'#94a3b8' }, 'Projected / guidance'));
+
+  // ── Top timeline (capex) ──────────────────────────────
+  const topG = ns('g', { class:'top-timeline' });
+  topG.appendChild(ns('line', { x1:yearToX(2019.8), y1:topY, x2:xRight, y2:topY, stroke:'#3D2B1F', 'stroke-width':'2.5', 'marker-end':'url(#arr-timeline)' }));
+  topG.appendChild(ns('text', { x:yearToX(2019.8)-6, y:topY-8, 'text-anchor':'end', 'font-size':'13', 'font-weight':'700', fill:'#3D2B1F' }, 'Capex'));
+  topG.appendChild(ns('text', { x:yearToX(2019.8)-6, y:topY+12, 'text-anchor':'end', 'font-size':'10', fill:'#94a3b8' }, 'Big 5'));
+
+  const capexDots = {};
+  const capexBarGs = {};
+
+  capexData.forEach(c => {
+    const x = yearToX(c.year);
+    const h = (c.amount / maxCapex) * barMaxH;
+    const g = ns('g', { class:'capex-year', 'data-year':c.year });
+
+    const bar = ns('rect', {
+      x: x - barW/2, y: topY - h, width: barW, height: h, rx:'4',
+      fill: c.projected ? 'none' : '#2D7A4F',
+      stroke: c.projected ? '#2D7A4F' : 'none',
+      'stroke-width': c.projected ? '1.5' : '0',
+      'stroke-dasharray': c.projected ? '4 3' : 'none',
+      opacity: c.projected ? '0.35' : '0.55',
+    });
+    bar.style.transition = 'opacity .25s';
+    g.appendChild(bar);
+    capexBarGs[c.year] = bar;
+
+    g.appendChild(ns('text', {
+      x:x, y:topY-h-10, 'text-anchor':'middle',
+      'font-size':'12', 'font-weight':'600', 'font-family':"'Inter',monospace",
+      fill:'#2D7A4F', opacity: c.projected ? '0.5' : '1',
+    }, c.label));
+
+    const yrLabel = c.year >= 2026 ? c.year + 'E' : '' + c.year;
+    g.appendChild(ns('text', {
+      x:x, y:topY+18, 'text-anchor':'middle',
+      'font-size':'11', fill:'#94a3b8', 'font-family':"'Inter',monospace",
+    }, yrLabel));
+
+    const dot = ns('circle', {
+      cx:x, cy:topY, r:'7', fill:'#2D7A4F', stroke:'#fff', 'stroke-width':'2.5', cursor:'pointer',
+    });
+    dot.style.transition = 'filter .2s';
+    g.appendChild(dot);
+    capexDots[c.year] = dot;
+
+    topG.appendChild(g);
+  });
+  svg.appendChild(topG);
+
+  // ── Bottom timeline (models) ──────────────────────────
+  const botG = ns('g', { class:'bot-timeline' });
+  botG.appendChild(ns('line', { x1:yearToX(2021.5), y1:botY, x2:xRight, y2:botY, stroke:'#3D2B1F', 'stroke-width':'2.5', 'marker-end':'url(#arr-timeline)' }));
+  botG.appendChild(ns('text', { x:yearToX(2021.5)-6, y:botY-8, 'text-anchor':'end', 'font-size':'13', 'font-weight':'700', fill:'#3D2B1F' }, 'Models'));
+  botG.appendChild(ns('text', { x:yearToX(2021.5)-6, y:botY+12, 'text-anchor':'end', 'font-size':'10', fill:'#94a3b8' }, 'Capability'));
+
+  const modelDots = {};
+  const modelLabels = {};
+
+  modelData.forEach(m => {
+    const x = yearToX(m.year);
+    const g = ns('g', { class:'model-year', 'data-year':m.year });
+
+    const dot = ns('circle', {
+      cx:x, cy:botY, r:'6',
+      fill: m.projected ? 'none' : '#3D2B1F',
+      stroke:'#3D2B1F', 'stroke-width': m.projected ? '1.5' : '0',
+      'stroke-dasharray': m.projected ? '3 2' : 'none', cursor:'pointer',
+    });
+    dot.style.transition = 'filter .2s';
+    g.appendChild(dot);
+    modelDots[m.year] = dot;
+
+    const nameEl = ns('text', {
+      x:x, y:botY+20, 'text-anchor':'middle',
+      'font-size':'11.5', 'font-weight':'600',
+      fill: m.projected ? '#94a3b8' : '#3D2B1F',
+    }, m.name);
+    nameEl.style.transition = 'fill .25s';
+    g.appendChild(nameEl);
+    modelLabels[m.year] = nameEl;
+
+    g.appendChild(ns('text', {
+      x:x, y:botY+34, 'text-anchor':'middle', 'font-size':'10', fill:'#94a3b8',
+    }, '' + m.year));
+
+    botG.appendChild(g);
+  });
+
+  // Off-chart year markers
+  [2029, 2030, 2031].forEach(yr => {
+    if (yearToX(yr) > xRight) return;
+    const x = yearToX(yr);
+    botG.appendChild(ns('circle', { cx:x, cy:botY, r:'3', fill:'none', stroke:'#cbd5e1', 'stroke-width':'1', 'stroke-dasharray':'2 2' }));
+    botG.appendChild(ns('text', { x:x, y:botY+20, 'text-anchor':'middle', 'font-size':'10', fill:'#cbd5e1' }, yr + '?'));
+    modelDots[yr] = botG.lastChild;
+  });
+  svg.appendChild(botG);
+
+  // ── Frontier arrows ───────────────────────────────────
+  const arrowsG = ns('g', { class:'frontier-arrows' });
+  svg.appendChild(arrowsG);
+
+  const frontierGroups = {};
+
+  capexData.forEach(capex => {
+    const sx = yearToX(capex.year);
+    const sy = topY + 10;
+
+    const fg = ns('g', { class:'frontier-group', 'data-capex':capex.year, opacity:'0' });
+    fg.style.transition = 'opacity .3s ease';
+
+    FRONTIERS.forEach((f, fi) => {
+      const targetYear = capex.year + f.offset;
+      const markerIds = ['arr-inf','arr-train','arr-res'];
+
+      let ex = yearToX(targetYear);
+      let ey = botY - 8;
+      let offChart = false;
+
+      if (ex > xRight - 15) {
+        ex = xRight - 10;
+        ey = botY - 25 + fi * 8;
+        offChart = true;
+      }
+
+      const dx = ex - sx, dy = ey - sy;
+      const cp1x = sx + dx * 0.06, cp1y = sy + dy * 0.55;
+      const cp2x = ex - dx * 0.12, cp2y = ey - dy * 0.18;
+
+      fg.appendChild(ns('path', {
+        d: 'M'+sx+','+sy+' C'+cp1x+','+cp1y+' '+cp2x+','+cp2y+' '+ex+','+ey,
+        stroke:f.color, 'stroke-width':'2.8', fill:'none',
+        'marker-end':'url(#'+markerIds[fi]+')', 'stroke-linecap':'round',
+      }));
+
+      if (offChart) {
+        fg.appendChild(ns('text', { x:ex+2, y:ey+4, 'font-size':'9', fill:f.color, opacity:'0.7' }, '\u2192'+targetYear));
+      }
+    });
+
+    arrowsG.appendChild(fg);
+    frontierGroups[capex.year] = fg;
+  });
+
+  // ── Lock ring ─────────────────────────────────────────
+  const lockRing = ns('circle', { r:'12', fill:'none', stroke:'#2D7A4F', 'stroke-width':'2', 'stroke-dasharray':'4 3', opacity:'0' });
+  lockRing.style.transition = 'opacity .2s';
+  svg.appendChild(lockRing);
+
+  // ── Interactivity ─────────────────────────────────────
+  let activeYear = null;
+  let locked = false;
+
+  function highlightCapex(year) {
+    if (activeYear === year) return;
+    activeYear = year;
+
+    Object.entries(frontierGroups).forEach(([yr, g]) => {
+      g.style.opacity = (+yr === year) ? '1' : '0';
+    });
+
+    Object.entries(capexDots).forEach(([yr, dot]) => {
+      if (+yr === year) {
+        dot.setAttribute('r', '9');
+        dot.style.filter = 'drop-shadow(0 0 6px rgba(45,122,79,0.4))';
+      } else {
+        dot.setAttribute('r', '7');
+        dot.style.filter = 'none';
+      }
+    });
+
+    Object.entries(capexBarGs).forEach(([yr, bar]) => {
+      const c = capexData.find(c => c.year === +yr);
+      bar.style.opacity = (+yr === year) ? (c.projected ? '0.5' : '0.8') : (c.projected ? '0.25' : '0.4');
+    });
+
+    const targets = FRONTIERS.map(f => year + f.offset);
+    Object.entries(modelDots).forEach(([yr, dot]) => {
+      if (targets.includes(+yr)) {
+        dot.style.filter = 'drop-shadow(0 0 5px rgba(0,0,0,0.25))';
+        if (modelLabels[+yr]) modelLabels[+yr].style.fill = '#1a202c';
+      } else {
+        dot.style.filter = 'none';
+        const m = modelData.find(m => m.year === +yr);
+        if (modelLabels[+yr]) modelLabels[+yr].style.fill = m && m.projected ? '#94a3b8' : '#3D2B1F';
+      }
+    });
+
+    updateInfoStrip(year);
+  }
+
+  function updateInfoStrip(year) {
+    const capex = capexData.find(c => c.year === year);
+    if (!capex) { resetInfoStrip(); return; }
+
+    let html = '<div class="info-content">';
+    html += '<div class="info-left">';
+    html += '<div class="info-title">' + capex.label + ' invested in ' + year + (capex.projected ? ' (est.)' : '') + '</div>';
+    if (capex.infra) html += '<div class="info-infra">\u26A1 ' + capex.infra + '</div>';
+    if (locked) html += '<div class="info-lock">\uD83D\uDD12 Locked &mdash; click dot or background to release</div>';
+    html += '</div>';
+
+    html += '<div class="info-right">';
+    FRONTIERS.forEach(f => {
+      const targetYear = year + f.offset;
+      const model = modelData.find(m => m.year === targetYear);
+      const desc = model ? model.detail + ' (' + targetYear + ')' : 'Models in ' + targetYear + '+';
+      html += '<div class="info-line"><div class="info-dot" style="background:' + f.color + '"></div><div><strong>' + f.label + '</strong> (~' + f.offset + 'yr) \u2192 ' + desc + '</div></div>';
+    });
+    html += '</div></div>';
+
+    infoStrip.innerHTML = html;
+  }
+
+  function resetInfoStrip() {
+    infoStrip.innerHTML = '<span class="info-hint">Hover or click any green investment dot to explore where the money goes</span>';
+  }
+
+  function clearHighlight() {
+    if (locked) return;
+    activeYear = null;
+    Object.values(frontierGroups).forEach(g => g.style.opacity = '0');
+    Object.values(capexDots).forEach(d => { d.setAttribute('r','7'); d.style.filter='none'; });
+    Object.entries(capexBarGs).forEach(([yr, bar]) => {
+      const c = capexData.find(c => c.year === +yr);
+      bar.style.opacity = c.projected ? '0.35' : '0.55';
+    });
+    Object.entries(modelDots).forEach(([yr, dot]) => {
+      dot.style.filter = 'none';
+      const m = modelData.find(m => m.year === +yr);
+      if (modelLabels[+yr]) modelLabels[+yr].style.fill = m && m.projected ? '#94a3b8' : '#3D2B1F';
+    });
+    lockRing.setAttribute('opacity', '0');
+    resetInfoStrip();
+  }
+
+  function showLockRing(year) {
+    const dot = capexDots[year];
+    if (!dot) return;
+    lockRing.setAttribute('cx', dot.getAttribute('cx'));
+    lockRing.setAttribute('cy', dot.getAttribute('cy'));
+    lockRing.setAttribute('opacity', '1');
+  }
+
+  function hideLockRing() {
+    lockRing.setAttribute('opacity', '0');
+  }
+
+  // Attach events to capex dots + bars
+  capexData.forEach(c => {
+    const dot = capexDots[c.year];
+
+    [dot, capexBarGs[c.year]].forEach(el => {
+      el.addEventListener('mouseenter', function() {
+        if (!locked) highlightCapex(c.year);
+      });
+      el.addEventListener('mouseleave', function() {
+        if (!locked) clearHighlight();
+      });
+      el.addEventListener('click', function(evt) {
+        evt.stopPropagation();
+        if (locked && activeYear === c.year) {
+          locked = false;
+          hideLockRing();
+          clearHighlight();
+          return;
+        } else {
+          locked = true;
+          highlightCapex(c.year);
+          showLockRing(c.year);
+          updateInfoStrip(c.year);
+        }
+      });
+    });
+  });
+
+  // Model dot hover (reverse lookup)
+  modelData.forEach(m => {
+    const dot = modelDots[m.year];
+    if (!dot) return;
+    dot.style.cursor = 'pointer';
+
+    dot.addEventListener('mouseenter', function() {
+      if (locked) return;
+      const infFrom = m.year - 2, trainFrom = m.year - 3, resFrom = m.year - 4;
+      let html = '<div class="info-content">';
+      html += '<div class="info-left">';
+      html += '<div class="info-title">' + m.detail + ' (' + m.year + ')</div>';
+      html += '<div class="info-infra">' + m.sub + '</div>';
+      html += '</div><div class="info-right">';
+
+      [{ label:'Inference from', year:infFrom, color:'#E05A33' },
+       { label:'Trained on', year:trainFrom, color:'#7C6DD8' },
+       { label:'Research from', year:resFrom, color:'#0EA5C9' }].forEach(s => {
+        const cap = capexData.find(c => c.year === s.year);
+        const desc = cap ? cap.label + ' capex (' + s.year + ')' : s.year + ' capex';
+        html += '<div class="info-line"><div class="info-dot" style="background:' + s.color + '"></div><div><strong>' + s.label + ':</strong> ' + desc + '</div></div>';
+      });
+      html += '</div></div>';
+      infoStrip.innerHTML = html;
+    });
+
+    dot.addEventListener('mouseleave', function() {
+      if (!locked) {
+        if (activeYear) updateInfoStrip(activeYear);
+        else resetInfoStrip();
+      }
+    });
+  });
+
+  // Click empty space to unlock
+  svg.addEventListener('click', function(evt) {
+    if (evt.target === svg || (evt.target.tagName === 'rect' && !evt.target.closest('.capex-year'))) {
+      locked = false;
+      hideLockRing();
+      clearHighlight();
+    }
+  });
+
+  // ── Initialize ────────────────────────────────────────
+  resetInfoStrip();
+
+})();
+</script>
+</body>
+</html>
