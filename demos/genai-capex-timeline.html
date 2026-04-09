@@ -92,7 +92,7 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
 
   <!-- Chart -->
   <div class="chart-wrap">
-    <svg id="chart" viewBox="0 0 1100 510" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="chart" viewBox="0 0 1100 540" preserveAspectRatio="xMidYMid meet"></svg>
 
     <div class="info-strip" id="info-strip">
       <span class="info-hint">Hover or click any green investment dot to explore where the money goes</span>
@@ -132,7 +132,7 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
     { year:2025, name:'Opus 4',     detail:'GPT-4.5 \u00B7 Grok 3 \u00B7 Claude Opus 4', sub:'~2\u20135T MoE', params:3500, confidence:'Estimated' },
     { year:2026, name:'Opus 4.6',   detail:'GPT-5.2 \u00B7 Claude Opus 4.6 \u00B7 Gemini 3', sub:'~2\u20135T', params:3500, confidence:'Estimated' },
     { year:2027, name:'Mythos?',    detail:'Mythos \u00B7 next-gen frontier',             sub:'~10\u201320T', params:15000, projected:true, confidence:'Projected' },
-    { year:2028, name:'From $700B', detail:'Models from $700B spend',                     sub:'Architecture unknown', params:null, projected:true, confidence:'Unknown' },
+    { year:2028, name:'From $700B', detail:'Models from $700B spend',                     sub:'~10\u201320T+ (est.)', params:15000, projected:true, confidence:'Projected' },
   ];
 
   const FRONTIERS = [
@@ -150,8 +150,8 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
   ];
 
   // ── Layout ────────────────────────────────────────────
-  const W = 1100, H = 510;
-  const topY = 180, botY = 430;
+  const W = 1100, H = 540;
+  const topY = 180, botY = 440;
   const barMaxH = 140, maxCapex = 950, barW = 28;
   const xLeft = 105, xRight = 1055;
   const yearMin = 2019.5, yearMax = 2029.5;
@@ -160,12 +160,13 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
     return xLeft + ((yr - yearMin) / (yearMax - yearMin)) * (xRight - xLeft);
   }
 
-  // Model dot radius from params (log scale)
+  // Model dot radius from params (log scale, generous base)
+  // 175B → r=16 (starting big), 15T → r=40
   function paramRadius(params) {
-    if (!params) return 5;
+    if (!params) return 8;
     var logMin = Math.log10(175), logMax = Math.log10(15000);
     var t = (Math.log10(params) - logMin) / (logMax - logMin);
-    return 5 + Math.max(0, Math.min(1, t)) * 16;
+    return 16 + Math.max(0, Math.min(1, t)) * 24;
   }
 
   // ── SVG helpers ───────────────────────────────────────
@@ -288,7 +289,7 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
       if (m.year === 2027) pLabel = '~15T';
       g.appendChild(ns('text', {
         x:x, y:botY+4, 'text-anchor':'middle',
-        'font-size': r > 10 ? '8' : '7', 'font-weight':'600',
+        'font-size': r > 25 ? '11' : '9', 'font-weight':'600',
         fill: m.projected ? '#3D2B1F' : '#fff',
       }, pLabel));
     }
