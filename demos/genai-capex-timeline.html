@@ -85,14 +85,14 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
       </div>
     </div>
     <div class="thesis-card thesis-full">
-      <div class="card-label">From dollar to model: 2.5&ndash;4+ years</div>
-      <div class="card-text">Building a datacenter takes 12&ndash;24 months. Procuring enough chips takes 6&ndash;12 months. Training a frontier model takes 6&ndash;12 months. Post-training and safety adds 3&ndash;6 months. Each year&rsquo;s capex splits into three bets: <strong style="color:#E05A33">inference capacity</strong> arriving in ~2&nbsp;years, <strong style="color:#7C6DD8">training runs</strong> for models ~3&nbsp;years out, and <strong style="color:#0EA5C9">research compute</strong> powering breakthroughs 4+&nbsp;years away.</div>
+      <div class="card-label">From dollar to model: 2.5&ndash;4+ years &mdash; in ~2-year staircases</div>
+      <div class="card-text">Building a datacenter takes 12&ndash;24 months. Procuring chips takes 6&ndash;12 months. Training takes 6&ndash;12 months. Post-training and safety adds 3&ndash;6 months. Each year&rsquo;s capex splits into three bets: <strong style="color:#E05A33">inference capacity</strong> arriving in ~2&nbsp;years, <strong style="color:#7C6DD8">training runs</strong> for models ~3&nbsp;years out, and <strong style="color:#0EA5C9">research compute</strong> powering breakthroughs 4+&nbsp;years away. Progress follows a <em>staircase</em> pattern: a big capability jump every ~2&nbsp;years, then refinement within that generation (GPT-4 &rarr; 4&nbsp;Turbo &rarr; 4o, or Claude&nbsp;3 Opus &rarr; 3.5 Sonnet &rarr; Opus&nbsp;4.6).</div>
     </div>
   </div>
 
   <!-- Chart -->
   <div class="chart-wrap">
-    <svg id="chart" viewBox="0 0 1100 430" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="chart" viewBox="0 0 1100 510" preserveAspectRatio="xMidYMid meet"></svg>
 
     <div class="info-strip" id="info-strip">
       <span class="info-hint">Hover or click any green investment dot to explore where the money goes</span>
@@ -124,14 +124,15 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
     { year:2027, amount:900, label:'$900B', projected:true, infra:'TMI restart \u00B7 multi-GW sites' },
   ];
 
+  // params in billions (B). Used for dot sizing on the model timeline.
   const modelData = [
-    { year:2022, name:'ChatGPT',      detail:'ChatGPT / GPT-3.5',                    sub:'~10\u00B2\u2074 FLOPs' },
-    { year:2023, name:'GPT-4',        detail:'GPT-4 \u00B7 Claude 2 \u00B7 Llama 2', sub:'2\u00D710\u00B2\u2075 FLOPs' },
-    { year:2024, name:'GPT-4o',       detail:'GPT-4o \u00B7 Claude 3.5 \u00B7 Gemini 1.5', sub:'3\u20135\u00D710\u00B2\u2075 FLOPs' },
-    { year:2025, name:'Opus 4',       detail:'GPT-4.5 \u00B7 Grok 3 \u00B7 Claude Opus 4', sub:'~10\u00B2\u2076 FLOPs' },
-    { year:2026, name:'Claude 4.6',   detail:'GPT-5.2 \u00B7 Claude 4.6 \u00B7 Gemini 3', sub:'Reasoning-first era' },
-    { year:2027, name:'From $416B',   detail:'Models from $416B spend', sub:'Training paradigms TBD', projected:true },
-    { year:2028, name:'From $700B',   detail:'Models from $700B spend', sub:'Architectures not yet designed', projected:true },
+    { year:2022, name:'ChatGPT',    detail:'ChatGPT / GPT-3.5',                          sub:'~175B dense', params:175, confidence:'Confirmed' },
+    { year:2023, name:'GPT-4',      detail:'GPT-4 \u00B7 Claude 2 \u00B7 Llama 2',      sub:'~1.8T MoE (280B active)', params:1800, confidence:'Leaked' },
+    { year:2024, name:'GPT-4o',     detail:'GPT-4o \u00B7 Claude 3.5 \u00B7 Gemini 1.5', sub:'~1\u20132T MoE', params:1500, confidence:'Estimated' },
+    { year:2025, name:'Opus 4',     detail:'GPT-4.5 \u00B7 Grok 3 \u00B7 Claude Opus 4', sub:'~2\u20135T MoE', params:3500, confidence:'Estimated' },
+    { year:2026, name:'Opus 4.6',   detail:'GPT-5.2 \u00B7 Claude Opus 4.6 \u00B7 Gemini 3', sub:'~2\u20135T', params:3500, confidence:'Estimated' },
+    { year:2027, name:'Mythos?',    detail:'Mythos \u00B7 next-gen frontier',             sub:'~10\u201320T', params:15000, projected:true, confidence:'Projected' },
+    { year:2028, name:'From $700B', detail:'Models from $700B spend',                     sub:'Architecture unknown', params:null, projected:true, confidence:'Unknown' },
   ];
 
   const FRONTIERS = [
@@ -140,15 +141,31 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
     { key:'research',  color:'#0EA5C9', offset:4, label:'Research' },
   ];
 
+  // ~2-year generation staircases
+  const CYCLES = [
+    { start:2020, end:2022, label:'GPT-3 gen \u00B7 ~175B', color:'#ddd5c4' },
+    { start:2023, end:2024, label:'GPT-4 gen \u00B7 ~1\u20132T', color:'#d5c4dd' },
+    { start:2025, end:2026, label:'Opus gen \u00B7 ~2\u20135T', color:'#c4ddd5' },
+    { start:2027, end:2028, label:'Next gen \u00B7 ~10\u201320T?', color:'#c4d5dd' },
+  ];
+
   // ── Layout ────────────────────────────────────────────
-  const W = 1100, H = 430;
-  const topY = 120, botY = 360;
-  const barMaxH = 75, maxCapex = 950, barW = 26;
+  const W = 1100, H = 510;
+  const topY = 180, botY = 430;
+  const barMaxH = 140, maxCapex = 950, barW = 28;
   const xLeft = 105, xRight = 1055;
   const yearMin = 2019.5, yearMax = 2029.5;
 
   function yearToX(yr) {
     return xLeft + ((yr - yearMin) / (yearMax - yearMin)) * (xRight - xLeft);
+  }
+
+  // Model dot radius from params (log scale)
+  function paramRadius(params) {
+    if (!params) return 5;
+    var logMin = Math.log10(175), logMax = Math.log10(15000);
+    var t = (Math.log10(params) - logMin) / (logMax - logMin);
+    return 5 + Math.max(0, Math.min(1, t)) * 16;
   }
 
   // ── SVG helpers ───────────────────────────────────────
@@ -176,10 +193,18 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
   addMarker('arr-res',  '#0EA5C9');
   svg.appendChild(defs);
 
-  // ── Projected zone ────────────────────────────────────
-  const projX = yearToX(2025.5);
-  svg.appendChild(ns('rect', { x:projX, y:12, width:xRight-projX+20, height:H-24, rx:10, fill:'#e8edf3', opacity:'0.5' }));
-  svg.appendChild(ns('text', { x:xRight+5, y:28, 'text-anchor':'end', 'font-size':'10', 'font-style':'italic', fill:'#94a3b8' }, 'Projected / guidance'));
+  // ── 2-year cycle bands (background) ───────────────────
+  CYCLES.forEach(function(c) {
+    var x1 = yearToX(c.start - 0.4);
+    var x2 = yearToX(c.end + 0.4);
+    svg.appendChild(ns('rect', { x:x1, y:10, width:x2-x1, height:H-20, rx:8, fill:c.color, opacity:'0.25' }));
+    svg.appendChild(ns('text', { x:(x1+x2)/2, y:H-6, 'text-anchor':'middle', 'font-size':'9', fill:'#94a3b8', 'font-style':'italic' }, c.label));
+  });
+
+  // ── Projected zone overlay ────────────────────────────
+  var projX = yearToX(2025.5);
+  svg.appendChild(ns('line', { x1:projX, y1:14, x2:projX, y2:H-14, stroke:'#b0b8c4', 'stroke-width':'1', 'stroke-dasharray':'4 4', opacity:'0.5' }));
+  svg.appendChild(ns('text', { x:projX+6, y:26, 'font-size':'10', 'font-style':'italic', fill:'#94a3b8' }, 'Projected \u2192'));
 
   // ── Top timeline (capex) ──────────────────────────────
   const topG = ns('g', { class:'top-timeline' });
@@ -190,12 +215,12 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
   const capexDots = {};
   const capexBarGs = {};
 
-  capexData.forEach(c => {
-    const x = yearToX(c.year);
-    const h = (c.amount / maxCapex) * barMaxH;
-    const g = ns('g', { class:'capex-year', 'data-year':c.year });
+  capexData.forEach(function(c) {
+    var x = yearToX(c.year);
+    var h = (c.amount / maxCapex) * barMaxH;
+    var g = ns('g', { class:'capex-year', 'data-year':c.year });
 
-    const bar = ns('rect', {
+    var bar = ns('rect', {
       x: x - barW/2, y: topY - h, width: barW, height: h, rx:'4',
       fill: c.projected ? 'none' : '#2D7A4F',
       stroke: c.projected ? '#2D7A4F' : 'none',
@@ -213,13 +238,13 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
       fill:'#2D7A4F', opacity: c.projected ? '0.5' : '1',
     }, c.label));
 
-    const yrLabel = c.year >= 2026 ? c.year + 'E' : '' + c.year;
+    var yrLabel = c.year >= 2026 ? c.year + 'E' : '' + c.year;
     g.appendChild(ns('text', {
       x:x, y:topY+18, 'text-anchor':'middle',
       'font-size':'11', fill:'#94a3b8', 'font-family':"'Inter',monospace",
     }, yrLabel));
 
-    const dot = ns('circle', {
+    var dot = ns('circle', {
       cx:x, cy:topY, r:'7', fill:'#2D7A4F', stroke:'#fff', 'stroke-width':'2.5', cursor:'pointer',
     });
     dot.style.transition = 'filter .2s';
@@ -230,7 +255,7 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
   });
   svg.appendChild(topG);
 
-  // ── Bottom timeline (models) ──────────────────────────
+  // ── Bottom timeline (models) — dot size = estimated params ──
   const botG = ns('g', { class:'bot-timeline' });
   botG.appendChild(ns('line', { x1:yearToX(2021.5), y1:botY, x2:xRight, y2:botY, stroke:'#3D2B1F', 'stroke-width':'2.5', 'marker-end':'url(#arr-timeline)' }));
   botG.appendChild(ns('text', { x:yearToX(2021.5)-6, y:botY-8, 'text-anchor':'end', 'font-size':'13', 'font-weight':'700', fill:'#3D2B1F' }, 'Models'));
@@ -239,23 +264,38 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
   const modelDots = {};
   const modelLabels = {};
 
-  modelData.forEach(m => {
-    const x = yearToX(m.year);
-    const g = ns('g', { class:'model-year', 'data-year':m.year });
+  modelData.forEach(function(m) {
+    var x = yearToX(m.year);
+    var r = paramRadius(m.params);
+    var g = ns('g', { class:'model-year', 'data-year':m.year });
 
-    const dot = ns('circle', {
-      cx:x, cy:botY, r:'6',
+    var dot = ns('circle', {
+      cx:x, cy:botY, r:r,
       fill: m.projected ? 'none' : '#3D2B1F',
       stroke:'#3D2B1F', 'stroke-width': m.projected ? '1.5' : '0',
       'stroke-dasharray': m.projected ? '3 2' : 'none', cursor:'pointer',
+      opacity: m.projected ? '0.5' : '0.75',
     });
     dot.style.transition = 'filter .2s';
     g.appendChild(dot);
     modelDots[m.year] = dot;
 
-    const nameEl = ns('text', {
-      x:x, y:botY+20, 'text-anchor':'middle',
-      'font-size':'11.5', 'font-weight':'600',
+    // Param label inside/near dot
+    if (m.params) {
+      var pLabel = m.params >= 1000 ? (m.params/1000)+'T' : m.params+'B';
+      if (m.year === 2024) pLabel = '~1.5T';
+      if (m.year === 2025 || m.year === 2026) pLabel = '~3.5T';
+      if (m.year === 2027) pLabel = '~15T';
+      g.appendChild(ns('text', {
+        x:x, y:botY+4, 'text-anchor':'middle',
+        'font-size': r > 10 ? '8' : '7', 'font-weight':'600',
+        fill: m.projected ? '#3D2B1F' : '#fff',
+      }, pLabel));
+    }
+
+    var nameEl = ns('text', {
+      x:x, y:botY+r+14, 'text-anchor':'middle',
+      'font-size':'11', 'font-weight':'600',
       fill: m.projected ? '#94a3b8' : '#3D2B1F',
     }, m.name);
     nameEl.style.transition = 'fill .25s';
@@ -263,16 +303,16 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
     modelLabels[m.year] = nameEl;
 
     g.appendChild(ns('text', {
-      x:x, y:botY+34, 'text-anchor':'middle', 'font-size':'10', fill:'#94a3b8',
+      x:x, y:botY+r+27, 'text-anchor':'middle', 'font-size':'10', fill:'#94a3b8',
     }, '' + m.year));
 
     botG.appendChild(g);
   });
 
   // Off-chart year markers
-  [2029, 2030, 2031].forEach(yr => {
+  [2029, 2030, 2031].forEach(function(yr) {
     if (yearToX(yr) > xRight) return;
-    const x = yearToX(yr);
+    var x = yearToX(yr);
     botG.appendChild(ns('circle', { cx:x, cy:botY, r:'3', fill:'none', stroke:'#cbd5e1', 'stroke-width':'1', 'stroke-dasharray':'2 2' }));
     botG.appendChild(ns('text', { x:x, y:botY+20, 'text-anchor':'middle', 'font-size':'10', fill:'#cbd5e1' }, yr + '?'));
     modelDots[yr] = botG.lastChild;
@@ -285,20 +325,22 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
 
   const frontierGroups = {};
 
-  capexData.forEach(capex => {
-    const sx = yearToX(capex.year);
-    const sy = topY + 10;
+  capexData.forEach(function(capex) {
+    var sx = yearToX(capex.year);
+    var sy = topY + 10;
 
-    const fg = ns('g', { class:'frontier-group', 'data-capex':capex.year, opacity:'0' });
+    var fg = ns('g', { class:'frontier-group', 'data-capex':capex.year, opacity:'0' });
     fg.style.transition = 'opacity .3s ease';
 
-    FRONTIERS.forEach((f, fi) => {
-      const targetYear = capex.year + f.offset;
-      const markerIds = ['arr-inf','arr-train','arr-res'];
+    FRONTIERS.forEach(function(f, fi) {
+      var targetYear = capex.year + f.offset;
+      var markerIds = ['arr-inf','arr-train','arr-res'];
+      var targetModel = modelData.find(function(m){ return m.year === targetYear; });
+      var targetR = targetModel ? paramRadius(targetModel.params) : 5;
 
-      let ex = yearToX(targetYear);
-      let ey = botY - 8;
-      let offChart = false;
+      var ex = yearToX(targetYear);
+      var ey = botY - targetR - 2;
+      var offChart = false;
 
       if (ex > xRight - 15) {
         ex = xRight - 10;
@@ -306,9 +348,9 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
         offChart = true;
       }
 
-      const dx = ex - sx, dy = ey - sy;
-      const cp1x = sx + dx * 0.06, cp1y = sy + dy * 0.55;
-      const cp2x = ex - dx * 0.12, cp2y = ey - dy * 0.18;
+      var dx = ex - sx, dy = ey - sy;
+      var cp1x = sx + dx * 0.06, cp1y = sy + dy * 0.55;
+      var cp2x = ex - dx * 0.12, cp2y = ey - dy * 0.18;
 
       fg.appendChild(ns('path', {
         d: 'M'+sx+','+sy+' C'+cp1x+','+cp1y+' '+cp2x+','+cp2y+' '+ex+','+ey,
@@ -331,41 +373,41 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
   svg.appendChild(lockRing);
 
   // ── Interactivity ─────────────────────────────────────
-  let activeYear = null;
-  let locked = false;
+  var activeYear = null;
+  var locked = false;
 
   function highlightCapex(year) {
     if (activeYear === year) return;
     activeYear = year;
 
-    Object.entries(frontierGroups).forEach(([yr, g]) => {
-      g.style.opacity = (+yr === year) ? '1' : '0';
+    Object.entries(frontierGroups).forEach(function(e) {
+      e[1].style.opacity = (+e[0] === year) ? '1' : '0';
     });
 
-    Object.entries(capexDots).forEach(([yr, dot]) => {
-      if (+yr === year) {
-        dot.setAttribute('r', '9');
-        dot.style.filter = 'drop-shadow(0 0 6px rgba(45,122,79,0.4))';
+    Object.entries(capexDots).forEach(function(e) {
+      if (+e[0] === year) {
+        e[1].setAttribute('r', '9');
+        e[1].style.filter = 'drop-shadow(0 0 6px rgba(45,122,79,0.4))';
       } else {
-        dot.setAttribute('r', '7');
-        dot.style.filter = 'none';
+        e[1].setAttribute('r', '7');
+        e[1].style.filter = 'none';
       }
     });
 
-    Object.entries(capexBarGs).forEach(([yr, bar]) => {
-      const c = capexData.find(c => c.year === +yr);
-      bar.style.opacity = (+yr === year) ? (c.projected ? '0.5' : '0.8') : (c.projected ? '0.25' : '0.4');
+    Object.entries(capexBarGs).forEach(function(e) {
+      var c = capexData.find(function(c){ return c.year === +e[0]; });
+      e[1].style.opacity = (+e[0] === year) ? (c.projected ? '0.5' : '0.8') : (c.projected ? '0.25' : '0.4');
     });
 
-    const targets = FRONTIERS.map(f => year + f.offset);
-    Object.entries(modelDots).forEach(([yr, dot]) => {
-      if (targets.includes(+yr)) {
-        dot.style.filter = 'drop-shadow(0 0 5px rgba(0,0,0,0.25))';
-        if (modelLabels[+yr]) modelLabels[+yr].style.fill = '#1a202c';
+    var targets = FRONTIERS.map(function(f){ return year + f.offset; });
+    Object.entries(modelDots).forEach(function(e) {
+      if (targets.includes(+e[0])) {
+        e[1].style.filter = 'drop-shadow(0 0 5px rgba(0,0,0,0.25))';
+        if (modelLabels[+e[0]]) modelLabels[+e[0]].style.fill = '#1a202c';
       } else {
-        dot.style.filter = 'none';
-        const m = modelData.find(m => m.year === +yr);
-        if (modelLabels[+yr]) modelLabels[+yr].style.fill = m && m.projected ? '#94a3b8' : '#3D2B1F';
+        e[1].style.filter = 'none';
+        var m = modelData.find(function(m){ return m.year === +e[0]; });
+        if (modelLabels[+e[0]]) modelLabels[+e[0]].style.fill = m && m.projected ? '#94a3b8' : '#3D2B1F';
       }
     });
 
@@ -373,21 +415,22 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
   }
 
   function updateInfoStrip(year) {
-    const capex = capexData.find(c => c.year === year);
+    var capex = capexData.find(function(c){ return c.year === year; });
     if (!capex) { resetInfoStrip(); return; }
 
-    let html = '<div class="info-content">';
+    var html = '<div class="info-content">';
     html += '<div class="info-left">';
     html += '<div class="info-title">' + capex.label + ' invested in ' + year + (capex.projected ? ' (est.)' : '') + '</div>';
     if (capex.infra) html += '<div class="info-infra">\u26A1 ' + capex.infra + '</div>';
-    if (locked) html += '<div class="info-lock">\uD83D\uDD12 Locked &mdash; click dot or background to release</div>';
+    if (locked) html += '<div class="info-lock">\uD83D\uDD12 Locked \u2014 click dot or background to release</div>';
     html += '</div>';
 
     html += '<div class="info-right">';
-    FRONTIERS.forEach(f => {
-      const targetYear = year + f.offset;
-      const model = modelData.find(m => m.year === targetYear);
-      const desc = model ? model.detail + ' (' + targetYear + ')' : 'Models in ' + targetYear + '+';
+    FRONTIERS.forEach(function(f) {
+      var targetYear = year + f.offset;
+      var model = modelData.find(function(m){ return m.year === targetYear; });
+      var desc = model ? model.detail + ' (' + targetYear + ')' : 'Models in ' + targetYear + '+';
+      if (model && model.sub) desc += ' \u2014 ' + model.sub;
       html += '<div class="info-line"><div class="info-dot" style="background:' + f.color + '"></div><div><strong>' + f.label + '</strong> (~' + f.offset + 'yr) \u2192 ' + desc + '</div></div>';
     });
     html += '</div></div>';
@@ -396,87 +439,74 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
   }
 
   function resetInfoStrip() {
-    infoStrip.innerHTML = '<span class="info-hint">Hover or click any green investment dot to explore where the money goes</span>';
+    infoStrip.innerHTML = '<span class="info-hint">Hover or click any green investment dot to explore where the money goes. Dot size on the model timeline = estimated SOTA model size.</span>';
   }
 
   function clearHighlight() {
     if (locked) return;
     activeYear = null;
-    Object.values(frontierGroups).forEach(g => g.style.opacity = '0');
-    Object.values(capexDots).forEach(d => { d.setAttribute('r','7'); d.style.filter='none'; });
-    Object.entries(capexBarGs).forEach(([yr, bar]) => {
-      const c = capexData.find(c => c.year === +yr);
-      bar.style.opacity = c.projected ? '0.35' : '0.55';
+    Object.values(frontierGroups).forEach(function(g){ g.style.opacity = '0'; });
+    Object.values(capexDots).forEach(function(d){ d.setAttribute('r','7'); d.style.filter='none'; });
+    Object.entries(capexBarGs).forEach(function(e) {
+      var c = capexData.find(function(c){ return c.year === +e[0]; });
+      e[1].style.opacity = c.projected ? '0.35' : '0.55';
     });
-    Object.entries(modelDots).forEach(([yr, dot]) => {
-      dot.style.filter = 'none';
-      const m = modelData.find(m => m.year === +yr);
-      if (modelLabels[+yr]) modelLabels[+yr].style.fill = m && m.projected ? '#94a3b8' : '#3D2B1F';
+    Object.entries(modelDots).forEach(function(e) {
+      e[1].style.filter = 'none';
+      var m = modelData.find(function(m){ return m.year === +e[0]; });
+      if (modelLabels[+e[0]]) modelLabels[+e[0]].style.fill = m && m.projected ? '#94a3b8' : '#3D2B1F';
     });
     lockRing.setAttribute('opacity', '0');
     resetInfoStrip();
   }
 
   function showLockRing(year) {
-    const dot = capexDots[year];
+    var dot = capexDots[year];
     if (!dot) return;
     lockRing.setAttribute('cx', dot.getAttribute('cx'));
     lockRing.setAttribute('cy', dot.getAttribute('cy'));
     lockRing.setAttribute('opacity', '1');
   }
 
-  function hideLockRing() {
-    lockRing.setAttribute('opacity', '0');
-  }
+  function hideLockRing() { lockRing.setAttribute('opacity', '0'); }
 
   // Attach events to capex dots + bars
-  capexData.forEach(c => {
-    const dot = capexDots[c.year];
-
-    [dot, capexBarGs[c.year]].forEach(el => {
-      el.addEventListener('mouseenter', function() {
-        if (!locked) highlightCapex(c.year);
-      });
-      el.addEventListener('mouseleave', function() {
-        if (!locked) clearHighlight();
-      });
+  capexData.forEach(function(c) {
+    var dot = capexDots[c.year];
+    [dot, capexBarGs[c.year]].forEach(function(el) {
+      el.addEventListener('mouseenter', function() { if (!locked) highlightCapex(c.year); });
+      el.addEventListener('mouseleave', function() { if (!locked) clearHighlight(); });
       el.addEventListener('click', function(evt) {
         evt.stopPropagation();
         if (locked && activeYear === c.year) {
-          locked = false;
-          hideLockRing();
-          clearHighlight();
-          return;
+          locked = false; hideLockRing(); clearHighlight(); return;
         } else {
-          locked = true;
-          highlightCapex(c.year);
-          showLockRing(c.year);
-          updateInfoStrip(c.year);
+          locked = true; highlightCapex(c.year); showLockRing(c.year); updateInfoStrip(c.year);
         }
       });
     });
   });
 
   // Model dot hover (reverse lookup)
-  modelData.forEach(m => {
-    const dot = modelDots[m.year];
+  modelData.forEach(function(m) {
+    var dot = modelDots[m.year];
     if (!dot) return;
     dot.style.cursor = 'pointer';
 
     dot.addEventListener('mouseenter', function() {
       if (locked) return;
-      const infFrom = m.year - 2, trainFrom = m.year - 3, resFrom = m.year - 4;
-      let html = '<div class="info-content">';
+      var infFrom = m.year - 2, trainFrom = m.year - 3, resFrom = m.year - 4;
+      var html = '<div class="info-content">';
       html += '<div class="info-left">';
       html += '<div class="info-title">' + m.detail + ' (' + m.year + ')</div>';
-      html += '<div class="info-infra">' + m.sub + '</div>';
+      html += '<div class="info-infra">' + m.sub + ' \u00B7 ' + m.confidence + '</div>';
       html += '</div><div class="info-right">';
 
       [{ label:'Inference from', year:infFrom, color:'#E05A33' },
        { label:'Trained on', year:trainFrom, color:'#7C6DD8' },
-       { label:'Research from', year:resFrom, color:'#0EA5C9' }].forEach(s => {
-        const cap = capexData.find(c => c.year === s.year);
-        const desc = cap ? cap.label + ' capex (' + s.year + ')' : s.year + ' capex';
+       { label:'Research from', year:resFrom, color:'#0EA5C9' }].forEach(function(s) {
+        var cap = capexData.find(function(c){ return c.year === s.year; });
+        var desc = cap ? cap.label + ' capex (' + s.year + ')' : s.year + ' capex';
         html += '<div class="info-line"><div class="info-dot" style="background:' + s.color + '"></div><div><strong>' + s.label + ':</strong> ' + desc + '</div></div>';
       });
       html += '</div></div>';
@@ -484,19 +514,14 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
     });
 
     dot.addEventListener('mouseleave', function() {
-      if (!locked) {
-        if (activeYear) updateInfoStrip(activeYear);
-        else resetInfoStrip();
-      }
+      if (!locked) { if (activeYear) updateInfoStrip(activeYear); else resetInfoStrip(); }
     });
   });
 
   // Click empty space to unlock
   svg.addEventListener('click', function(evt) {
     if (evt.target === svg || (evt.target.tagName === 'rect' && !evt.target.closest('.capex-year'))) {
-      locked = false;
-      hideLockRing();
-      clearHighlight();
+      locked = false; hideLockRing(); clearHighlight();
     }
   });
 
