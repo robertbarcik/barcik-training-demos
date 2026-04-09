@@ -272,10 +272,11 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
 
     var dot = ns('circle', {
       cx:x, cy:botY, r:r,
-      fill: m.projected ? 'none' : '#3D2B1F',
-      stroke:'#3D2B1F', 'stroke-width': m.projected ? '1.5' : '0',
-      'stroke-dasharray': m.projected ? '3 2' : 'none', cursor:'pointer',
-      opacity: m.projected ? '0.5' : '0.75',
+      fill: '#3D2B1F',
+      stroke: m.projected ? '#fff' : 'none',
+      'stroke-width': m.projected ? '2' : '0',
+      'stroke-dasharray': m.projected ? '5 3' : 'none', cursor:'pointer',
+      opacity: m.projected ? '0.45' : '0.75',
     });
     dot.style.transition = 'filter .2s';
     g.appendChild(dot);
@@ -286,11 +287,11 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
       var pLabel = m.params >= 1000 ? (m.params/1000)+'T' : m.params+'B';
       if (m.year === 2024) pLabel = '~1.5T';
       if (m.year === 2025 || m.year === 2026) pLabel = '~3.5T';
-      if (m.year === 2027) pLabel = '~15T';
+      if (m.year === 2027 || m.year === 2028) pLabel = '~15T';
       g.appendChild(ns('text', {
         x:x, y:botY+4, 'text-anchor':'middle',
         'font-size': r > 25 ? '11' : '9', 'font-weight':'600',
-        fill: m.projected ? '#3D2B1F' : '#fff',
+        fill: '#fff',
       }, pLabel));
     }
 
