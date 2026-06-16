@@ -394,16 +394,20 @@
   function spawnDrip(side, geo) {
     const inset = geo.w * 0.10;
     const baseX = side < 0 ? geo.cx - geo.w / 2 + inset : geo.cx + geo.w / 2 - inset;
+    const s = geo.scale;
     drips.push({
       x: baseX + (Math.random() - 0.5) * geo.w * 0.12,
-      off: 0,                                      // bead distance below the rim — only ever grows
-      vel: (16 + Math.random() * 15) * geo.scale,  // initial flow speed (px/s), accelerates under gravity
-      seg: (24 + Math.random() * 16) * geo.scale,  // length of the bright bead+tail (opacity taper, not geometry)
-      w: (3.0 + Math.random() * 2.4) * geo.scale,
+      y: geo.topY,                               // ABSOLUTE bead-centre Y; born at the hot rim
+      heat: 1,                                   // 1 = fully molten/mobile → 0 = cooled & set
+      maxVel: (45 + Math.random() * 30) * s,     // px/s at full heat; speed ∝ heat → eases to a stop
+      coolMs: 1000 + Math.random() * 800,        // time to cool down and stop
+      r: (3.6 + Math.random() * 2.2) * s,        // bump radius
+      seg: (16 + Math.random() * 14) * s,        // length of the thin trailing dribble
+      w: (2.6 + Math.random() * 1.8) * s,        // dribble width
       age: 0,
-      ttl: 1500 + Math.random() * 1100,            // lifetime (ms)
+      solid: false,                              // becomes a static bump once cooled
     });
-    if (drips.length > 14) drips.shift();
+    if (drips.length > 8) drips.shift();
   }
 
   // ───────────────────────── Geometry ─────────────────────────
@@ -554,8 +558,8 @@
   function drawRim(geo, t, lit = 1, cool = 0) {
     const { cx, w, topY, scale } = geo;
     ctx.save();
-    const rimW = w * 0.52;
-    const rimH = 9 * scale;
+    const rimW = w * 0.40;   // molten well sits INSIDE the candle width (was 0.52 → overhung the walls)
+    const rimH = 8 * scale;
 
     // pool body — interpolates from hot molten wax to a cool, settled, matte surface
     const c0 = [lerp(255, 196, cool), lerp(243, 210, cool), lerp(214, 224, cool)]; // centre
@@ -607,43 +611,64 @@
 
   function drawDrips(geo, cool = 0) {
     const { scale, topY, baseY } = geo;
-    const settle = 1 - cool;          // all drips fade as the candle settles
+    const settle = 1 - cool;          // bumps fade out as the candle settles at the very end
     if (settle <= 0.02) return;
+    const rim = topY;
+    const lit = 1 - state.snuff;
     for (const d of drips) {
-      const rim = topY;
-      const tip = rim + d.off;          // strictly non-decreasing in Y → never moves up, never stalls
-      const bottom = Math.min(tip, baseY);
-      const top = rim;                  // streak is ALWAYS anchored to the rim (no detached floating blob)
-      const len = bottom - top;
-      if (len < d.w * 0.4) continue;
-      // fade in at birth, out near end of life, and as the bead melts into the base
-      const lifeFade = Math.min(d.age / 150, 1) * Math.max(0, Math.min((d.ttl - d.age) / 600, 1));
-      const baseFade = Math.max(0, Math.min(1, 1 - (tip - bottom) / (28 * scale)));
-      const a = settle * lifeFade * baseFade;
+      const by = Math.min(d.y, baseY);          // bump centre (absolute)
+      if (rim >= by + d.r) continue;            // fully absorbed (also removed in update)
+      // dissolve smoothly as the rim passes through the bump; quick fade-in at birth
+      const absorbFade = Math.max(0, Math.min(1, (d.y + d.r - rim) / (2 * d.r)));
+      const a = settle * absorbFade * Math.min(d.age / 160, 1);
       if (a <= 0.02) continue;
+      // dribble: faintly connected to the rim while flowing → short tail once it's a static bump
+      const tailTop = d.solid ? Math.max(rim, by - d.seg) : rim;
+      const len = by - tailTop;
       ctx.save();
-      // streak: transparent at the rim, ramping to opaque at the bead, so it reads as a
-      // running bead with a short tail connected to the lip (never a free-floating lozenge).
-      const f = len > 0 ? Math.max(0, (len - d.seg) / len) : 0;
-      const g = ctx.createLinearGradient(0, top, 0, bottom);
-      g.addColorStop(0, 'rgba(216,229,238,0)');
-      if (f > 0.001) g.addColorStop(f, 'rgba(216,229,238,0)');
-      g.addColorStop(1, `rgba(223,233,240,${0.9 * a})`);
-      ctx.fillStyle = g;
-      roundedRectPath(d.x - d.w / 2, top, d.w, Math.max(len, d.w), d.w / 2);
-      ctx.fill();
-      // glistening bead at the leading tip
+      // clip to BELOW the rim, so the part the hot rim has reached is melted away (absorbed)
       ctx.beginPath();
+      ctx.rect(d.x - d.r * 3, rim, d.r * 6, Math.max(0, baseY - rim));
+      ctx.clip();
+      // thin dribble streak (transparent at the top → opaque toward the bump)
+      if (len > 0.5) {
+        const f = Math.max(0, (len - d.seg) / len);
+        const g = ctx.createLinearGradient(0, tailTop, 0, by);
+        g.addColorStop(0, 'rgba(216,229,238,0)');
+        if (f > 0.001) g.addColorStop(f, 'rgba(216,229,238,0)');
+        g.addColorStop(1, `rgba(223,233,240,${0.85 * a})`);
+        ctx.fillStyle = g;
+        roundedRectPath(d.x - d.w / 2, tailTop, d.w, Math.max(len, d.w), d.w / 2);
+        ctx.fill();
+      }
+      // glistening bump — a rounded lump bulging from the wall (wider than tall once set)
+      const rx = d.solid ? d.r * 1.15 : d.r;
+      const ry = d.solid ? d.r * 0.90 : d.r;
       ctx.fillStyle = `rgba(231,240,246,${0.92 * a})`;
-      ctx.arc(d.x, bottom, d.w * 0.85, 0, Math.PI * 2);
-      ctx.fill();
-      // cyan rim light on the bead
-      ctx.lineWidth = 1 * scale;
-      ctx.strokeStyle = `rgba(78,205,196,${0.45 * a})`;
       ctx.beginPath();
-      ctx.arc(d.x, bottom, d.w * 0.85, 0, Math.PI * 2);
+      ctx.ellipse(d.x, by, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 1 * scale;
+      ctx.strokeStyle = `rgba(78,205,196,${0.5 * a})`;
+      ctx.beginPath();
+      ctx.ellipse(d.x, by, rx, ry, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
+      // reheat glow — the hot rim closing in on the bump just before it melts it back in
+      const gap = (d.y - d.r) - rim;            // rim distance above the bump top (>0 = approaching)
+      if (lit > 0.2 && gap > 0 && gap < 12 * scale) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const ga = (1 - gap / (12 * scale)) * 0.30 * lit * settle;
+        const rg = ctx.createRadialGradient(d.x, by, 0, d.x, by, d.r * 3);
+        rg.addColorStop(0, `rgba(255,180,90,${ga})`);
+        rg.addColorStop(1, 'rgba(255,180,90,0)');
+        ctx.fillStyle = rg;
+        ctx.beginPath();
+        ctx.arc(d.x, by, d.r * 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
   }
 
@@ -773,23 +798,23 @@
     const geo = geometry();
     const t = now / 1000;
 
-    // drips — born at the molten rim, then flow continuously DOWN the wall.
-    // Motion advances ONLY while the candle is actively melting (running); on pause/finish
-    // the wax holds in place. The bead never freezes mid-screen, so its tip is strictly
-    // non-decreasing in Y — no stall, no rim-eaten "yoyo" retraction at any timer length.
+    // drips — wax runs from the hot rim, COOLS and slows to a STOP, solidifies into a static
+    // bump on the wall, and is only ABSORBED when the descending rim melts back down to it.
+    // Physics advances only while melting (running); bead Y is globally non-decreasing.
     if (state.running && now >= nextDripAt) {
-      nextDripAt = now + 700 + Math.random() * 1500;
+      nextDripAt = now + 2500 + Math.random() * 3000;        // occasional, since bumps persist
       spawnDrip(Math.random() < 0.5 ? -1 : 1, geo);
     }
-    const grav = 26 * geo.scale, vTerm = 60 * geo.scale;
     for (let i = drips.length - 1; i >= 0; i--) {
       const d = drips[i];
-      if (state.running) {
+      if (state.running && !d.solid) {
         d.age += dt;
-        d.vel = Math.min(d.vel + grav * dt / 1000, vTerm);   // gravity → terminal speed (never negative)
-        d.off += d.vel * dt / 1000;                          // strictly non-decreasing
+        d.heat = Math.max(0, d.heat - dt / d.coolMs);        // cools as it runs from the hot top
+        d.y += d.maxVel * d.heat * dt / 1000;                // speed ∝ heat → smoothly eases to rest
+        if (d.heat <= 0.04) d.solid = true;                  // cooled & set into a bump at this Y
       }
-      if (d.age >= d.ttl || state.cool >= 1) drips.splice(i, 1);
+      // absorbed once the descending rim reaches the bump's bottom (or the candle finishes cooling)
+      if (geo.topY >= d.y + d.r || state.cool >= 1) drips.splice(i, 1);
     }
 
     // smoke
