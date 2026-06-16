@@ -391,20 +391,19 @@
     });
   }
 
-  function spawnDrip(side, rimY, geo) {
+  function spawnDrip(side, geo) {
     const inset = geo.w * 0.10;
-    const x = side < 0 ? geo.cx - geo.w / 2 + inset : geo.cx + geo.w / 2 - inset;
+    const baseX = side < 0 ? geo.cx - geo.w / 2 + inset : geo.cx + geo.w / 2 - inset;
     drips.push({
-      x,
-      startY: rimY,
-      len: 0,
-      maxLen: (18 + Math.random() * 46) * geo.scale,
-      speed: (0.18 + Math.random() * 0.30) * geo.scale,
-      w: (3.2 + Math.random() * 2.6) * geo.scale,
-      bulb: 0,
-      solid: false,
+      x: baseX + (Math.random() - 0.5) * geo.w * 0.12,
+      off: 0,                                      // bead distance below the rim — only ever grows
+      vel: (16 + Math.random() * 15) * geo.scale,  // initial flow speed (px/s), accelerates under gravity
+      seg: (24 + Math.random() * 16) * geo.scale,  // length of the bright bead+tail (opacity taper, not geometry)
+      w: (3.0 + Math.random() * 2.4) * geo.scale,
+      age: 0,
+      ttl: 1500 + Math.random() * 1100,            // lifetime (ms)
     });
-    if (drips.length > 16) drips.shift();
+    if (drips.length > 14) drips.shift();
   }
 
   // ───────────────────────── Geometry ─────────────────────────
@@ -608,31 +607,39 @@
 
   function drawDrips(geo, cool = 0) {
     const { scale, topY, baseY } = geo;
-    const fade = 1 - cool;            // loose drips melt away as the candle settles
-    if (fade <= 0.02) return;
+    const settle = 1 - cool;          // all drips fade as the candle settles
+    if (settle <= 0.02) return;
     for (const d of drips) {
-      // A drip clings to the candle's outer wall. As the rim melts DOWN past
-      // where it formed, its top is "eaten" — so it never floats above the candle.
-      // Its bottom is clamped to the candle base so it never dangles below the candle.
-      const top = Math.max(d.startY, topY);
-      const bottom = Math.min(d.startY + d.len, baseY);
-      if (bottom - top < d.w * 0.4) continue; // fully consumed this frame
+      const rim = topY;
+      const tip = rim + d.off;          // strictly non-decreasing in Y → never moves up, never stalls
+      const bottom = Math.min(tip, baseY);
+      const top = rim;                  // streak is ALWAYS anchored to the rim (no detached floating blob)
+      const len = bottom - top;
+      if (len < d.w * 0.4) continue;
+      // fade in at birth, out near end of life, and as the bead melts into the base
+      const lifeFade = Math.min(d.age / 150, 1) * Math.max(0, Math.min((d.ttl - d.age) / 600, 1));
+      const baseFade = Math.max(0, Math.min(1, 1 - (tip - bottom) / (28 * scale)));
+      const a = settle * lifeFade * baseFade;
+      if (a <= 0.02) continue;
       ctx.save();
-      // streak
+      // streak: transparent at the rim, ramping to opaque at the bead, so it reads as a
+      // running bead with a short tail connected to the lip (never a free-floating lozenge).
+      const f = len > 0 ? Math.max(0, (len - d.seg) / len) : 0;
       const g = ctx.createLinearGradient(0, top, 0, bottom);
-      g.addColorStop(0, `rgba(220,231,238,${0.78 * fade})`);
-      g.addColorStop(1, `rgba(207,224,234,${0.92 * fade})`);
+      g.addColorStop(0, 'rgba(216,229,238,0)');
+      if (f > 0.001) g.addColorStop(f, 'rgba(216,229,238,0)');
+      g.addColorStop(1, `rgba(223,233,240,${0.9 * a})`);
       ctx.fillStyle = g;
-      roundedRectPath(d.x - d.w / 2, top, d.w, Math.max(bottom - top, d.w), d.w / 2);
+      roundedRectPath(d.x - d.w / 2, top, d.w, Math.max(len, d.w), d.w / 2);
       ctx.fill();
-      // bulb at the leading edge
+      // glistening bead at the leading tip
       ctx.beginPath();
-      ctx.fillStyle = `rgba(231,240,246,${0.92 * fade})`;
+      ctx.fillStyle = `rgba(231,240,246,${0.92 * a})`;
       ctx.arc(d.x, bottom, d.w * 0.85, 0, Math.PI * 2);
       ctx.fill();
-      // cyan rim light
+      // cyan rim light on the bead
       ctx.lineWidth = 1 * scale;
-      ctx.strokeStyle = `rgba(78,205,196,${0.45 * fade})`;
+      ctx.strokeStyle = `rgba(78,205,196,${0.45 * a})`;
       ctx.beginPath();
       ctx.arc(d.x, bottom, d.w * 0.85, 0, Math.PI * 2);
       ctx.stroke();
@@ -766,20 +773,23 @@
     const geo = geometry();
     const t = now / 1000;
 
-    // drips — only while actively burning
+    // drips — born at the molten rim, then flow continuously DOWN the wall.
+    // Motion advances ONLY while the candle is actively melting (running); on pause/finish
+    // the wax holds in place. The bead never freezes mid-screen, so its tip is strictly
+    // non-decreasing in Y — no stall, no rim-eaten "yoyo" retraction at any timer length.
     if (state.running && now >= nextDripAt) {
-      nextDripAt = now + 700 + Math.random() * 2200;
-      spawnDrip(Math.random() < 0.5 ? -1 : 1, geo.topY + 3 * geo.scale, geo);
+      nextDripAt = now + 700 + Math.random() * 1500;
+      spawnDrip(Math.random() < 0.5 ? -1 : 1, geo);
     }
+    const grav = 26 * geo.scale, vTerm = 60 * geo.scale;
     for (let i = drips.length - 1; i >= 0; i--) {
       const d = drips[i];
-      if (!d.solid) {
-        d.len += d.speed * dt * 0.06;
-        if (d.len >= d.maxLen) { d.len = d.maxLen; d.solid = true; }
+      if (state.running) {
+        d.age += dt;
+        d.vel = Math.min(d.vel + grav * dt / 1000, vTerm);   // gravity → terminal speed (never negative)
+        d.off += d.vel * dt / 1000;                          // strictly non-decreasing
       }
-      // remove once the descending rim has melted past the whole drip,
-      // or once the candle has fully cooled (loose drips settle away for a clean end)
-      if (geo.topY >= d.startY + d.len || state.cool >= 1) drips.splice(i, 1);
+      if (d.age >= d.ttl || state.cool >= 1) drips.splice(i, 1);
     }
 
     // smoke
@@ -827,11 +837,14 @@
 
   // ───────────────────────── Main loop ─────────────────────────
   let prev = performance.now();
+  let manual = false;        // when true, the rAF loop yields and the sim is driven by __candle.tick()
+  let simClock = 0;
   function loop(now) {
     let dt = now - prev;
     prev = now;
-    if (dt > 100) dt = 100; // clamp after tab was hidden — keeps timing sane
-    render(now, dt);
+    if (dt > 64) dt = 64;   // clamp after tab was hidden — avoids a physics "teleport" on resume
+    if (dt < 0) dt = 0;     // never run time backwards
+    if (!manual) render(now, dt);
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
@@ -1011,10 +1024,18 @@
 
   // ───────────────────────── Debug hook (used for self-testing) ─────────────────────────
   window.__candle = {
-    setRemainingSeconds(sec) { state.remainingMs = sec * 1000; },
+    setRemainingSeconds(sec) {
+      // moving the rim UP (more time) would jerk live drips — flush them first
+      if (sec * 1000 > state.remainingMs) drips.length = 0;
+      state.remainingMs = sec * 1000;
+    },
     setTotal(val, u) { unit = u || unit; applyUnitLabels(); selectedVal = val; resetTimer(); },
     start, pause, state,
     finishNow() { state.remainingMs = 0; },
+    drips,                 // live reference to the drip particle array (for diagnostics)
+    geom: () => geometry(),// current geometry (topY/baseY/scale) for monotonicity probes
+    setManual(b) { manual = !!b; if (b && !simClock) simClock = performance.now(); }, // pause rAF, drive by tick()
+    tick(dt) { simClock += dt; render(simClock, dt); },                               // advance sim deterministically
   };
 })();
 </script>
