@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melting Candle Timer — robert@barcik.training</title>
+<meta name="description" content="An ambient timer that burns a glowing candle down — the wax level is the time you have left.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@200;300;400;600&display=swap');
+
+  :root {
+    --bg: #0b1929;
+    --bg-deep: #060e18;
+    --surface: rgba(255,255,255,0.05);
+    --surface-hi: rgba(255,255,255,0.09);
+    --border: rgba(120,200,210,0.18);
+    --text: #e8eef5;
+    --text-dim: rgba(232,238,245,0.45);
+    --accent: #4ecdc4;
+    --accent-glow: rgba(78,205,196,0.35);
+    --flame: #ffb04a;
+    --flame-glow: rgba(255,150,60,0.35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  canvas#scene {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: block;
+  }
+
+  /* ── Branding ── */
+  .branding {
+    position: fixed;
+    top: 1.2rem;
+    left: 1.4rem;
+    z-index: 3;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.25s ease;
+  }
+  .branding:hover { color: var(--accent); }
+
+  /* ── Intro title (fades out on start) ── */
+  .intro {
+    position: fixed;
+    z-index: 2;
+    top: 11vh;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    width: min(90vw, 560px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .intro h1 {
+    font-weight: 200;
+    font-size: clamp(1.7rem, 5vw, 2.7rem);
+    letter-spacing: 0.01em;
+    margin-bottom: 0.5rem;
+  }
+  .intro h1 b { font-weight: 600; color: var(--accent); }
+  .intro p {
+    font-size: clamp(0.85rem, 2.4vw, 1rem);
+    font-weight: 300;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  body.running .intro,
+  body.finished .intro { opacity: 0; transform: translateX(-50%) translateY(-14px); pointer-events: none; }
+  body.ambient .intro { opacity: 0; pointer-events: none; }
+
+  /* ── Big time readout above the candle ── */
+  .readout {
+    position: fixed;
+    z-index: 2;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+    font-size: clamp(2.4rem, 9vw, 4.4rem);
+    letter-spacing: 0.04em;
+    color: var(--text);
+    text-shadow: 0 0 24px rgba(78,205,196,0.25);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    /* sits in the dark area to the left/above; nudged up so it doesn't cover candle */
+    margin-top: -22vh;
+  }
+  body.running .readout,
+  body.finished .readout { opacity: 1; }
+  body.ambient .readout { opacity: 0 !important; }
+  .readout.done {
+    color: var(--flame);
+    text-shadow: 0 0 32px var(--flame-glow);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+  /* ── Control dock ── */
+  .dock {
+    position: fixed;
+    z-index: 3;
+    left: 50%;
+    bottom: 2.2rem;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: min(94vw, 540px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  body.ambient .dock { opacity: 0; transform: translateX(-50%) translateY(18px); pointer-events: none; }
+
+  .presets {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .preset, .custom-wrap {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    height: 46px;
+    min-width: 64px;
+    padding: 0 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.22s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+  .preset:hover {
+    border-color: var(--accent);
+    background: rgba(78,205,196,0.08);
+    box-shadow: 0 0 16px var(--accent-glow);
+    transform: translateY(-2px);
+  }
+  .preset.active {
+    border-color: var(--accent);
+    background: rgba(78,205,196,0.14);
+    box-shadow: 0 0 18px var(--accent-glow);
+    color: #fff;
+  }
+  .custom-wrap { cursor: text; padding: 0 0.7rem 0 0.9rem; }
+  .custom-wrap input {
+    width: 44px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    text-align: right;
+  }
+  .custom-wrap span { color: var(--text-dim); font-size: 0.78rem; }
+  .custom-wrap.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 18px var(--accent-glow);
+  }
+
+  .actions { display: flex; gap: 0.7rem; align-items: center; }
+  .btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    height: 52px;
+    padding: 0 1.7rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.22s ease;
+    letter-spacing: 0.01em;
+  }
+  .btn:hover { background: var(--surface-hi); border-color: rgba(120,200,210,0.4); }
+  .btn.primary {
+    background: var(--accent);
+    color: #06231f;
+    font-weight: 600;
+    border-color: transparent;
+    box-shadow: 0 0 26px var(--accent-glow);
+    padding: 0 2.3rem;
+  }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.icon {
+    width: 52px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+  }
+  .btn:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+
+  .hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+    text-align: center;
+  }
+  .hint b { color: var(--accent); font-weight: 500; }
+
+  /* ── Floating toggles (top-right) ── */
+  .toggles {
+    position: fixed;
+    z-index: 3;
+    top: 1.1rem;
+    right: 1.2rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .toggle {
+    width: 42px; height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--surface);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.22s ease;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.05rem;
+  }
+  .toggle:hover { color: var(--text); border-color: rgba(120,200,210,0.4); }
+  .toggle.on { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 14px var(--accent-glow); }
+
+  @media (max-width: 480px) {
+    .dock { bottom: 1.3rem; gap: 0.8rem; }
+    .btn { height: 48px; }
+    .preset, .custom-wrap { height: 42px; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <a class="branding" href="../" title="All demos">&larr; robert@barcik.training</a>
+
+  <div class="toggles">
+    <button class="toggle" id="ambientBtn" title="Ambient mode — hide the interface">&#9728;</button>
+    <button class="toggle" id="soundBtn" title="Sound on/off">&#128263;</button>
+  </div>
+
+  <div class="intro" id="intro">
+    <h1>Melting <b>Candle</b> Timer</h1>
+    <p>No ticking numbers — just a candle that burns down. The glowing wax <em>is</em> your time remaining. When it gutters out, you're done.</p>
+  </div>
+
+  <div class="readout" id="readout">25:00</div>
+
+  <div class="dock" id="dock">
+    <div class="presets" id="presets">
+      <button class="preset" data-min="5">5<span style="font-size:.7rem;color:var(--text-dim)">m</span></button>
+      <button class="preset active" data-min="15">15<span style="font-size:.7rem;color:var(--text-dim)">m</span></button>
+      <button class="preset" data-min="25">25<span style="font-size:.7rem;color:var(--text-dim)">m</span></button>
+      <button class="preset" data-min="45">45<span style="font-size:.7rem;color:var(--text-dim)">m</span></button>
+      <label class="custom-wrap" id="customWrap" title="Custom minutes">
+        <input id="customInput" type="number" min="1" max="180" placeholder="--" inputmode="numeric">
+        <span>min</span>
+      </label>
+    </div>
+    <div class="actions">
+      <button class="btn icon" id="resetBtn" title="Reset" disabled>&#8635;</button>
+      <button class="btn primary" id="startBtn">Light the candle</button>
+    </div>
+    <div class="hint" id="hint">Pick a length, then <b>light the candle</b>. Press <b>&#9728;</b> for pure ambient mode.</div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ───────────────────────── Canvas & sizing ─────────────────────────
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = 1;
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ───────────────────────── Timer state ─────────────────────────
+  const state = {
+    totalMs: 15 * 60 * 1000,
+    remainingMs: 15 * 60 * 1000,
+    running: false,
+    finished: false,
+    snuff: 0,          // 0..1 progress of the extinguish animation
+    lastTick: 0,
+  };
+
+  // ───────────────────────── Smooth flicker noise ─────────────────────────
+  // Deterministic layered-sine "noise" — organic flame movement, no RNG.
+  function flick(t, seed) {
+    return (
+      0.50 * Math.sin(t * 7.3 + seed) +
+      0.30 * Math.sin(t * 13.1 + seed * 1.7 + 1.3) +
+      0.20 * Math.sin(t * 23.7 + seed * 2.3 + 0.5)
+    ); // range ~[-1, 1]
+  }
+
+  // ───────────────────────── Particle systems ─────────────────────────
+  const smoke = [];
+  const drips = [];
+  let nextDripAt = 0;
+
+  function spawnSmoke(x, y, scale, burst) {
+    smoke.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 0.18 * scale,
+      vy: -(0.35 + Math.random() * 0.4) * scale,
+      r: (burst ? 6 + Math.random() * 8 : 2 + Math.random() * 3) * scale,
+      grow: (0.18 + Math.random() * 0.22) * scale,
+      life: 1,
+      decay: burst ? 0.006 + Math.random() * 0.004 : 0.010 + Math.random() * 0.006,
+      sway: Math.random() * Math.PI * 2,
+      alpha0: burst ? 0.32 : 0.14,
+    });
+  }
+
+  function spawnDrip(side, rimY, geo) {
+    const inset = geo.w * 0.10;
+    const x = side < 0 ? geo.cx - geo.w / 2 + inset : geo.cx + geo.w / 2 - inset;
+    drips.push({
+      x,
+      startY: rimY,
+      len: 0,
+      maxLen: (18 + Math.random() * 46) * geo.scale,
+      speed: (0.18 + Math.random() * 0.30) * geo.scale,
+      w: (3.2 + Math.random() * 2.6) * geo.scale,
+      bulb: 0,
+      solid: false,
+    });
+    if (drips.length > 16) drips.shift();
+  }
+
+  // ───────────────────────── Geometry ─────────────────────────
+  function geometry() {
+    const scale = Math.max(0.62, Math.min(W / 620, H / 760, 1.45));
+    const cx = W / 2;
+    const baseY = H * 0.80;          // the surface the candle stands on
+    const fullH = 320 * scale;
+    const stubH = 40 * scale;
+    const w = 116 * scale;
+    const remFrac = state.totalMs > 0 ? Math.max(0, state.remainingMs / state.totalMs) : 0;
+    const bodyH = stubH + (fullH - stubH) * remFrac;
+    const topY = baseY - bodyH;
+    return { scale, cx, baseY, w, topY, bodyH, remFrac };
+  }
+
+  // ───────────────────────── Drawing helpers ─────────────────────────
+  function roundedRectPath(x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  function drawBackground(intensity) {
+    // deep vertical wash
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#0b1929');
+    g.addColorStop(0.6, '#081320');
+    g.addColorStop(1, '#050c15');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // vignette
+    const vg = ctx.createRadialGradient(W / 2, H * 0.5, Math.min(W, H) * 0.2, W / 2, H * 0.55, Math.max(W, H) * 0.75);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawHalo(geo, intensity, flameY) {
+    // warm breathing glow behind the flame
+    const r = (220 + intensity * 80) * geo.scale;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(geo.cx, flameY, 0, geo.cx, flameY, r);
+    g.addColorStop(0, `rgba(255,180,90,${0.18 + intensity * 0.10})`);
+    g.addColorStop(0.35, `rgba(255,130,60,${0.07 + intensity * 0.05})`);
+    g.addColorStop(1, 'rgba(255,120,50,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // cool cyan rim glow lower down (synthwave accent)
+    const g2 = ctx.createRadialGradient(geo.cx, geo.baseY, 0, geo.cx, geo.baseY, 260 * geo.scale);
+    g2.addColorStop(0, 'rgba(78,205,196,0.10)');
+    g2.addColorStop(1, 'rgba(78,205,196,0)');
+    ctx.fillStyle = g2;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  function drawSurface(geo, intensity) {
+    // soft warm pool of light on the surface under the candle
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const pool = ctx.createRadialGradient(geo.cx, geo.baseY + 8 * geo.scale, 0, geo.cx, geo.baseY + 8 * geo.scale, geo.w * 2.6);
+    pool.addColorStop(0, `rgba(255,170,80,${0.16 + intensity * 0.06})`);
+    pool.addColorStop(1, 'rgba(255,170,80,0)');
+    ctx.fillStyle = pool;
+    ctx.beginPath();
+    ctx.ellipse(geo.cx, geo.baseY + 10 * geo.scale, geo.w * 2.4, geo.w * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // thin surface line
+    const lg = ctx.createLinearGradient(geo.cx - geo.w * 3, 0, geo.cx + geo.w * 3, 0);
+    lg.addColorStop(0, 'rgba(120,200,210,0)');
+    lg.addColorStop(0.5, 'rgba(120,200,210,0.18)');
+    lg.addColorStop(1, 'rgba(120,200,210,0)');
+    ctx.strokeStyle = lg;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(geo.cx - geo.w * 3, geo.baseY + 1);
+    ctx.lineTo(geo.cx + geo.w * 3, geo.baseY + 1);
+    ctx.stroke();
+  }
+
+  function drawCandle(geo) {
+    const { cx, w, topY, baseY, scale } = geo;
+    const x = cx - w / 2;
+    const h = baseY - topY;
+
+    // body fill — translucent wax lit from within, warm at the molten top
+    ctx.save();
+    roundedRectPath(x, topY, w, h, 10 * scale);
+    ctx.clip();
+    const bg = ctx.createLinearGradient(0, topY, 0, baseY);
+    bg.addColorStop(0, '#f4e6c8');         // warm molten crown
+    bg.addColorStop(0.08, '#dfe8ee');
+    bg.addColorStop(0.5, '#aebfd0');
+    bg.addColorStop(1, '#7d93ac');
+    ctx.fillStyle = bg;
+    ctx.fillRect(x, topY, w, h);
+
+    // inner cyan glow up the left edge
+    const eg = ctx.createLinearGradient(x, 0, x + w * 0.55, 0);
+    eg.addColorStop(0, 'rgba(78,205,196,0.30)');
+    eg.addColorStop(1, 'rgba(78,205,196,0)');
+    ctx.fillStyle = eg;
+    ctx.fillRect(x, topY, w, h);
+
+    // warm light falloff from the flame down the body
+    const wl = ctx.createLinearGradient(0, topY, 0, topY + h * 0.5);
+    wl.addColorStop(0, 'rgba(255,170,80,0.42)');
+    wl.addColorStop(1, 'rgba(255,170,80,0)');
+    ctx.fillStyle = wl;
+    ctx.fillRect(x, topY, w, h * 0.5);
+
+    // vertical specular highlight stripe
+    const hl = ctx.createLinearGradient(x + w * 0.20, 0, x + w * 0.42, 0);
+    hl.addColorStop(0, 'rgba(255,255,255,0)');
+    hl.addColorStop(0.5, 'rgba(255,255,255,0.22)');
+    hl.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hl;
+    ctx.fillRect(x + w * 0.20, topY, w * 0.22, h);
+    ctx.restore();
+
+    // neon outline
+    ctx.save();
+    ctx.shadowColor = 'rgba(78,205,196,0.55)';
+    ctx.shadowBlur = 16 * scale;
+    ctx.strokeStyle = 'rgba(180,240,238,0.65)';
+    ctx.lineWidth = 1.6 * scale;
+    roundedRectPath(x + 0.5, topY + 0.5, w - 1, h - 1, 10 * scale);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawRim(geo, t) {
+    const { cx, w, topY, scale } = geo;
+    // molten pool ellipse sitting on the current top
+    ctx.save();
+    const rimW = w * 0.52;
+    const rimH = 9 * scale;
+    // pool body
+    const pg = ctx.createRadialGradient(cx, topY, 0, cx, topY, rimW);
+    pg.addColorStop(0, '#fff3d6');
+    pg.addColorStop(0.5, '#f0d49a');
+    pg.addColorStop(1, '#c9b074');
+    ctx.fillStyle = pg;
+    ctx.beginPath();
+    ctx.ellipse(cx, topY, rimW, rimH, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // glossy highlight that shifts with flicker
+    ctx.globalCompositeOperation = 'lighter';
+    const hx = cx + Math.sin(t * 2.1) * rimW * 0.18;
+    const hg = ctx.createRadialGradient(hx, topY - rimH * 0.3, 0, hx, topY - rimH * 0.3, rimW * 0.7);
+    hg.addColorStop(0, 'rgba(255,220,150,0.55)');
+    hg.addColorStop(1, 'rgba(255,220,150,0)');
+    ctx.fillStyle = hg;
+    ctx.beginPath();
+    ctx.ellipse(cx, topY, rimW, rimH, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDrips(geo) {
+    const { scale, topY } = geo;
+    for (const d of drips) {
+      // A drip clings to the candle's outer wall. As the rim melts DOWN past
+      // where it formed, its top is "eaten" — so it never floats above the candle.
+      const top = Math.max(d.startY, topY);
+      const bottom = d.startY + d.len;
+      if (bottom - top < d.w * 0.4) continue; // fully consumed this frame
+      ctx.save();
+      // streak
+      const g = ctx.createLinearGradient(0, top, 0, bottom);
+      g.addColorStop(0, 'rgba(220,231,238,0.78)');
+      g.addColorStop(1, 'rgba(207,224,234,0.92)');
+      ctx.fillStyle = g;
+      roundedRectPath(d.x - d.w / 2, top, d.w, Math.max(bottom - top, d.w), d.w / 2);
+      ctx.fill();
+      // bulb at the leading edge
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(231,240,246,0.92)';
+      ctx.arc(d.x, bottom, d.w * 0.85, 0, Math.PI * 2);
+      ctx.fill();
+      // cyan rim light
+      ctx.lineWidth = 1 * scale;
+      ctx.strokeStyle = 'rgba(78,205,196,0.45)';
+      ctx.beginPath();
+      ctx.arc(d.x, bottom, d.w * 0.85, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawFlame(geo, t, intensity) {
+    const { cx, topY, scale } = geo;
+    if (state.snuff >= 1) return;
+
+    const snuffK = 1 - state.snuff;                 // shrinks to 0 on extinguish
+    const lowWax = Math.min(1, geo.remFrac * 4 + 0.15); // flame dims as wax runs low
+    const baseY = topY - 3 * scale;
+    const wickH = 7 * scale;
+    const wickTop = topY - wickH;
+
+    // wick
+    ctx.save();
+    ctx.strokeStyle = '#2a2118';
+    ctx.lineWidth = 1.8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx, topY - 1);
+    ctx.lineTo(cx + Math.sin(t * 3) * 1.2 * scale, wickTop);
+    ctx.stroke();
+    ctx.restore();
+
+    const sway = flick(t, 1.0) * 4 * scale * snuffK;
+    const flH = (62 * scale) * (0.78 + 0.22 * (flick(t, 2.0) * 0.5 + 0.5)) * snuffK * lowWax;
+    const flW = (17 * scale) * (0.82 + 0.18 * (flick(t, 3.0) * 0.5 + 0.5)) * snuffK;
+    const tipX = cx + sway;
+    const tipY = wickTop - flH;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+
+    // outer warm glow
+    const og = ctx.createRadialGradient(cx, wickTop - flH * 0.4, 0, cx, wickTop - flH * 0.4, flH * 1.5);
+    og.addColorStop(0, `rgba(255,160,70,${0.5 * snuffK})`);
+    og.addColorStop(0.5, `rgba(255,120,50,${0.18 * snuffK})`);
+    og.addColorStop(1, 'rgba(255,120,50,0)');
+    ctx.fillStyle = og;
+    ctx.beginPath();
+    ctx.arc(cx, wickTop - flH * 0.4, flH * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // flame body — teardrop
+    function teardrop(scaleX, scaleY, color) {
+      ctx.beginPath();
+      const bx = cx, by = wickTop + 2 * scale;
+      ctx.moveTo(bx, by);
+      ctx.bezierCurveTo(
+        bx - flW * scaleX, by - flH * 0.18 * scaleY,
+        bx - flW * scaleX * 0.8, tipY + flH * 0.45 * scaleY,
+        tipX, tipY
+      );
+      ctx.bezierCurveTo(
+        bx + flW * scaleX * 0.8, tipY + flH * 0.45 * scaleY,
+        bx + flW * scaleX, by - flH * 0.18 * scaleY,
+        bx, by
+      );
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    teardrop(1.18, 1.0, `rgba(255,120,40,${0.55 * snuffK})`);   // orange halo body
+    teardrop(1.0, 0.94, `rgba(255,170,70,${0.85 * snuffK})`);   // main orange
+
+    // hot core
+    const cg = ctx.createLinearGradient(0, tipY, 0, wickTop);
+    cg.addColorStop(0, `rgba(255,240,200,${0.95 * snuffK})`);
+    cg.addColorStop(1, `rgba(255,210,120,${0.6 * snuffK})`);
+    ctx.fillStyle = cg;
+    ctx.beginPath();
+    const coreH = flH * 0.6, coreW = flW * 0.5;
+    ctx.moveTo(cx, wickTop);
+    ctx.bezierCurveTo(cx - coreW, wickTop - coreH * 0.3, cx - coreW * 0.6, tipY + coreH * 0.5, tipX, wickTop - coreH);
+    ctx.bezierCurveTo(cx + coreW * 0.6, tipY + coreH * 0.5, cx + coreW, wickTop - coreH * 0.3, cx, wickTop);
+    ctx.closePath();
+    ctx.fill();
+
+    // cool blue base
+    const bg = ctx.createRadialGradient(cx, wickTop, 0, cx, wickTop, flW * 0.9);
+    bg.addColorStop(0, `rgba(120,200,255,${0.55 * snuffK})`);
+    bg.addColorStop(1, 'rgba(120,200,255,0)');
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.ellipse(cx, wickTop + 1 * scale, flW * 0.55, flH * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawSmoke(geo) {
+    ctx.save();
+    for (const p of smoke) {
+      ctx.beginPath();
+      const a = p.alpha0 * p.life;
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      g.addColorStop(0, `rgba(180,195,210,${a})`);
+      g.addColorStop(1, 'rgba(180,195,210,0)');
+      ctx.fillStyle = g;
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ───────────────────────── Update ─────────────────────────
+  function update(now, dt) {
+    // timer
+    if (state.running && !state.finished) {
+      state.remainingMs -= dt;
+      if (state.remainingMs <= 0) {
+        state.remainingMs = 0;
+        state.finished = true;
+        state.running = false;
+        finish();
+      }
+    }
+
+    // snuff animation
+    if (state.finished && state.snuff < 1) {
+      state.snuff = Math.min(1, state.snuff + dt / 1400);
+    }
+
+    const geo = geometry();
+    const t = now / 1000;
+
+    // drips — only while actively burning
+    if (state.running && now >= nextDripAt) {
+      nextDripAt = now + 700 + Math.random() * 2200;
+      spawnDrip(Math.random() < 0.5 ? -1 : 1, geo.topY + 3 * geo.scale, geo);
+    }
+    for (let i = drips.length - 1; i >= 0; i--) {
+      const d = drips[i];
+      if (!d.solid) {
+        d.len += d.speed * dt * 0.06;
+        if (d.len >= d.maxLen) { d.len = d.maxLen; d.solid = true; }
+      }
+      // remove once the descending rim has melted past the whole drip
+      if (geo.topY >= d.startY + d.len) drips.splice(i, 1);
+    }
+
+    // smoke
+    const wickTop = geo.topY - 7 * geo.scale;
+    const flH = 50 * geo.scale;
+    if (state.running && Math.random() < 0.12) {
+      spawnSmoke(geo.cx + (Math.random() - 0.5) * 4, wickTop - flH * (0.6 + Math.random() * 0.4), geo.scale, false);
+    }
+    for (let i = smoke.length - 1; i >= 0; i--) {
+      const p = smoke[i];
+      p.sway += dt * 0.003;
+      p.x += p.vx * dt * 0.06 + Math.sin(p.sway) * 0.12;
+      p.y += p.vy * dt * 0.06;
+      p.r += p.grow * dt * 0.012;
+      p.life -= p.decay * dt * 0.06;
+      if (p.life <= 0) smoke.splice(i, 1);
+    }
+
+    return { geo, t };
+  }
+
+  // ───────────────────────── Render ─────────────────────────
+  function render(now, dt) {
+    const { geo, t } = update(now, dt);
+    const burning = state.snuff < 1;
+    const intensity = burning ? (0.6 + (flick(t, 2.0) * 0.5 + 0.5) * 0.4) * (1 - state.snuff) : 0;
+
+    drawBackground(intensity);
+    drawHalo(geo, intensity, geo.topY - 34 * geo.scale);
+    drawSurface(geo, intensity);
+    drawCandle(geo);
+    drawDrips(geo);
+    drawRim(geo, t);
+    drawFlame(geo, t, intensity);
+    drawSmoke(geo);
+
+    updateReadout();
+  }
+
+  // ───────────────────────── Main loop ─────────────────────────
+  let prev = performance.now();
+  function loop(now) {
+    let dt = now - prev;
+    prev = now;
+    if (dt > 100) dt = 100; // clamp after tab was hidden — keeps timing sane
+    render(now, dt);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ───────────────────────── Readout / UI ─────────────────────────
+  const readout = document.getElementById('readout');
+  function fmt(ms) {
+    const s = Math.ceil(ms / 1000);
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  }
+  function updateReadout() {
+    if (state.finished && state.snuff >= 0.6) {
+      readout.textContent = "Time's up";
+      readout.classList.add('done');
+    } else {
+      readout.textContent = fmt(state.remainingMs);
+      readout.classList.remove('done');
+    }
+  }
+
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const presets = document.getElementById('presets');
+  const customWrap = document.getElementById('customWrap');
+  const customInput = document.getElementById('customInput');
+  const ambientBtn = document.getElementById('ambientBtn');
+  const soundBtn = document.getElementById('soundBtn');
+  const hint = document.getElementById('hint');
+
+  let selectedMin = 15;
+
+  function setSelection(min, fromCustom) {
+    selectedMin = min;
+    [...presets.querySelectorAll('.preset')].forEach(b =>
+      b.classList.toggle('active', !fromCustom && +b.dataset.min === min));
+    customWrap.classList.toggle('active', !!fromCustom);
+  }
+
+  presets.querySelectorAll('.preset').forEach(b => {
+    b.addEventListener('click', () => {
+      if (state.running) return;
+      customInput.value = '';
+      setSelection(+b.dataset.min, false);
+      resetTimer();
+    });
+  });
+  customInput.addEventListener('input', () => {
+    if (state.running) return;
+    const v = Math.max(1, Math.min(180, +customInput.value || 0));
+    if (v) { setSelection(v, true); resetTimer(); }
+  });
+
+  function resetTimer() {
+    state.totalMs = selectedMin * 60 * 1000;
+    state.remainingMs = state.totalMs;
+    state.running = false;
+    state.finished = false;
+    state.snuff = 0;
+    smoke.length = 0;
+    drips.length = 0;
+    document.body.classList.remove('running', 'finished');
+    startBtn.textContent = 'Light the candle';
+    startBtn.disabled = false;
+    resetBtn.disabled = true;
+  }
+
+  function start() {
+    if (state.finished) resetTimer();
+    state.running = true;
+    document.body.classList.remove('finished');
+    document.body.classList.add('running');
+    startBtn.textContent = 'Pause';
+    resetBtn.disabled = false;
+    hint.innerHTML = 'Burning… press <b>&#9728;</b> for pure ambient mode.';
+    chime(false);
+  }
+  function pause() {
+    state.running = false;
+    startBtn.textContent = 'Resume';
+  }
+
+  startBtn.addEventListener('click', () => {
+    if (state.finished) { resetTimer(); start(); return; } // "Light again" → relight in one click
+    state.running ? pause() : start();
+  });
+  resetBtn.addEventListener('click', () => { resetTimer(); hint.innerHTML = 'Pick a length, then <b>light the candle</b>.'; });
+
+  // ambient mode
+  let ambient = false;
+  ambientBtn.addEventListener('click', () => {
+    ambient = !ambient;
+    document.body.classList.toggle('ambient', ambient);
+    ambientBtn.classList.toggle('on', ambient);
+  });
+  // tap anywhere to exit ambient
+  canvas.addEventListener('click', () => {
+    if (ambient) { ambient = false; document.body.classList.remove('ambient'); ambientBtn.classList.remove('on'); }
+  });
+
+  // ───────────────────────── Sound (muted by default) ─────────────────────────
+  let soundOn = false;
+  let audioCtx = null;
+  soundBtn.addEventListener('click', () => {
+    soundOn = !soundOn;
+    soundBtn.classList.toggle('on', soundOn);
+    soundBtn.innerHTML = soundOn ? '&#128266;' : '&#128263;';
+    if (soundOn && !audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    }
+  });
+  function chime(end) {
+    if (!soundOn || !audioCtx) return;
+    const notes = end ? [523.25, 659.25, 783.99] : [392.0];
+    notes.forEach((f, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = f;
+      const t0 = audioCtx.currentTime + i * 0.16;
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(0.18, t0 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t0); o.stop(t0 + 1);
+    });
+  }
+
+  function finish() {
+    document.body.classList.remove('running');
+    document.body.classList.add('finished');
+    startBtn.textContent = 'Light again';
+    startBtn.disabled = false;
+    hint.innerHTML = 'The candle has burned out. <b>Light again</b> to restart.';
+    // smoke puff from the wick
+    const geo = geometry();
+    const wickTop = geo.topY - 7 * geo.scale;
+    for (let i = 0; i < 22; i++) spawnSmoke(geo.cx + (Math.random() - 0.5) * 8 * geo.scale, wickTop, geo.scale, true);
+    chime(true);
+  }
+
+  // init
+  resetTimer();
+
+  // ───────────────────────── Debug hook (used for self-testing) ─────────────────────────
+  window.__candle = {
+    setRemainingSeconds(sec) { state.remainingMs = sec * 1000; },
+    setTotalMinutes(min) { selectedMin = min; resetTimer(); },
+    start, pause, state,
+    finishNow() { state.remainingMs = 0; },
+  };
+})();
+</script>
+</body>
+</html>
