@@ -182,6 +182,36 @@
     border-color: var(--accent);
     box-shadow: 0 0 18px var(--accent-glow);
   }
+  .preset .u { font-size: 0.7rem; color: var(--text-dim); margin-left: 0.05rem; }
+
+  /* minutes / seconds segmented toggle */
+  .unit-toggle {
+    display: flex;
+    height: 46px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    overflow: hidden;
+    padding: 4px;
+    gap: 2px;
+  }
+  .unit-toggle button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    padding: 0 0.7rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .unit-toggle button:hover:not(.active) { color: var(--text); }
+  .unit-toggle button.active {
+    background: rgba(78,205,196,0.16);
+    color: #fff;
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
 
   .actions { display: flex; gap: 0.7rem; align-items: center; }
   .btn {
@@ -276,14 +306,18 @@
 
   <div class="dock" id="dock">
     <div class="presets" id="presets">
-      <button class="preset" data-min="5">5<span style="font-size:.7rem;color:var(--text-dim)">m</span></button>
-      <button class="preset active" data-min="15">15<span style="font-size:.7rem;color:var(--text-dim)">m</span></button>
-      <button class="preset" data-min="25">25<span style="font-size:.7rem;color:var(--text-dim)">m</span></button>
-      <button class="preset" data-min="45">45<span style="font-size:.7rem;color:var(--text-dim)">m</span></button>
-      <label class="custom-wrap" id="customWrap" title="Custom minutes">
+      <button class="preset" data-val="5">5<span class="u">m</span></button>
+      <button class="preset active" data-val="15">15<span class="u">m</span></button>
+      <button class="preset" data-val="25">25<span class="u">m</span></button>
+      <button class="preset" data-val="45">45<span class="u">m</span></button>
+      <label class="custom-wrap" id="customWrap" title="Custom length">
         <input id="customInput" type="number" min="1" max="180" placeholder="--" inputmode="numeric">
-        <span>min</span>
+        <span class="unit-label">min</span>
       </label>
+      <div class="unit-toggle" id="unitToggle" title="Count in minutes or seconds">
+        <button data-unit="min" class="active">min</button>
+        <button data-unit="sec">sec</button>
+      </div>
     </div>
     <div class="actions">
       <button class="btn icon" id="resetBtn" title="Reset" disabled>&#8635;</button>
@@ -318,9 +352,13 @@
     remainingMs: 15 * 60 * 1000,
     running: false,
     finished: false,
-    snuff: 0,          // 0..1 progress of the extinguish animation
+    snuff: 0,          // 0..1 progress of the extinguish animation (flame dying)
+    cool: 0,           // 0..1 progress of the wax cooling/settling AFTER the flame is out
     lastTick: 0,
   };
+
+  // small numeric lerp helper
+  const lerp = (a, b, k) => a + (b - a) * k;
 
   // ───────────────────────── Smooth flicker noise ─────────────────────────
   // Deterministic layered-sine "noise" — organic flame movement, no RNG.
@@ -340,14 +378,16 @@
   function spawnSmoke(x, y, scale, burst) {
     smoke.push({
       x, y,
-      vx: (Math.random() - 0.5) * 0.18 * scale,
-      vy: -(0.35 + Math.random() * 0.4) * scale,
-      r: (burst ? 6 + Math.random() * 8 : 2 + Math.random() * 3) * scale,
-      grow: (0.18 + Math.random() * 0.22) * scale,
+      // burst particles start clustered, then bloom outward + drift up as one soft cloud
+      vx: (Math.random() - 0.5) * (burst ? 0.30 : 0.18) * scale,
+      vy: -((burst ? 0.14 + Math.random() * 0.16 : 0.35 + Math.random() * 0.4)) * scale,
+      r: (burst ? 6 + Math.random() * 6 : 2 + Math.random() * 3) * scale,
+      grow: (burst ? 0.34 + Math.random() * 0.28 : 0.18 + Math.random() * 0.22) * scale,
+      drag: burst ? 0.985 : 1,        // burst cloud loses horizontal momentum and settles
       life: 1,
-      decay: burst ? 0.006 + Math.random() * 0.004 : 0.010 + Math.random() * 0.006,
+      decay: burst ? 0.0038 + Math.random() * 0.0026 : 0.010 + Math.random() * 0.006,
       sway: Math.random() * Math.PI * 2,
-      alpha0: burst ? 0.32 : 0.14,
+      alpha0: burst ? 0.42 : 0.14,
     });
   }
 
@@ -431,12 +471,12 @@
     ctx.restore();
   }
 
-  function drawSurface(geo, intensity) {
-    // soft warm pool of light on the surface under the candle
+  function drawSurface(geo, lit) {
+    // soft warm pool of light on the surface — fades out completely once the flame dies
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     const pool = ctx.createRadialGradient(geo.cx, geo.baseY + 8 * geo.scale, 0, geo.cx, geo.baseY + 8 * geo.scale, geo.w * 2.6);
-    pool.addColorStop(0, `rgba(255,170,80,${0.16 + intensity * 0.06})`);
+    pool.addColorStop(0, `rgba(255,170,80,${0.20 * lit})`);
     pool.addColorStop(1, 'rgba(255,170,80,0)');
     ctx.fillStyle = pool;
     ctx.beginPath();
@@ -457,17 +497,21 @@
     ctx.stroke();
   }
 
-  function drawCandle(geo) {
+  function drawCandle(geo, lit = 1, cool = 0) {
     const { cx, w, topY, baseY, scale } = geo;
     const x = cx - w / 2;
     const h = baseY - topY;
 
-    // body fill — translucent wax lit from within, warm at the molten top
+    // body fill — translucent wax lit from within, warm at the molten top.
+    // As it cools, the warm crown settles toward the cool body colour.
     ctx.save();
     roundedRectPath(x, topY, w, h, 10 * scale);
     ctx.clip();
+    const crownR = Math.round(lerp(244, 214, cool));
+    const crownG = Math.round(lerp(230, 222, cool));
+    const crownB = Math.round(lerp(200, 224, cool));
     const bg = ctx.createLinearGradient(0, topY, 0, baseY);
-    bg.addColorStop(0, '#f4e6c8');         // warm molten crown
+    bg.addColorStop(0, `rgb(${crownR},${crownG},${crownB})`);   // molten crown → cooled
     bg.addColorStop(0.08, '#dfe8ee');
     bg.addColorStop(0.5, '#aebfd0');
     bg.addColorStop(1, '#7d93ac');
@@ -481,9 +525,9 @@
     ctx.fillStyle = eg;
     ctx.fillRect(x, topY, w, h);
 
-    // warm light falloff from the flame down the body
+    // warm light falloff from the flame down the body — fades as the flame dies
     const wl = ctx.createLinearGradient(0, topY, 0, topY + h * 0.5);
-    wl.addColorStop(0, 'rgba(255,170,80,0.42)');
+    wl.addColorStop(0, `rgba(255,170,80,${0.42 * lit})`);
     wl.addColorStop(1, 'rgba(255,170,80,0)');
     ctx.fillStyle = wl;
     ctx.fillRect(x, topY, w, h * 0.5);
@@ -508,59 +552,87 @@
     ctx.restore();
   }
 
-  function drawRim(geo, t) {
+  function drawRim(geo, t, lit = 1, cool = 0) {
     const { cx, w, topY, scale } = geo;
-    // molten pool ellipse sitting on the current top
     ctx.save();
     const rimW = w * 0.52;
     const rimH = 9 * scale;
-    // pool body
+
+    // pool body — interpolates from hot molten wax to a cool, settled, matte surface
+    const c0 = [lerp(255, 196, cool), lerp(243, 210, cool), lerp(214, 224, cool)]; // centre
+    const c1 = [lerp(201, 120, cool), lerp(176, 150, cool), lerp(116, 178, cool)]; // edge
     const pg = ctx.createRadialGradient(cx, topY, 0, cx, topY, rimW);
-    pg.addColorStop(0, '#fff3d6');
-    pg.addColorStop(0.5, '#f0d49a');
-    pg.addColorStop(1, '#c9b074');
+    pg.addColorStop(0, `rgb(${c0[0]|0},${c0[1]|0},${c0[2]|0})`);
+    pg.addColorStop(0.55, `rgb(${lerp(c0[0],c1[0],0.6)|0},${lerp(c0[1],c1[1],0.6)|0},${lerp(c0[2],c1[2],0.6)|0})`);
+    pg.addColorStop(1, `rgb(${c1[0]|0},${c1[1]|0},${c1[2]|0})`);
     ctx.fillStyle = pg;
     ctx.beginPath();
     ctx.ellipse(cx, topY, rimW, rimH, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // glossy highlight that shifts with flicker
-    ctx.globalCompositeOperation = 'lighter';
-    const hx = cx + Math.sin(t * 2.1) * rimW * 0.18;
-    const hg = ctx.createRadialGradient(hx, topY - rimH * 0.3, 0, hx, topY - rimH * 0.3, rimW * 0.7);
-    hg.addColorStop(0, 'rgba(255,220,150,0.55)');
-    hg.addColorStop(1, 'rgba(255,220,150,0)');
-    ctx.fillStyle = hg;
-    ctx.beginPath();
-    ctx.ellipse(cx, topY, rimW, rimH, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // a settled inner depression once cooled (reads as solidified wax, not a glowing pool)
+    if (cool > 0.05) {
+      ctx.globalCompositeOperation = 'source-over';
+      const dg = ctx.createRadialGradient(cx, topY, 0, cx, topY, rimW * 0.8);
+      dg.addColorStop(0, `rgba(20,32,52,${0.30 * cool})`);
+      dg.addColorStop(1, 'rgba(20,32,52,0)');
+      ctx.fillStyle = dg;
+      ctx.beginPath();
+      ctx.ellipse(cx, topY + rimH * 0.15, rimW * 0.7, rimH * 0.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // glossy molten highlight — only while there is still flame light
+    if (lit > 0.02) {
+      ctx.globalCompositeOperation = 'lighter';
+      const hx = cx + Math.sin(t * 2.1) * rimW * 0.18;
+      const hg = ctx.createRadialGradient(hx, topY - rimH * 0.3, 0, hx, topY - rimH * 0.3, rimW * 0.7);
+      hg.addColorStop(0, `rgba(255,220,150,${0.55 * lit})`);
+      hg.addColorStop(1, 'rgba(255,220,150,0)');
+      ctx.fillStyle = hg;
+      ctx.beginPath();
+      ctx.ellipse(cx, topY, rimW, rimH, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // tiny burnt wick remnant left behind once the flame is fully out
+    if (state.snuff >= 1) {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = `rgba(30,26,22,${0.6 + 0.4 * cool})`;
+      ctx.beginPath();
+      ctx.ellipse(cx, topY - 1 * scale, 1.7 * scale, 1.2 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
-  function drawDrips(geo) {
-    const { scale, topY } = geo;
+  function drawDrips(geo, cool = 0) {
+    const { scale, topY, baseY } = geo;
+    const fade = 1 - cool;            // loose drips melt away as the candle settles
+    if (fade <= 0.02) return;
     for (const d of drips) {
       // A drip clings to the candle's outer wall. As the rim melts DOWN past
       // where it formed, its top is "eaten" — so it never floats above the candle.
+      // Its bottom is clamped to the candle base so it never dangles below the candle.
       const top = Math.max(d.startY, topY);
-      const bottom = d.startY + d.len;
+      const bottom = Math.min(d.startY + d.len, baseY);
       if (bottom - top < d.w * 0.4) continue; // fully consumed this frame
       ctx.save();
       // streak
       const g = ctx.createLinearGradient(0, top, 0, bottom);
-      g.addColorStop(0, 'rgba(220,231,238,0.78)');
-      g.addColorStop(1, 'rgba(207,224,234,0.92)');
+      g.addColorStop(0, `rgba(220,231,238,${0.78 * fade})`);
+      g.addColorStop(1, `rgba(207,224,234,${0.92 * fade})`);
       ctx.fillStyle = g;
       roundedRectPath(d.x - d.w / 2, top, d.w, Math.max(bottom - top, d.w), d.w / 2);
       ctx.fill();
       // bulb at the leading edge
       ctx.beginPath();
-      ctx.fillStyle = 'rgba(231,240,246,0.92)';
+      ctx.fillStyle = `rgba(231,240,246,${0.92 * fade})`;
       ctx.arc(d.x, bottom, d.w * 0.85, 0, Math.PI * 2);
       ctx.fill();
       // cyan rim light
       ctx.lineWidth = 1 * scale;
-      ctx.strokeStyle = 'rgba(78,205,196,0.45)';
+      ctx.strokeStyle = `rgba(78,205,196,${0.45 * fade})`;
       ctx.beginPath();
       ctx.arc(d.x, bottom, d.w * 0.85, 0, Math.PI * 2);
       ctx.stroke();
@@ -661,8 +733,9 @@
       ctx.beginPath();
       const a = p.alpha0 * p.life;
       const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-      g.addColorStop(0, `rgba(180,195,210,${a})`);
-      g.addColorStop(1, 'rgba(180,195,210,0)');
+      g.addColorStop(0, `rgba(198,210,224,${a})`);
+      g.addColorStop(0.6, `rgba(188,200,216,${a * 0.5})`);
+      g.addColorStop(1, 'rgba(188,200,216,0)');
       ctx.fillStyle = g;
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fill();
@@ -683,9 +756,11 @@
       }
     }
 
-    // snuff animation
+    // ending: first the flame snuffs out (snuff), THEN the wax cools & settles (cool)
     if (state.finished && state.snuff < 1) {
-      state.snuff = Math.min(1, state.snuff + dt / 1400);
+      state.snuff = Math.min(1, state.snuff + dt / 1300);
+    } else if (state.finished && state.cool < 1) {
+      state.cool = Math.min(1, state.cool + dt / 2000);
     }
 
     const geo = geometry();
@@ -702,8 +777,9 @@
         d.len += d.speed * dt * 0.06;
         if (d.len >= d.maxLen) { d.len = d.maxLen; d.solid = true; }
       }
-      // remove once the descending rim has melted past the whole drip
-      if (geo.topY >= d.startY + d.len) drips.splice(i, 1);
+      // remove once the descending rim has melted past the whole drip,
+      // or once the candle has fully cooled (loose drips settle away for a clean end)
+      if (geo.topY >= d.startY + d.len || state.cool >= 1) drips.splice(i, 1);
     }
 
     // smoke
@@ -717,6 +793,7 @@
       p.sway += dt * 0.003;
       p.x += p.vx * dt * 0.06 + Math.sin(p.sway) * 0.12;
       p.y += p.vy * dt * 0.06;
+      p.vx *= p.drag;                  // cloud loses sideways momentum and gathers
       p.r += p.grow * dt * 0.012;
       p.life -= p.decay * dt * 0.06;
       if (p.life <= 0) smoke.splice(i, 1);
@@ -729,14 +806,19 @@
   function render(now, dt) {
     const { geo, t } = update(now, dt);
     const burning = state.snuff < 1;
+    // flicker intensity drives the flame + halo brightness
     const intensity = burning ? (0.6 + (flick(t, 2.0) * 0.5 + 0.5) * 0.4) * (1 - state.snuff) : 0;
+    // `lit` = how much warm candlelight falls on the wax/surface (1 burning → 0 when out)
+    const lit = 1 - state.snuff;
+    // `cool` = how settled/cooled the molten wax is after the flame is gone
+    const cool = state.cool;
 
     drawBackground(intensity);
     drawHalo(geo, intensity, geo.topY - 34 * geo.scale);
-    drawSurface(geo, intensity);
-    drawCandle(geo);
-    drawDrips(geo);
-    drawRim(geo, t);
+    drawSurface(geo, lit);
+    drawCandle(geo, lit, cool);
+    drawDrips(geo, cool);
+    drawRim(geo, t, lit, cool);
     drawFlame(geo, t, intensity);
     drawSmoke(geo);
 
@@ -781,35 +863,59 @@
   const soundBtn = document.getElementById('soundBtn');
   const hint = document.getElementById('hint');
 
-  let selectedMin = 15;
+  let selectedVal = 15;
+  let unit = 'min';                              // 'min' | 'sec'
+  const unitMs = () => unit === 'sec' ? 1000 : 60000;
+  const unitToggle = document.getElementById('unitToggle');
+  const unitLabel = customWrap.querySelector('.unit-label');
 
-  function setSelection(min, fromCustom) {
-    selectedMin = min;
+  function setSelection(val, fromCustom) {
+    selectedVal = val;
     [...presets.querySelectorAll('.preset')].forEach(b =>
-      b.classList.toggle('active', !fromCustom && +b.dataset.min === min));
+      b.classList.toggle('active', !fromCustom && +b.dataset.val === val));
     customWrap.classList.toggle('active', !!fromCustom);
+  }
+
+  function applyUnitLabels() {
+    const suffix = unit === 'sec' ? 's' : 'm';
+    presets.querySelectorAll('.preset .u').forEach(s => s.textContent = suffix);
+    unitLabel.textContent = unit === 'sec' ? 'sec' : 'min';
+    customInput.max = unit === 'sec' ? 600 : 180;
+    [...unitToggle.querySelectorAll('button')].forEach(b =>
+      b.classList.toggle('active', b.dataset.unit === unit));
   }
 
   presets.querySelectorAll('.preset').forEach(b => {
     b.addEventListener('click', () => {
       if (state.running) return;
       customInput.value = '';
-      setSelection(+b.dataset.min, false);
+      setSelection(+b.dataset.val, false);
       resetTimer();
     });
   });
   customInput.addEventListener('input', () => {
     if (state.running) return;
-    const v = Math.max(1, Math.min(180, +customInput.value || 0));
+    const cap = unit === 'sec' ? 600 : 180;
+    const v = Math.max(1, Math.min(cap, +customInput.value || 0));
     if (v) { setSelection(v, true); resetTimer(); }
   });
 
+  unitToggle.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      if (state.running || unit === b.dataset.unit) return;
+      unit = b.dataset.unit;
+      applyUnitLabels();
+      resetTimer();                  // reinterpret the current value in the new unit
+    });
+  });
+
   function resetTimer() {
-    state.totalMs = selectedMin * 60 * 1000;
+    state.totalMs = selectedVal * unitMs();
     state.remainingMs = state.totalMs;
     state.running = false;
     state.finished = false;
     state.snuff = 0;
+    state.cool = 0;
     smoke.length = 0;
     drips.length = 0;
     document.body.classList.remove('running', 'finished');
@@ -885,20 +991,28 @@
     startBtn.textContent = 'Light again';
     startBtn.disabled = false;
     hint.innerHTML = 'The candle has burned out. <b>Light again</b> to restart.';
-    // smoke puff from the wick
+    // smoke puff from the wick — a small cluster that blooms upward into a tiny cloud
     const geo = geometry();
     const wickTop = geo.topY - 7 * geo.scale;
-    for (let i = 0; i < 22; i++) spawnSmoke(geo.cx + (Math.random() - 0.5) * 8 * geo.scale, wickTop, geo.scale, true);
+    for (let i = 0; i < 24; i++) {
+      // tight cluster at the wick so the particles merge into one rounded puff
+      spawnSmoke(
+        geo.cx + (Math.random() - 0.5) * 7 * geo.scale,
+        wickTop - Math.random() * 6 * geo.scale,
+        geo.scale, true
+      );
+    }
     chime(true);
   }
 
   // init
+  applyUnitLabels();
   resetTimer();
 
   // ───────────────────────── Debug hook (used for self-testing) ─────────────────────────
   window.__candle = {
     setRemainingSeconds(sec) { state.remainingMs = sec * 1000; },
-    setTotalMinutes(min) { selectedMin = min; resetTimer(); },
+    setTotal(val, u) { unit = u || unit; applyUnitLabels(); selectedVal = val; resetTimer(); },
     start, pause, state,
     finishNow() { state.remainingMs = 0; },
   };
