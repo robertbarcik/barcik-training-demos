@@ -109,6 +109,31 @@
             padding: 0.15rem 0.5rem; border-radius: 10px; font-weight: 600;
         }
 
+        /* ===== HUMAN-IN-THE-LOOP LAB ===== */
+        .lab-section {
+            margin-top: 1.5rem; padding-top: 1.5rem;
+            border-top: 2px solid rgba(37, 99, 235, 0.45);
+        }
+        .lab-header {
+            display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;
+        }
+        .lab-label {
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
+            color: #93c5fd; font-weight: 700;
+        }
+        .lab-blurb {
+            font-size: 0.82rem; color: #94a3b8; margin-bottom: 0.9rem; line-height: 1.5;
+        }
+        .lab-blurb a { color: #93c5fd; text-decoration: none; }
+        .lab-blurb a:hover { text-decoration: underline; }
+        .lab-section .demo-list a { border-left-color: #2563eb; }
+        .lab-flagship .demo-title::after {
+            content: 'FLAGSHIP'; font-size: 0.6rem; font-weight: 700;
+            background: #2563eb; color: #fff; border-radius: 8px;
+            padding: 0.1rem 0.45rem; margin-left: 0.5rem; vertical-align: middle;
+            letter-spacing: 0.06em;
+        }
+
         /* ===== TOOLS SECTION ===== */
         .tools-section {
             margin-top: 1rem; padding-top: 1.5rem;
@@ -238,6 +263,45 @@
                 <li><a href="demos/genai-capex-timeline.html">
                     <div class="demo-title">Where Does the Money Go?</div>
                     <div class="demo-desc">Interactive capex-to-model timeline: see how each year's Big 5 investment splits into inference, training, and research — each arriving 2–4+ years later.</div>
+                </a></li>
+            </ul>
+        </div>
+
+        <!-- The Human-in-the-Loop Lab -->
+        <div class="lab-section">
+            <div class="lab-header">
+                <span class="lab-label">The Human-in-the-Loop Lab</span>
+                <span class="deck-badge">7 items</span>
+            </div>
+            <p class="lab-blurb">"Don't worry, we'll just put a human in the loop." These simulations let you feel why that sentence hides so much work: automation bias, alert fatigue, anchoring, and the moral crumple zone, played out across the sectors the EU AI Act calls high-risk. Companion suite to the booklet <a href="https://publications.barcik.training/llm-human-interaction-patterns/">LLM-Human Interaction Design Patterns for Operations</a>.</p>
+            <ul class="demo-list">
+                <li class="lab-flagship"><a href="demos/operators-dilemma.html">
+                    <div class="demo-title">The Operator's Dilemma</div>
+                    <div class="demo-desc">Five acts of being the human in the loop of an IT operation: rubber-stamp triage under a timer, an anchoring trap, confidence theater, a 3 AM kill-switch scenario, and designing the seam yourself. Includes a personal debrief.</div>
+                </a></li>
+                <li><a href="demos/credit-desk.html">
+                    <div class="demo-title">The Credit Desk</div>
+                    <div class="demo-desc">Banking: six loan applications, an AI credit score, and an ordering experiment. Does seeing the model's number first change your judgment? Two of the scores are deliberately wrong.</div>
+                </a></li>
+                <li><a href="demos/triage-ward.html">
+                    <div class="demo-title">The Triage Ward</div>
+                    <div class="demo-desc">Medical: work a night-shift alarm queue where one alarm out of eighteen matters, then work the same night after an evidence-based alarm redesign.</div>
+                </a></li>
+                <li><a href="demos/watchlist.html">
+                    <div class="demo-title">The Watchlist</div>
+                    <div class="demo-desc">Law enforcement: verify facial-recognition watchlist matches against the record under a countdown. Some of the AI's matches are wrong, and one of its rejections is too.</div>
+                </a></li>
+                <li><a href="demos/shortlist.html">
+                    <div class="demo-title">The Shortlist</div>
+                    <div class="demo-desc">Hiring: an AI-ranked candidate shortlist with two seeded injustices. Measures your Weight-of-Advice score: how much of the final ranking was actually yours?</div>
+                </a></li>
+                <li><a href="demos/border-queue.html">
+                    <div class="demo-title">The Border Queue</div>
+                    <div class="demo-desc">Border control: the same risk assessments packaged three ways (raw decimals, calibrated categories, bare verdicts) and what each framing does to your referrals.</div>
+                </a></li>
+                <li><a href="demos/docket.html">
+                    <div class="demo-title">The Docket</div>
+                    <div class="demo-desc">Justice: a pre-trial docket with an "advisory only" AI risk score. One case goes wrong three months later, and the inquiry knows exactly whose signature is on the order.</div>
                 </a></li>
             </ul>
         </div>

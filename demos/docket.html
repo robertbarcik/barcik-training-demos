@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Docket &middot; The Moral Crumple Zone in AI-Assisted Judicial Decisions</title>
+<meta name="description" content="An interactive simulation: you are the judge, the risk tool is only advisory, and the signature on the order is always yours. Part of the Human-in-the-Loop Lab.">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f1f5f9; color: #1a202c; line-height: 1.6; font-size: 16px;
+}
+header { background: #1e3a5f; color: #fff; padding: 1.2rem 2rem; text-align: center; }
+header h1 { font-size: 1.35rem; letter-spacing: -0.01em; }
+header .subtitle { font-size: 0.85rem; color: #cbd5e0; margin-top: 0.15rem; }
+.header-links { margin-top: 0.45rem; font-size: 0.78rem; }
+.header-links a { color: #93c5fd; text-decoration: none; }
+.header-links a:hover { text-decoration: underline; }
+.header-links .sep { color: #64748b; margin: 0 0.4rem; }
+main { max-width: 860px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+.panel {
+  background: #fff; border-radius: 10px; padding: 1.5rem;
+  border: 1px solid #e2e8f0; margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+}
+.panel-title {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #2563eb; margin-bottom: 0.6rem;
+}
+h2 { font-size: 1.25rem; color: #1e3a5f; margin-bottom: 0.6rem; }
+h3 { font-size: 1.02rem; color: #1e3a5f; margin-bottom: 0.4rem; }
+p { margin-bottom: 0.8rem; }
+.muted { color: #64748b; font-size: 0.88rem; }
+.btn {
+  display: inline-block; padding: 0.6rem 1.4rem; border-radius: 8px; border: none;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.btn-primary { background: #1e3a5f; color: #fff; }
+.btn-primary:hover { background: #2a5280; }
+.btn-outline { background: #fff; color: #1e3a5f; border: 1.5px solid #1e3a5f; }
+.btn-outline:hover { background: #f8fafc; }
+.btn-group { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+.progress-note { font-size: 0.78rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+.docket-clock {
+  font-size: 0.78rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 0.5rem;
+}
+.docket-clock.clock-tight { color: #b45309; }
+
+/* Risk panel */
+.risk-panel {
+  background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #2563eb;
+  border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0;
+}
+.risk-panel .risk-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #2563eb; margin-bottom: 0.4rem; }
+.risk-score-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.risk-score { font-size: 2.2rem; font-weight: 800; color: #1e3a5f; }
+.risk-band { font-size: 0.78rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 999px; }
+.risk-low { background: #ecfdf5; color: #047857; }
+.risk-moderate { background: #fffbeb; color: #b45309; }
+.risk-high { background: #fef2f2; color: #b91c1c; }
+.risk-factors { font-size: 0.84rem; color: #475569; margin-top: 0.6rem; }
+.risk-factors li { margin-left: 1.2rem; margin-bottom: 0.2rem; }
+.vendor-line {
+  font-size: 0.74rem; color: #94a3b8; font-style: italic; margin-top: 0.7rem;
+  border-top: 1px dashed #bfdbfe; padding-top: 0.5rem;
+}
+
+/* Case file */
+.file-panel { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; }
+.file-panel .file-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 0.5rem; }
+.file-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem 1.25rem; font-size: 0.88rem; }
+.file-grid .k { color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.file-grid .v { font-weight: 600; color: #1a202c; }
+.file-notes { margin-top: 0.75rem; font-size: 0.86rem; color: #334155; border-top: 1px dashed #e2e8f0; padding-top: 0.6rem; }
+.log-list { font-size: 0.86rem; color: #334155; margin-top: 0.2rem; }
+.log-list li { margin-left: 1.2rem; margin-bottom: 0.35rem; }
+
+/* Decision buttons */
+.decision-row { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+.btn-release { background: #ecfdf5; color: #047857; border: 1.5px solid #a7f3d0; }
+.btn-release:hover, .btn-release.selected { background: #047857; color: #fff; border-color: #047857; }
+.btn-conditions { background: #fffbeb; color: #b45309; border: 1.5px solid #fde68a; }
+.btn-conditions:hover, .btn-conditions.selected { background: #b45309; color: #fff; border-color: #b45309; }
+.btn-detain { background: #fef2f2; color: #b91c1c; border: 1.5px solid #fecaca; }
+.btn-detain:hover, .btn-detain.selected { background: #b91c1c; color: #fff; border-color: #b91c1c; }
+
+/* News panel (epilogue) */
+.news-panel {
+  background: #fdfdf8; border: 1px solid #e2e8f0; border-top: 4px solid #1e3a5f;
+  border-bottom: 4px solid #1e3a5f; border-radius: 4px; padding: 1.4rem 1.5rem; margin: 1rem 0;
+}
+.news-kicker { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; margin-bottom: 0.6rem; }
+.news-headline { font-family: Georgia, 'Times New Roman', serif; font-size: 1.45rem; font-weight: 800; color: #1a202c; line-height: 1.28; margin-bottom: 0.5rem; }
+.news-byline { font-size: 0.78rem; color: #94a3b8; font-style: italic; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.85rem; }
+.news-panel p { font-family: Georgia, 'Times New Roman', serif; font-size: 0.96rem; color: #334155; }
+.quote-block {
+  border-left: 3px solid #2563eb; background: #eff6ff; padding: 0.65rem 1rem;
+  margin: 0.85rem 0; font-size: 0.9rem; font-style: italic; color: #1e3a5f;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.doc-facsimile {
+  border: 1px dashed #94a3b8; background: #f8fafc; border-radius: 6px; padding: 1rem 1.25rem;
+  margin: 1rem 0; font-family: 'Courier New', monospace; font-size: 0.82rem; color: #334155;
+}
+.doc-facsimile .doc-title { font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1e3a5f; margin-bottom: 0.5rem; }
+.doc-facsimile .doc-line { margin-bottom: 0.3rem; }
+.doc-facsimile .doc-sign { margin-top: 0.6rem; font-weight: 700; }
+.closing-line { font-size: 0.92rem; color: #1e3a5f; font-weight: 600; margin-top: 1rem; }
+
+/* Results */
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1rem 0; }
+th { text-align: left; padding: 0.5rem 0.6rem; background: #f1f5f9; color: #475569; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 0.5rem 0.6rem; border-bottom: 1px solid #f1f5f9; }
+.highlight-row { background: #fffbeb; }
+.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+.stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.9rem; text-align: center; }
+.stat-card .num { font-size: 1.5rem; font-weight: 800; color: #1e3a5f; }
+.stat-card .lbl { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.2rem; }
+.debrief-science { background: #f8fafc; border-left: 4px solid #1e3a5f; border-radius: 0 8px 8px 0; padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.9rem; }
+.booklet-link {
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+  padding: 1rem 1.25rem; margin-top: 1.25rem; font-size: 0.9rem; text-align: center;
+}
+.booklet-link a { color: #1e3a5f; font-weight: 700; }
+footer { text-align: center; padding: 1.5rem; font-size: 0.75rem; color: #94a3b8; }
+.hidden { display: none; }
+@media (max-width: 600px) { main { padding: 1rem 0.75rem 2rem; } .panel { padding: 1.1rem; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The Docket</h1>
+  <div class="subtitle">The algorithm was advisory. The signature is yours.</div>
+  <div class="header-links">
+    <a href="https://demos.barcik.training/">&larr; All demos</a>
+    <span class="sep">&middot;</span>
+    <a href="https://publications.barcik.training/llm-human-interaction-patterns/">Read the booklet</a>
+  </div>
+</header>
+
+<main>
+
+<!-- BRIEFING -->
+<div class="panel" id="briefing">
+  <div class="panel-title">Your Role</div>
+  <h2>Presiding Judge &middot; Pretrial Division</h2>
+  <p>Six pretrial hearings are on your docket this afternoon. Every file arrives with a PreTrial Risk Assessment: a single tool-generated score from 1 to 10, a LOW, MODERATE, or HIGH band, and three stated factors. Your job is to read the file, weigh the assessment, and decide: release, release with conditions, or detain.</p>
+  <p class="muted">Under the EU AI Act, tools used to research facts and apply the law in judicial proceedings sit inside the administration of justice, a listed high-risk area (Annex III, point 8). You are the required human oversight. This simulation asks what that oversight actually buys, and who is left holding it when a file was more complicated than the score.</p>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="startGame()">Open the Docket</button>
+  </div>
+</div>
+
+<!-- CASE SCREEN -->
+<div class="panel hidden" id="case-screen">
+  <div class="docket-clock" id="docket-clock">Case 1 of 6</div>
+  <h2 id="case-title"></h2>
+  <p class="muted" id="case-meta"></p>
+  <div id="case-slots"></div>
+  <div id="case-assess"></div>
+</div>
+
+<!-- REPLAY (CASE 4 ONLY) -->
+<div class="panel hidden" id="replay-screen">
+  <div class="panel-title">Replay &middot; Docket 2214-D</div>
+  <h2>The Same File, One More Time</h2>
+  <div id="replay-slots"></div>
+  <div id="replay-actions"></div>
+</div>
+
+<!-- EPILOGUE -->
+<div class="panel hidden" id="epilogue">
+  <div class="panel-title">Three Months Later</div>
+  <div id="epilogue-content"></div>
+  <div id="epilogue-actions"></div>
+</div>
+
+<!-- RESULTS -->
+<div class="panel hidden" id="results">
+  <div class="panel-title">The Debrief</div>
+  <h2>You Were the Human in the Loop</h2>
+  <p>Six cases, six PreTrial Risk Assessments, six decisions with your name on them. Here is how your calls lined up against the tool, and what Docket 2214-D was built to show.</p>
+  <div class="stat-cards" id="stat-cards"></div>
+  <div id="results-table"></div>
+  <div class="debrief-science">
+    <h3>The science</h3>
+    <p>Madeleine Clare Elish named this pattern the <strong>moral crumple zone</strong> in 2019: in a human-machine system, legal and moral responsibility gets displaced onto the nearest human operator, the one person with a name and a signature, even when that operator had limited real control over the outcome. The human absorbs the failure the way a car's crumple zone absorbs impact: by design, so the frame behind it does not have to.</p>
+    <p>Ben Green reviewed dozens of policies requiring human oversight of government algorithms in 2022 and found that the oversight largely fails to catch bad recommendations in practice, while doing real work to legitimize the systems it supervises. A human signed off, so the process looks accountable, whether or not that human actually second-guessed the machine.</p>
+    <p>The vise you just felt in Docket 2214-D, follow the tool and own its errors, or deviate and own the deviation statistics, is what "we'll just put a human in the loop" actually delegates to that human. The tool is never named in either headline. The signature under review is always the judge's.</p>
+    <p style="margin-bottom:0;">Real pretrial risk instruments carry documented bias problems that go well beyond what a six-case fictional demo can show; treat this simulation as a lesson in accountability structure, not a benchmark of any actual tool.</p>
+  </div>
+  <div class="booklet-link">
+    The companion booklet opens with exactly this problem, "The Case Against the Naive Loop", before building its design answer:<br>
+    <a href="https://publications.barcik.training/llm-human-interaction-patterns/">LLM-Human Interaction Design Patterns for Operations &rarr;</a>
+  </div>
+  <div class="btn-group" style="justify-content:center;">
+    <button class="btn btn-outline" onclick="location.reload()">Run It Again</button>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  All defendants, cases, journalists, and jurisdictions in this simulation are entirely fictional.<br>
+  Part of <a href="https://demos.barcik.training/" style="color:#64748b;">The Human-in-the-Loop Lab</a> &middot; robert@barcik.training
+</footer>
+
+<script>
+// Six fictional pretrial cases. Case 4 (index 3) is the seed: the AI sees only
+// convictions, address stability, and age; it never sees the escalating contact log.
+const CASES = [
+  {
+    id: 1, docket: '2214-A', person: 'Casey M.',
+    charge: 'Theft (Retail), Third Offense in 18 Months',
+    prior: 'Two prior convictions for retail theft (misdemeanor), both within the last 18 months. No violent offenses on record.',
+    file: {
+      'Employment': 'Unemployed since March',
+      'Residence': 'Staying with a sibling, no lease in own name',
+      'Cooperation': 'Attended all prior court dates',
+      'Counsel note': 'Requests release to attend a job interview scheduled next week.'
+    },
+    risk: { band: 'MODERATE', score: 6, factors: ['Two prior convictions within 18 months', 'Currently unemployed', 'No stable address in own name'] }
+  },
+  {
+    id: 2, docket: '2214-B', person: 'Jordan R.',
+    charge: 'Driving Under the Influence, First Offense',
+    prior: 'No prior convictions of any kind.',
+    file: {
+      'Employment': 'Warehouse supervisor, same employer 5 years',
+      'Residence': 'Owns residence with partner, 6 years',
+      'Cooperation': 'Fully cooperative, license already surrendered voluntarily',
+      'Counsel note': 'Requests conditions rather than unconditional release.'
+    },
+    risk: { band: 'LOW', score: 2, factors: ['No prior record', 'Stable employment, same employer 5 years', 'First listed offense category'] }
+  },
+  {
+    id: 3, docket: '2214-C', person: 'Riley T.',
+    charge: 'Assault, Bar Altercation',
+    prior: 'One prior contact for disorderly conduct, two years ago, no conviction entered.',
+    file: {
+      'Employment': 'Part-time retail associate',
+      'Residence': 'Lives alone, 1 year at current address',
+      'Cooperation': 'Voluntarily gave a statement to police',
+      'Counsel note': 'Other party involved in the altercation was also charged; witnesses describe mutual combat.'
+    },
+    risk: { band: 'MODERATE', score: 5, factors: ['One prior contact, non-violent', 'Alcohol involved in current incident', 'Mutual combat reported by witnesses'] }
+  },
+  {
+    id: 4, docket: '2214-D', person: 'Avery N.',
+    charge: 'Disorderly Conduct, Domestic Disturbance (verbal, no injury this incident)',
+    prior: 'No prior convictions on record.',
+    file: {
+      'Employment': 'Terminated two weeks ago (logistics coordinator, 2 years)',
+      'Residence': 'Same residence, 3 years'
+    },
+    contactLog: [
+      '4 months ago: noise complaint from a neighbor, no charges filed.',
+      '6 weeks ago: welfare check requested; officer report notes "raised voices, a door reported broken."',
+      'This arrest: officer notes the defendant "raised voice, blocked the exit" during the disturbance.',
+      'Filed 6 days ago: a family member requested a protective order; the request is pending review, not yet granted.'
+    ],
+    counselNote: 'Counsel requests release, noting no conviction has ever been entered against the defendant.',
+    risk: { band: 'LOW', score: 2, factors: ['No prior convictions on record', 'Stable residential address, 3 years at current residence', 'Age bracket associated with lower instrument-wide risk'] }
+  },
+  {
+    id: 5, docket: '2214-E', person: 'Morgan K.',
+    charge: 'Breach of Pretrial Release Conditions, Curfew Violation',
+    prior: 'One prior conviction, possession (minor), currently serving pretrial release on that matter.',
+    file: {
+      'Employment': 'Employed, evening shift',
+      'Residence': 'Fixed address, conditions verified at intake',
+      'Compliance history': 'Second curfew violation logged in 30 days',
+      'Counsel note': 'Self-reports transportation issues as the cause.'
+    },
+    risk: { band: 'HIGH', score: 7, factors: ['Existing violation of active release conditions', 'Second compliance failure in 30 days', 'Prior conviction on record'] }
+  },
+  {
+    id: 6, docket: '2214-F', person: 'Taylor B.',
+    charge: 'Fraud, Benefits Misrepresentation',
+    prior: 'No prior convictions.',
+    file: {
+      'Employment': 'Employed full-time',
+      'Residence': 'Fixed address, 4 years',
+      'Cooperation': 'Fully cooperative, retained counsel, proposed a restitution plan',
+      'Counsel note': 'Case involves a documentation review; no allegation of concealment or flight risk.'
+    },
+    risk: { band: 'LOW', score: 3, factors: ['No prior convictions', 'Non-violent offense category', 'Employed with a proposed restitution plan'] }
+  }
+];
+
+const STATE = { current: 0, decisions: [], case4Decision: null, replayDecision: null };
+
+function startGame() {
+  document.getElementById('briefing').classList.add('hidden');
+  document.getElementById('case-screen').classList.remove('hidden');
+  showCase(0);
+}
+
+function riskPanelHTML(c) {
+  const bandClass = c.risk.band === 'LOW' ? 'risk-low' : c.risk.band === 'MODERATE' ? 'risk-moderate' : 'risk-high';
+  const rec = c.risk.band === 'LOW' ? 'Release' : c.risk.band === 'MODERATE' ? 'Release with conditions' : 'Detain';
+  return `<div class="risk-panel">
+    <div class="risk-label">PreTrial Risk Assessment &middot; Meridian PTRA v3.1</div>
+    <div class="risk-score-row">
+      <span class="risk-score">${c.risk.score}/10</span>
+      <span class="risk-band ${bandClass}">${c.risk.band}</span>
+      <span style="font-size:0.88rem; font-weight:600;">Instrument recommendation: ${rec}</span>
+    </div>
+    <ul class="risk-factors">${c.risk.factors.map(f => `<li>${f}</li>`).join('')}</ul>
+    <div class="vendor-line">Advisory only. Final determination rests with the judicial officer.</div>
+  </div>`;
+}
+
+function filePanelHTML(c) {
+  let html = `<div class="file-panel">
+    <div class="file-label">Case File</div>
+    <div class="file-grid">
+      <div><div class="k">Docket</div><div class="v">${c.docket}</div></div>
+      <div><div class="k">Defendant</div><div class="v">${c.person}</div></div>
+      ${Object.entries(c.file).map(([k, v]) => `<div><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}
+    </div>
+    <div class="file-notes"><strong>Prior record:</strong> ${c.prior}</div>
+  </div>`;
+  if (c.contactLog) {
+    html += `<div class="file-panel">
+      <div class="file-label">Recent Contact Log</div>
+      <ul class="log-list">${c.contactLog.map(l => `<li>${l}</li>`).join('')}</ul>
+      ${c.counselNote ? `<div class="file-notes"><strong>Counsel note:</strong> ${c.counselNote}</div>` : ''}
+    </div>`;
+  }
+  return html;
+}
+
+function decisionHTML(handler) {
+  return `<div class="decision-row">
+    <button class="btn btn-release" onclick="${handler}('release')">Release</button>
+    <button class="btn btn-conditions" onclick="${handler}('conditions')">Release with Conditions</button>
+    <button class="btn btn-detain" onclick="${handler}('detain')">Detain</button>
+  </div>`;
+}
+
+function showCase(i) {
+  STATE.current = i;
+  const c = CASES[i];
+  const casesLeft = CASES.length - (i + 1);
+  const clockEl = document.getElementById('docket-clock');
+  const tail = casesLeft > 0
+    ? `${casesLeft} case${casesLeft === 1 ? '' : 's'} remaining after this one`
+    : 'Last case before the recess';
+  clockEl.textContent = `Case ${i + 1} of ${CASES.length} · Court adjourns 16:30 · ${tail}`;
+  clockEl.className = 'docket-clock' + (casesLeft <= 1 ? ' clock-tight' : '');
+  document.getElementById('case-title').textContent = c.charge;
+  document.getElementById('case-meta').textContent = `Docket ${c.docket} · ${c.person}`;
+  document.getElementById('case-slots').innerHTML = filePanelHTML(c) + riskPanelHTML(c);
+  document.getElementById('case-assess').innerHTML = decisionHTML('decide');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function decide(decision) {
+  const c = CASES[STATE.current];
+  STATE.decisions.push({ case: c, decision: decision });
+  if (c.id === 4) STATE.case4Decision = decision;
+  if (STATE.current + 1 < CASES.length) {
+    showCase(STATE.current + 1);
+  } else {
+    showEpilogue(STATE.case4Decision, 'main');
+  }
+}
+
+function newsShell(kicker, headline, body) {
+  return `<div class="news-panel">
+    <div class="news-kicker">${kicker}</div>
+    <div class="news-headline">${headline}</div>
+    <div class="news-byline">Staff report · Docket 2214-D follow-up</div>
+    ${body}
+  </div>`;
+}
+
+function releasedEpilogueHTML() {
+  return newsShell(
+    'Court Reporter &middot; Three Months Later',
+    'Judge Released Attacker Despite Warning Signs in File',
+    `<p>Three months after Avery N. was released from the pretrial docket, the family member who had requested a protective order was seriously injured in an assault at the residence police had visited twice before. The protective order request, filed six days before the release hearing, had never been granted; the case was still on the pending list on the day of the attack.</p>
+    <div class="quote-block">A review by the Office of Judicial Oversight quotes the disclaimer printed on every PreTrial Risk Assessment screen: "Advisory only. Final determination rests with the judicial officer."</div>
+    <div class="quote-block">Meridian Analytics, which supplies the PreTrial Risk Assessment tool used in this jurisdiction, issued a short statement: "Our tool flagged the risk factors available in structured records at the time of assessment. Judicial discretion was exercised in the final determination."</div>
+    <div class="doc-facsimile">
+      <div class="doc-title">Pretrial Release Order</div>
+      <div class="doc-line">Docket 2214-D · Defendant: Avery N.</div>
+      <div class="doc-line">Instrument score at hearing: LOW, 2/10</div>
+      <div class="doc-line">Disposition: Released</div>
+      <div class="doc-sign">Signed: The Presiding Judge, this docket. That was you.</div>
+    </div>
+    <p class="closing-line">The tool was never named on the order. The signature line was yours.</p>`
+  );
+}
+
+function detainedEpilogueHTML() {
+  return newsShell(
+    'Court Reporter &middot; Three Months Later',
+    "Judge's Override Rate Under Review After Low-Score Detention",
+    `<p>A data journalist reviewing three months of pretrial dockets found that in Docket 2214-D, the presiding judge detained a defendant the PreTrial Risk Assessment tool had scored LOW, 2 out of 10. The published analysis noted the judge's override rate on low-scored cases running well above the courthouse average.</p>
+    <div class="quote-block">An oversight memo from the Pretrial Services Administration asks the judge to submit a written justification for deviations from "the validated instrument" whenever the override rate exceeds a set threshold. No such memo is issued when a judge simply follows the tool's recommendation, whatever the outcome turns out to be.</div>
+    <p>Nothing happened to Avery N.'s family member in this branch. No one was hurt. The scrutiny landed anyway, on the decision that departed from the score.</p>
+    <div class="doc-facsimile">
+      <div class="doc-title">Oversight Memorandum</div>
+      <div class="doc-line">Re: Docket 2214-D, deviation from PreTrial Risk Assessment</div>
+      <div class="doc-line">Action requested: written justification within 10 days</div>
+      <div class="doc-sign">Addressed to: The Presiding Judge, this docket. That was you.</div>
+    </div>
+    <p class="closing-line">The tool was never named in the memo. The signature under review was yours.</p>`
+  );
+}
+
+function showEpilogue(decision, mode) {
+  document.getElementById('case-screen').classList.add('hidden');
+  document.getElementById('replay-screen').classList.add('hidden');
+  const panel = document.getElementById('epilogue');
+  panel.classList.remove('hidden');
+  const branch = decision === 'detain' ? 'detained' : 'released';
+  document.getElementById('epilogue-content').innerHTML = branch === 'released' ? releasedEpilogueHTML() : detainedEpilogueHTML();
+  const actions = document.getElementById('epilogue-actions');
+  if (mode === 'main') {
+    actions.innerHTML = `<div class="btn-group">
+      <button class="btn btn-outline" onclick="startReplay()">See the Other Ending</button>
+      <button class="btn btn-primary" onclick="showResults()">Continue to the Debrief</button>
+    </div>`;
+  } else {
+    actions.innerHTML = `<p class="muted" style="margin-top:0.25rem;">Two branches, two headlines, one tool that appears in neither photograph.</p>
+      <div class="btn-group"><button class="btn btn-primary" onclick="showResults()">Continue to the Debrief</button></div>`;
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startReplay() {
+  document.getElementById('epilogue').classList.add('hidden');
+  const rp = document.getElementById('replay-screen');
+  rp.classList.remove('hidden');
+  const c = CASES[3];
+  document.getElementById('replay-slots').innerHTML = filePanelHTML(c) + riskPanelHTML(c);
+  document.getElementById('replay-actions').innerHTML =
+    `<p class="muted">Same file, same score. This time, choose differently and see where the other ending lands.</p>` +
+    decisionHTML('decideReplay');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function decideReplay(decision) {
+  STATE.replayDecision = decision;
+  showEpilogue(decision, 'replay');
+}
+
+function recKey(c) { return c.risk.band === 'LOW' ? 'release' : c.risk.band === 'MODERATE' ? 'conditions' : 'detain'; }
+function recLabel(c) { return c.risk.band === 'LOW' ? 'Release' : c.risk.band === 'MODERATE' ? 'Release with conditions' : 'Detain'; }
+function decisionLabel(d) { return d === 'release' ? 'Released' : d === 'conditions' ? 'Released with conditions' : 'Detained'; }
+
+function showResults() {
+  document.getElementById('epilogue').classList.add('hidden');
+  document.getElementById('replay-screen').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+
+  const matches = STATE.decisions.filter(r => r.decision === recKey(r.case)).length;
+  const deviations = STATE.decisions.length - matches;
+
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="stat-card"><div class="num">${matches}</div><div class="lbl">Decisions matching the tool's recommendation</div></div>
+    <div class="stat-card"><div class="num">${deviations}</div><div class="lbl">Decisions departing from the tool's recommendation</div></div>
+    <div class="stat-card"><div class="num">${decisionLabel(STATE.case4Decision)}</div><div class="lbl">Docket 2214-D, your first call (tool said Release, LOW 2/10)</div></div>`;
+
+  const rows = STATE.decisions.map(r => {
+    const isCase4 = r.case.id === 4;
+    let replayNote = '';
+    if (isCase4 && STATE.replayDecision) {
+      replayNote = `<br><span class="muted" style="font-size:0.78rem;">Replay branch explored: ${decisionLabel(STATE.replayDecision)}</span>`;
+    }
+    return `<tr class="${isCase4 ? 'highlight-row' : ''}">
+      <td><strong>${r.case.docket}</strong></td>
+      <td>${r.case.charge}</td>
+      <td>${recLabel(r.case)} (${r.case.risk.band} ${r.case.risk.score}/10)</td>
+      <td>${decisionLabel(r.decision)}${replayNote}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('results-table').innerHTML = `<table>
+    <tr><th>Docket</th><th>Charge</th><th>Instrument recommendation</th><th>Your decision</th></tr>${rows}</table>`;
+}
+</script>
+</body>
+</html>

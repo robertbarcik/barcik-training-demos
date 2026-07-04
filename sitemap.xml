@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://demos.barcik.training/</loc>
-    <lastmod>2026-06-12</lastmod>
+    <lastmod>2026-07-04</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
@@ -93,6 +93,41 @@
   <url>
     <loc>https://demos.barcik.training/demos/what-should-you-build.html</loc>
     <lastmod>2026-06-12</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://demos.barcik.training/demos/operators-dilemma.html</loc>
+    <lastmod>2026-07-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://demos.barcik.training/demos/credit-desk.html</loc>
+    <lastmod>2026-07-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://demos.barcik.training/demos/triage-ward.html</loc>
+    <lastmod>2026-07-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://demos.barcik.training/demos/watchlist.html</loc>
+    <lastmod>2026-07-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://demos.barcik.training/demos/shortlist.html</loc>
+    <lastmod>2026-07-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://demos.barcik.training/demos/border-queue.html</loc>
+    <lastmod>2026-07-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://demos.barcik.training/demos/docket.html</loc>
+    <lastmod>2026-07-04</lastmod>
     <priority>0.5</priority>
   </url>
 </urlset>

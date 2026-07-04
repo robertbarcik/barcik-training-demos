@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Shortlist &middot; Rubber-Stamping in AI-Assisted Hiring</title>
+<meta name="description" content="An interactive simulation: the AI ranked eight applicants for an IT Support Team Lead role. You sign the interview list. Part of the Human-in-the-Loop Lab.">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f1f5f9; color: #1a202c; line-height: 1.6; font-size: 16px;
+}
+header { background: #1e3a5f; color: #fff; padding: 1.2rem 2rem; text-align: center; }
+header h1 { font-size: 1.35rem; letter-spacing: -0.01em; }
+header .subtitle { font-size: 0.85rem; color: #cbd5e0; margin-top: 0.15rem; }
+.header-links { margin-top: 0.45rem; font-size: 0.78rem; }
+.header-links a { color: #93c5fd; text-decoration: none; }
+.header-links a:hover { text-decoration: underline; }
+.header-links .sep { color: #64748b; margin: 0 0.4rem; }
+main { max-width: 860px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+.panel {
+  background: #fff; border-radius: 10px; padding: 1.5rem;
+  border: 1px solid #e2e8f0; margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+}
+.panel-title {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #2563eb; margin-bottom: 0.6rem;
+}
+h2 { font-size: 1.25rem; color: #1e3a5f; margin-bottom: 0.6rem; }
+h3 { font-size: 1.02rem; color: #1e3a5f; margin-bottom: 0.4rem; }
+p { margin-bottom: 0.8rem; }
+.muted { color: #64748b; font-size: 0.88rem; }
+.btn {
+  display: inline-block; padding: 0.6rem 1.4rem; border-radius: 8px; border: none;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.btn-primary { background: #1e3a5f; color: #fff; }
+.btn-primary:hover { background: #2a5280; }
+.btn-outline { background: #fff; color: #1e3a5f; border: 1.5px solid #1e3a5f; }
+.btn-outline:hover { background: #f8fafc; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-group { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+.progress-note { font-size: 0.78rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+
+/* Timer */
+.timer-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+.timer-bar { font-size: 0.85rem; font-weight: 700; color: #1e3a5f; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 999px; padding: 0.35rem 0.9rem; }
+.timer-bar.timer-critical { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+.expire-banner {
+  background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #b91c1c;
+  border-radius: 0 8px 8px 0; padding: 0.9rem 1.2rem; margin-bottom: 1rem; font-weight: 600; color: #b91c1c;
+}
+
+/* Candidate list */
+.list-section-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin: 1.1rem 0 0.5rem; }
+.candidate-card {
+  border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 0.6rem; overflow: hidden; background: #fff;
+}
+.candidate-card.will-interview { border-left: 4px solid #047857; }
+.candidate-card.no-interview { border-left: 4px solid #cbd5e0; }
+.candidate-card.rejected-card { border-left: 4px solid #94a3b8; background: #f8fafc; opacity: 0.9; }
+.candidate-header { display: flex; align-items: center; gap: 0.9rem; padding: 0.85rem 1rem; flex-wrap: wrap; }
+.candidate-rank { font-size: 1.3rem; font-weight: 800; color: #1e3a5f; min-width: 2.2rem; text-align: center; }
+.candidate-main { flex: 1; min-width: 200px; }
+.candidate-name { font-weight: 700; color: #1a202c; font-size: 1rem; }
+.candidate-score-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.2rem; }
+.ai-score-mini { font-weight: 800; color: #2563eb; font-size: 0.95rem; }
+.ai-reasons-mini { color: #64748b; font-size: 0.8rem; }
+.candidate-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.btn-sm { padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem; font-weight: 700; border: 1.5px solid #cbd5e0; background: #fff; color: #1e3a5f; cursor: pointer; font-family: inherit; }
+.btn-sm:hover:not(:disabled) { background: #f8fafc; }
+.btn-sm:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-sm.btn-reject { color: #b91c1c; border-color: #fecaca; }
+.btn-sm.btn-restore { color: #047857; border-color: #a7f3d0; }
+.candidate-file {
+  max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out;
+  background: #f8fafc; border-top: 1px solid transparent;
+}
+.candidate-file.expanded { max-height: 900px; border-top: 1px solid #e2e8f0; }
+.candidate-file-inner { padding: 1rem 1.25rem; }
+.file-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem 1.25rem; font-size: 0.86rem; margin-bottom: 0.75rem; }
+.file-grid .k { color: #64748b; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.file-grid .v { font-weight: 600; color: #1a202c; }
+.file-notes { font-size: 0.86rem; color: #334155; border-top: 1px dashed #e2e8f0; padding-top: 0.6rem; }
+.interview-line { text-align: center; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #047857; border-top: 2px dashed #a7f3d0; padding-top: 0.5rem; margin: 0.6rem 0 0.8rem; }
+.no-interview-note { text-align: center; font-size: 0.75rem; color: #94a3b8; margin: 0.4rem 0 0.8rem; }
+
+/* Results */
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1rem 0; }
+th { text-align: left; padding: 0.5rem 0.6rem; background: #f1f5f9; color: #475569; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 0.5rem 0.6rem; border-bottom: 1px solid #f1f5f9; }
+.highlight-row { background: #fffbeb; }
+.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+.stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.9rem; text-align: center; }
+.stat-card .num { font-size: 1.7rem; font-weight: 800; color: #1e3a5f; }
+.stat-card .lbl { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.2rem; }
+.debrief-science { background: #f8fafc; border-left: 4px solid #1e3a5f; border-radius: 0 8px 8px 0; padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.9rem; }
+.booklet-link {
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+  padding: 1rem 1.25rem; margin-top: 1.25rem; font-size: 0.9rem; text-align: center;
+}
+.booklet-link a { color: #1e3a5f; font-weight: 700; }
+footer { text-align: center; padding: 1.5rem; font-size: 0.75rem; color: #94a3b8; }
+.hidden { display: none; }
+@media (max-width: 600px) {
+  main { padding: 1rem 0.75rem 2rem; }
+  .panel { padding: 1.1rem; }
+  .candidate-header { padding: 0.75rem 0.85rem; }
+  .candidate-actions { width: 100%; justify-content: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The Shortlist</h1>
+  <div class="subtitle">The AI ranked them. You sign the interview list.</div>
+  <div class="header-links">
+    <a href="https://demos.barcik.training/">&larr; All demos</a>
+    <span class="sep">&middot;</span>
+    <a href="https://publications.barcik.training/llm-human-interaction-patterns/">Read the booklet</a>
+  </div>
+</header>
+
+<main>
+
+<!-- BRIEFING -->
+<div class="panel" id="briefing">
+  <div class="panel-title">Your Role</div>
+  <h2>Hiring Manager &middot; IT Support Team Lead</h2>
+  <p>Eight applicants came in for the open IT Support Team Lead role. Your company's screening tool, TalentSort AI, has already scored and ranked all eight. The top four on the list get interview slots. Your job is to review the ranking, open any file you want to check, reorder or reject candidates, and sign off on a final list of four.</p>
+  <p class="muted">Recruitment and CV screening are listed as high-risk uses under Annex III of the EU AI Act, precisely because a spurious feature can quietly become a rejection rule. You are the safeguard the law assumes exists. The question this simulation asks: how much of this list is actually your judgment?</p>
+  <p class="muted">Your next meeting starts in 3:00. The clock starts when you open the list.</p>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="startGame()">Open the Shortlist</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="panel hidden" id="game-screen">
+  <div class="timer-row">
+    <div class="progress-note">Interview List Builder</div>
+    <div class="timer-bar" id="timer-bar">Next meeting in <span id="timer-text">3:00</span></div>
+  </div>
+  <div id="expire-banner" class="expire-banner hidden">Your next meeting starts now. The list was submitted as it stood.</div>
+  <p class="muted">Reorder, expand a file, or reject a candidate. The top four when you submit get interview slots. At least four candidates must stay on the list.</p>
+
+  <div class="list-section-label">Ranked list</div>
+  <div id="candidate-list-ranked"></div>
+
+  <div id="rejected-section" class="hidden">
+    <div class="list-section-label">Rejected</div>
+    <div id="candidate-list-rejected"></div>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-primary" id="submit-btn" onclick="submitList(false)">Submit Final List (Top 4)</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="panel hidden" id="results">
+  <div class="panel-title">The Reveal</div>
+  <h2>What the Final List Says About Your Review</h2>
+  <p>Here is how your final list compares to TalentSort AI's original ranking, and what each file actually contained.</p>
+  <div class="stat-cards" id="stat-cards"></div>
+  <div id="results-verdict"></div>
+  <div id="results-table"></div>
+  <div class="debrief-science">
+    <h3>The science</h3>
+    <p>Weight of Advice is a standard behavioral measure of how far a person's final judgment moves toward advice they were given, relative to their own independent starting point. Applied to a ranked list, the same idea holds: a final order that sits almost exactly where the AI put it, produced without opening the files, amounts to ratification rather than review, the point where the Draft and Refine pattern degrades into rubber-stamping.</p>
+    <p style="margin-bottom:0;">Recruitment and CV screening are listed as high-risk uses under Annex III, point 4 of the EU AI Act for exactly this reason: a spurious feature, like an employment gap that was documented parental leave, can silently become a rejection rule inside a scoring model. The human review step is the legally assumed safeguard against that. It only works if someone actually opens the file.</p>
+  </div>
+  <div class="booklet-link">
+    Weight of Advice and other behavioral metrics for trust calibration are covered in the companion booklet:<br>
+    <a href="https://publications.barcik.training/llm-human-interaction-patterns/">LLM-Human Interaction Design Patterns for Operations &rarr;</a>
+  </div>
+  <div class="btn-group" style="justify-content:center;">
+    <button class="btn btn-outline" onclick="location.reload()">Run It Again</button>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  All candidates and employers in this simulation are entirely fictional.<br>
+  Part of <a href="https://demos.barcik.training/" style="color:#64748b;">The Human-in-the-Loop Lab</a> &middot; robert@barcik.training
+</footer>
+
+<script>
+// Eight fictional applicants for "IT Support Team Lead". id = TalentSort AI's original rank (1 = top score).
+// Two seeded cases: id 7 (Amara Osei, strongest file, buried by a parental-leave gap) and
+// id 2 (Jordan Ellery, keyword-dense but thin file, overscored).
+const CANDIDATES = [
+  {
+    id: 1, name: 'James Okafor', score: 92,
+    reasons: ['Exact job title match in work history', '8 years continuous IT support experience', 'ITIL v4 and CompTIA A+ certified'],
+    file: {
+      'Years experience': '8 years, IT support',
+      'Current role': 'Senior Support Engineer, MidlandRetail Group (5 yrs)',
+      'Team leadership': 'Coordinates shift handover for a 4-person desk, no formal reports',
+      'Certifications': 'CompTIA A+, ITIL v4 Foundation',
+      'Education': 'Diploma, Information Systems',
+      'Reference summary': 'Manager: "Reliable, technically sharp, keeps tickets moving."'
+    },
+    notesFull: 'File is consistent with the score. No gaps, no inflated language, references check out. A well-documented top candidate.',
+    seeded: null,
+    tell: 'Straightforward file. Score and stated reasons hold up under review.'
+  },
+  {
+    id: 2, name: 'Jordan Ellery', score: 88,
+    reasons: ["Resume keyword match: 94% against job posting", "Action verbs 'led', 'orchestrated', 'spearheaded' appear 11 times", 'No employment gaps in the past 4 years'],
+    file: {
+      'Years experience': '4 years, IT support (5 employers)',
+      'Employment history': 'IT Support Associate roles at 5 companies, 6 to 11 months each',
+      'Team leadership': 'No direct reports at any employer',
+      'Certifications': 'None listed',
+      'Education': 'BA, Communications',
+      'Reference summary': 'Most recent manager: "Jordan completed assigned tickets. I would not describe them as a leader on the team."'
+    },
+    notesFull: "The resume describes 'orchestrating an enterprise-wide migration.' The file shows Jordan was one of twelve associates assigned to that rollout, with no ownership of scope or budget. Five jobs in four years, all under a year each, no direct reports anywhere. The strongest language in this file is Jordan's own.",
+    seeded: 'weak-inflated',
+    tell: 'Score was built on keyword density, not verified impact. No leadership experience at any employer, five short tenures in four years, and a lukewarm reference from the most recent manager.'
+  },
+  {
+    id: 3, name: 'Priya Chandrasekaran', score: 79,
+    reasons: ['5 years IT support, steady tenure', 'Strong ticket resolution metrics', 'Relevant technical certifications'],
+    file: {
+      'Years experience': '5 years, IT support',
+      'Current role': 'Senior Support Technician, Callow & Reeve (3 yrs)',
+      'Team leadership': 'Mentors 2 junior technicians informally, no formal title',
+      'Certifications': 'CompTIA Network+, Microsoft 365 Certified',
+      'Education': 'BSc, Computer Science',
+      'Reference summary': 'Manager: "Technically excellent. Ready to grow into a lead role with the right support."'
+    },
+    notesFull: "Solid technical depth and steady tenure. Has not formally managed a team, so the 'Team Lead' title would be a first for Priya. Reference is positive and specific.",
+    seeded: null,
+    tell: 'File broadly supports the score. No formal leadership experience yet, but a credible growth case.'
+  },
+  {
+    id: 4, name: 'Lukas Novotny', score: 75,
+    reasons: ['4 years IT support experience', 'Led two internal migration projects', 'Consistently positive customer feedback scores'],
+    file: {
+      'Years experience': '4 years, IT support',
+      'Current role': 'IT Support Specialist, Nordveld Logistics (4 yrs, same employer)',
+      'Team leadership': 'Led two software migration projects (3 to 4 colleagues each), no ongoing reports',
+      'Certifications': 'CompTIA A+',
+      'Education': 'Vocational IT diploma',
+      'Reference summary': "Manager: \"Dependable, steps up when asked, hasn't had a permanent leadership title yet.\""
+    },
+    notesFull: 'Single-employer tenure and real, if temporary, project leadership on two occasions. The reasons in the score are accurate and traceable to the file.',
+    seeded: null,
+    tell: 'Reasons check out. Genuine, if limited, leadership experience.'
+  },
+  {
+    id: 5, name: 'Sofia Martinez', score: 68,
+    reasons: ['3 years IT support experience', 'Highest customer satisfaction score of the pool', 'Currently studying for ITIL certification'],
+    file: {
+      'Years experience': '3 years, IT support',
+      'Current role': 'IT Support Technician, Bellcrest Financial (2 yrs)',
+      'Team leadership': 'None formal, volunteers to train new hires',
+      'Certifications': 'ITIL Foundation (in progress)',
+      'Education': 'Associate degree, Business IT',
+      'Reference summary': 'Manager: "Fast learner, well liked, a bit junior for a lead role today."'
+    },
+    notesFull: 'Strong on customer-facing metrics, genuinely early in her career for a lead position. Score and reasons line up with the file.',
+    seeded: null,
+    tell: 'Matches the file. Promising, but the most junior of the plausible middle candidates.'
+  },
+  {
+    id: 6, name: 'Ben Harrington', score: 61,
+    reasons: ['2 years IT support after a prior career in retail management', 'Five years of people-management experience overall', 'Currently pursuing CompTIA A+'],
+    file: {
+      'Years experience': '2 years IT support, 5 years retail team management before that',
+      'Current role': 'IT Support Technician, Fenwick & Cole (2 yrs)',
+      'Team leadership': 'Managed a team of 7 in a prior retail career, none in IT yet',
+      'Certifications': 'CompTIA A+ (exam scheduled)',
+      'Education': 'BA, Business Administration',
+      'Reference summary': 'Manager: "Great people instincts, still building the technical depth for a senior IT role."'
+    },
+    notesFull: 'Genuine management experience, but it predates his move into IT, and the target certification is not yet complete. A believable but earlier-stage candidate for a technical lead role.',
+    seeded: null,
+    tell: "Consistent with the file. Real leadership background, but not yet in IT, and the target certification isn't finished."
+  },
+  {
+    id: 7, name: 'Amara Osei', score: 54,
+    reasons: ['24-month employment gap (2022 to 2024)', 'Strong certification match', 'Requested salary near the top of the posted band'],
+    file: {
+      'Years experience': '9 years IT support before the gap',
+      'Most recent role': 'IT Support Team Lead, Grantham Council (led a 6-person helpdesk, 4 yrs)',
+      'Team leadership': 'Direct people-management of 6 technicians, owned the escalation process',
+      'Certifications': 'CompTIA A+, Network+, ITIL v4, Microsoft Certified: Modern Desktop Administrator',
+      'Education': 'BSc, Computer Science',
+      'Employment gap': '2022 to 2024, documented parental leave, confirmed in writing by former employer HR',
+      'Reference summary': 'Former manager: "Amara ran the tightest ship of any team I managed. I would hire her again without hesitation."'
+    },
+    notesFull: 'Nine years of IT support experience, including four years under the exact job title on offer here, leading a six-person helpdesk. The gap the score flagged is documented parental leave, confirmed in writing by her former employer. On paper, this is the strongest file in the pool. Nothing in it explains the score except the gap.',
+    seeded: 'strong-hidden',
+    tell: 'Nine years of support experience, four of them with the exact job title on offer, leading a six-person team, plus excellent references. The gap the AI flagged as a risk factor was documented parental leave. This was the strongest file of the eight.'
+  },
+  {
+    id: 8, name: 'Derek Simmons', score: 47,
+    reasons: ['1 year of help desk experience', 'Certification obtained within the last 3 months', 'No leadership experience listed'],
+    file: {
+      'Years experience': '1 year, help desk (entry level)',
+      'Current role': 'Help Desk Technician, QuickFix IT Services (1 yr)',
+      'Team leadership': 'None',
+      'Certifications': 'CompTIA A+ (obtained 3 months ago)',
+      'Education': 'Recent bootcamp graduate',
+      'Reference summary': 'Manager: "Reliable, still learning the fundamentals, has potential."'
+    },
+    notesFull: 'Genuinely early career. Positive but generic reference. Consistent with the score, and probably not ready for a lead role yet.',
+    seeded: null,
+    tell: 'Matches the file. The most junior candidate in the pool, plausibly ranked last.'
+  }
+];
+
+const MAX_DEVIATION = 32; // sum |i - reverse(i)| for n = 8, the maximum possible reordering
+
+const STATE = {
+  ranked: [1, 2, 3, 4, 5, 6, 7, 8],
+  rejected: [],
+  expandedNow: new Set(),
+  opened: new Set(),
+  timeLeft: 180,
+  timerId: null,
+  locked: false,
+  submitted: false
+};
+
+function byId(id) { return CANDIDATES.find(c => c.id === id); }
+
+function startGame() {
+  document.getElementById('briefing').classList.add('hidden');
+  document.getElementById('game-screen').classList.remove('hidden');
+  renderAll();
+  startTimer();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startTimer() {
+  updateTimerText();
+  STATE.timerId = setInterval(() => {
+    STATE.timeLeft--;
+    if (STATE.timeLeft <= 0) {
+      STATE.timeLeft = 0;
+      updateTimerText();
+      clearInterval(STATE.timerId);
+      expireTimer();
+      return;
+    }
+    updateTimerText();
+  }, 1000);
+}
+
+function updateTimerText() {
+  const m = Math.floor(STATE.timeLeft / 60);
+  const s = STATE.timeLeft % 60;
+  const text = m + ':' + String(s).padStart(2, '0');
+  document.getElementById('timer-text').textContent = text;
+  const bar = document.getElementById('timer-bar');
+  if (STATE.timeLeft <= 30) {
+    bar.classList.add('timer-critical');
+  }
+}
+
+function expireTimer() {
+  STATE.locked = true;
+  document.getElementById('expire-banner').classList.remove('hidden');
+  renderAll();
+  setTimeout(() => submitList(true), 900);
+}
+
+function renderAll() {
+  renderRanked();
+  renderRejected();
+}
+
+function renderRanked() {
+  const container = document.getElementById('candidate-list-ranked');
+  const n = STATE.ranked.length;
+  let html = '';
+  STATE.ranked.forEach((id, idx) => {
+    const position = idx + 1;
+    const willInterview = position <= 4;
+    html += candidateCardHTML(byId(id), position, true, willInterview, idx === 0, idx === n - 1, n);
+    if (n > 4 && position === 4) {
+      html += '<div class="interview-line">Interview line &middot; above here gets a slot</div>';
+    }
+  });
+  if (n <= 4) {
+    html += '<div class="no-interview-note">Four or fewer remain on the list. Everyone here gets an interview slot.</div>';
+  }
+  container.innerHTML = html;
+}
+
+function renderRejected() {
+  const section = document.getElementById('rejected-section');
+  const container = document.getElementById('candidate-list-rejected');
+  if (STATE.rejected.length === 0) {
+    section.classList.add('hidden');
+    container.innerHTML = '';
+    return;
+  }
+  section.classList.remove('hidden');
+  let html = '';
+  STATE.rejected.forEach(id => {
+    html += candidateCardHTML(byId(id), null, false, false, false, false, 0);
+  });
+  container.innerHTML = html;
+}
+
+function candidateCardHTML(c, position, isRanked, willInterview, isFirst, isLast, listLen) {
+  const expanded = STATE.expandedNow.has(c.id);
+  const cardClass = isRanked ? (willInterview ? 'will-interview' : 'no-interview') : 'rejected-card';
+  const rankLabel = isRanked ? '#' + position : 'Rejected';
+  const disabledAttr = STATE.locked ? 'disabled' : '';
+  const canRejectMore = STATE.ranked.length > 4;
+
+  let actions = '';
+  if (isRanked) {
+    actions = `
+      <button class="btn-sm" onclick="moveUp(${c.id})" ${disabledAttr || (isFirst ? 'disabled' : '')}>Move up</button>
+      <button class="btn-sm" onclick="moveDown(${c.id})" ${disabledAttr || (isLast ? 'disabled' : '')}>Move down</button>
+      <button class="btn-sm btn-reject" onclick="rejectCandidate(${c.id})" ${disabledAttr || (!canRejectMore ? 'disabled title="At least 4 candidates must remain on the list"' : '')}>Reject</button>
+    `;
+  } else {
+    actions = `<button class="btn-sm btn-restore" onclick="restoreCandidate(${c.id})" ${disabledAttr}>Restore</button>`;
+  }
+
+  return `<div class="candidate-card ${cardClass}" id="card-${c.id}">
+    <div class="candidate-header">
+      <div class="candidate-rank">${rankLabel}</div>
+      <div class="candidate-main">
+        <div class="candidate-name">${c.name}</div>
+        <div class="candidate-score-row">
+          <span class="ai-score-mini">Score ${c.score}</span>
+          <span class="ai-reasons-mini">${c.reasons.join(' &middot; ')}</span>
+        </div>
+      </div>
+      <div class="candidate-actions">
+        <button class="btn-sm" onclick="toggleExpand(${c.id})">${expanded ? 'Hide file' : 'View full file'}</button>
+        ${actions}
+      </div>
+    </div>
+    <div class="candidate-file ${expanded ? 'expanded' : ''}" id="file-${c.id}">
+      <div class="candidate-file-inner">
+        <div class="file-grid">${Object.entries(c.file).map(([k, v]) => `<div><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div>
+        <div class="file-notes">${c.notesFull}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleExpand(id) {
+  const fileEl = document.getElementById('file-' + id);
+  const nowExpanded = fileEl.classList.toggle('expanded');
+  if (nowExpanded) {
+    STATE.expandedNow.add(id);
+  } else {
+    STATE.expandedNow.delete(id);
+  }
+  STATE.opened.add(id);
+  const card = document.getElementById('card-' + id);
+  const btn = card.querySelector('.candidate-actions .btn-sm');
+  btn.textContent = nowExpanded ? 'Hide file' : 'View full file';
+}
+
+function moveUp(id) {
+  if (STATE.locked) return;
+  const i = STATE.ranked.indexOf(id);
+  if (i <= 0) return;
+  [STATE.ranked[i - 1], STATE.ranked[i]] = [STATE.ranked[i], STATE.ranked[i - 1]];
+  renderAll();
+}
+
+function moveDown(id) {
+  if (STATE.locked) return;
+  const i = STATE.ranked.indexOf(id);
+  if (i === -1 || i >= STATE.ranked.length - 1) return;
+  [STATE.ranked[i], STATE.ranked[i + 1]] = [STATE.ranked[i + 1], STATE.ranked[i]];
+  renderAll();
+}
+
+function rejectCandidate(id) {
+  if (STATE.locked) return;
+  if (STATE.ranked.length <= 4) return;
+  const i = STATE.ranked.indexOf(id);
+  if (i === -1) return;
+  STATE.ranked.splice(i, 1);
+  STATE.rejected.push(id);
+  renderAll();
+}
+
+function restoreCandidate(id) {
+  if (STATE.locked) return;
+  const i = STATE.rejected.indexOf(id);
+  if (i === -1) return;
+  STATE.rejected.splice(i, 1);
+  STATE.ranked.push(id);
+  renderAll();
+}
+
+function submitList(auto) {
+  if (STATE.submitted) return;
+  STATE.submitted = true;
+  STATE.locked = true;
+  clearInterval(STATE.timerId);
+
+  const finalOrder = STATE.ranked.concat(STATE.rejected); // positions 1..8
+  let deviation = 0;
+  finalOrder.forEach((id, idx) => {
+    deviation += Math.abs((idx + 1) - id); // id equals TalentSort's original rank
+  });
+  const normalizedDeviation = Math.min(1, deviation / MAX_DEVIATION);
+
+  const top4 = STATE.ranked.slice(0, 4);
+  const interviewedAmara = top4.includes(7);
+  const jordanCaught = !top4.includes(2);
+  const seededCatches = (interviewedAmara ? 1 : 0) + (jordanCaught ? 1 : 0);
+  const openedCount = STATE.opened.size;
+
+  showResults({ finalOrder, normalizedDeviation, top4, interviewedAmara, jordanCaught, seededCatches, openedCount, timeLeftAtSubmit: STATE.timeLeft, auto });
+}
+
+function showResults(r) {
+  document.getElementById('game-screen').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+
+  const timeUsed = 180 - r.timeLeftAtSubmit;
+  const tm = Math.floor(timeUsed / 60), ts = timeUsed % 60;
+
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="stat-card"><div class="num">${r.normalizedDeviation.toFixed(2)}</div><div class="lbl">Independence from AI order<br>(0 unchanged, 1 fully reordered)</div></div>
+    <div class="stat-card"><div class="num">${r.openedCount} / 8</div><div class="lbl">Candidate files opened</div></div>
+    <div class="stat-card"><div class="num">${r.seededCatches} / 2</div><div class="lbl">Seeded catches made</div></div>
+    <div class="stat-card"><div class="num">${tm}:${String(ts).padStart(2, '0')}</div><div class="lbl">Time used before submitting</div></div>`;
+
+  let verdict = '';
+  if (r.auto) {
+    verdict += `<p>Time ran out before you submitted. The list you see below is exactly what was current when the clock hit zero, which is the point of the exercise: an unfinished review still becomes the interview list.</p>`;
+  }
+  if (r.interviewedAmara) {
+    verdict += `<p><strong>Amara Osei</strong> kept an interview slot on your final list. Her file showed nine years of experience, four of them under the exact job title on offer, leading a six-person team. TalentSort's score was built almost entirely on a documented parental-leave gap.</p>`;
+  } else {
+    verdict += `<p><strong>Amara Osei</strong> did not make your final four. Her file showed nine years of experience, four of them leading a six-person help desk under the exact job title on offer, plus a reference calling her the best manager the referee ever had. TalentSort's low score was built almost entirely on a documented parental-leave gap, and the final list carried that gap forward as a rejection.</p>`;
+  }
+  if (r.jordanCaught) {
+    verdict += `<p><strong>Jordan Ellery</strong> was moved out of the top four. Good catch: the 88 was keyword density and inflated verbs, not five short jobs in four years and a manager who would not call Jordan a leader.</p>`;
+  } else {
+    verdict += `<p><strong>Jordan Ellery</strong> kept an interview slot. The 88 was built on resume keyword density and eleven leadership verbs, not on five jobs in four years, zero direct reports at any employer, or a lukewarm reference from the most recent manager.</p>`;
+  }
+  if (r.openedCount <= 3 && r.normalizedDeviation < 0.15) {
+    verdict += `<p>You opened ${r.openedCount} of 8 files and left the AI's order almost untouched. That reads as ratification more than review, the AI's draft signed without a second read.</p>`;
+  } else if (r.openedCount <= 3) {
+    verdict += `<p>You opened only ${r.openedCount} of 8 files but still reshaped the order. Some of that reordering was informed reading, and some may have been a hunch. Opening more files closes that gap.</p>`;
+  } else {
+    verdict += `<p>You opened ${r.openedCount} of 8 files, a genuine look before deciding. That is closer to independent review than to rubber-stamping.</p>`;
+  }
+  document.getElementById('results-verdict').innerHTML = verdict;
+
+  let rows = CANDIDATES.map(c => {
+    const finalPos = r.finalOrder.indexOf(c.id) + 1;
+    const isRejected = STATE.rejected.includes(c.id);
+    const status = isRejected ? 'Rejected' : (finalPos <= 4 ? `Interview (#${finalPos})` : `Not selected (#${finalPos})`);
+    const seededMark = c.seeded ? ' &#9888;' : '';
+    return `<tr class="${c.seeded ? 'highlight-row' : ''}">
+      <td><strong>${c.name}</strong>${seededMark}</td>
+      <td>#${c.id} (score ${c.score})</td>
+      <td>${status}</td>
+      <td>${c.tell}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('results-table').innerHTML = `<table>
+    <tr><th>Candidate</th><th>AI rank</th><th>Final status</th><th>What the full file showed</th></tr>${rows}</table>`;
+}
+</script>
+</body>
+</html>

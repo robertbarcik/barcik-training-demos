@@ -15,6 +15,20 @@ Interactive browser demos for [barcik.training](https://barcik.training) — a p
 | [Fine-Tuning & LoRA](https://demos.barcik.training/demos/finetune.html) | Interactive visualization of fine-tuning methods and LoRA adapters |
 | [Training Timer](https://demos.barcik.training/demos/timer.html) | Classroom break/exercise timer with AI trivia |
 
+## The Human-in-the-Loop Lab
+
+A distinct suite of simulations, companion to the booklet [LLM-Human Interaction Design Patterns for Operations](https://publications.barcik.training/llm-human-interaction-patterns/). Each one lets you experience a documented human-AI failure mode firsthand, in sectors the EU AI Act lists as high-risk. All scenarios are fictional; no API keys, fully client-side.
+
+| Simulation | Sector / Failure mode |
+|------|-------------|
+| [The Operator's Dilemma](https://demos.barcik.training/demos/operators-dilemma.html) | IT operations, five acts (flagship; source of truth lives in [llm-human-interaction-patterns](https://github.com/robertbarcik/llm-human-interaction-patterns) `app/index.html`, this repo holds the deployed copy) |
+| [The Credit Desk](https://demos.barcik.training/demos/credit-desk.html) | Banking / anchoring |
+| [The Triage Ward](https://demos.barcik.training/demos/triage-ward.html) | Medical / alert fatigue |
+| [The Watchlist](https://demos.barcik.training/demos/watchlist.html) | Law enforcement / automation bias |
+| [The Shortlist](https://demos.barcik.training/demos/shortlist.html) | Hiring / rubber-stamping, Weight of Advice |
+| [The Border Queue](https://demos.barcik.training/demos/border-queue.html) | Border control / confidence framing |
+| [The Docket](https://demos.barcik.training/demos/docket.html) | Justice / the moral crumple zone |
+
 ## Architecture
 
 ```
