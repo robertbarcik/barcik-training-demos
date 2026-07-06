@@ -636,12 +636,12 @@ footer {
 <script>
 /* ===== DATA ===== */
 const MULTIPLIER = 1.75;
-const WEEKS_PER_MONTH = 4.33;
-const WEEKS_PER_YEAR = 48; // ~working weeks
+const WEEKS_PER_YEAR = 48; // ~working weeks (holidays & vacation excluded)
+const WEEKS_PER_MONTH = WEEKS_PER_YEAR / 12; // keep monthly × 12 = annual
 
 const scenarios = [
-  { id: 1, title: "Daily Standup", desc: "15-min sync every morning. Everyone shares what they did yesterday and today.", duration: 1.25, followUp: { tag: "Decide", question: "Who is the decision maker in this standup?" } },
-  { id: 2, title: "Budget Review", desc: "Monthly 90-min session reviewing departmental spending with finance team.", duration: 6, followUp: { tag: "Decide", question: "Who is the decision maker for budget approvals?" } },
+  { id: 1, title: "Daily Standup", desc: "15-min sync every morning. Everyone shares what they did yesterday and today.", duration: 5, followUp: { tag: "Decide", question: "Who is the decision maker in this standup?" } },
+  { id: 2, title: "Budget Review", desc: "Monthly 90-min session reviewing departmental spending with finance team.", duration: 1.5, followUp: { tag: "Decide", question: "Who is the decision maker for budget approvals?" } },
   { id: 3, title: "Brainstorm Session", desc: "Weekly 60-min open brainstorm for new product features.", duration: 4, followUp: { tag: "Learn", question: "Could this be replaced with an async idea board?" } },
   { id: 4, title: "Welcome Lunch", desc: "Informal 60-min lunch when a new team member joins (~monthly).", duration: 1, followUp: null },
   { id: 5, title: "The Email Thread Meeting", desc: "45-min meeting called because an email thread got too long.", duration: 3, followUp: { tag: "Decide", question: "Who is the decision maker here?" } },
@@ -710,7 +710,7 @@ function buildScenarioCards() {
     card.innerHTML = `
       <div class="sc-title">${s.title}</div>
       <div class="sc-desc">${s.desc}</div>
-      <div class="sc-duration">${s.duration} hours/week</div>
+      <div class="sc-duration">${s.duration} team-hours/week</div>
       <div class="tag-row">
         <label>Purpose</label>
         ${['Decide','Learn','Bond','Do'].map(t =>
@@ -821,7 +821,8 @@ function updateTriageSummary() {
 
   const rate = +document.getElementById('hourlyCost').value || 45;
   const teamN = +document.getElementById('teamSize').value;
-  const annualSaved = timeSaved * rate * teamN * MULTIPLIER * WEEKS_PER_YEAR;
+  // timeSaved is already team-hours/week (scenario durations include all attendees)
+  const annualSaved = timeSaved * rate * MULTIPLIER * WEEKS_PER_YEAR;
   document.getElementById('costSaved').textContent = fmtEur(annualSaved);
 
   // Meeting Culture Score (0-100)

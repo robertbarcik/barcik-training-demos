@@ -591,7 +591,7 @@ const AI_FACTS = [
   { text: "Rewording the same prompt without changing its meaning can swing an LLM's accuracy by up to 76 percentage points. Many benchmarks may measure prompter skill more than model capability.", cat: "Concepts" },
 
   // ── INDUSTRY & SURPRISING ──
-  { text: "OpenAI was founded as a tax-exempt nonprofit in 2015 with a 100× profit cap. That cap was quietly reduced, then eliminated entirely when OpenAI converted to a for-profit corporation in 2025.", cat: "Industry" },
+  { text: "OpenAI was founded as a tax-exempt nonprofit in 2015 with a 100× profit cap. That cap was quietly reduced, then eliminated when OpenAI restructured its business into a for-profit public benefit corporation in 2025.", cat: "Industry" },
   { text: "In 2022, an AI-generated artwork won first place at the Colorado State Fair. The artist disclosed it was AI. Other artists were furious.", cat: "Surprise" },
   { text: "The FDA had approved 223 AI-powered medical devices by 2023. AI is reading your X-rays, ECGs, and retinal scans.", cat: "Industry" },
   { text: "According to McKinsey (2026), 71% of companies report using generative AI in at least one business function.", cat: "Industry" },
@@ -844,7 +844,7 @@ function buildDots() {
 function startCycling() {
   currentItem = -1;
   showNext();
-  // For break facts: 11s. For recap points: adaptive to total time
+  // For break facts: 22s. For recap points: adaptive to total time
   let ms;
   if (mode === 'break') {
     ms = 22000;

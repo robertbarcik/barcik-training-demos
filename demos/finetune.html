@@ -525,8 +525,8 @@ canvas { display: block; margin: 0 auto; }
           <div style="font-size:0.8rem; color:var(--text-dim);">GPT-3 parameters</div>
         </div>
         <div style="text-align:center; flex:1; min-width:150px;">
-          <div class="param-count" style="color:var(--orange);">~700 GB</div>
-          <div style="font-size:0.8rem; color:var(--text-dim);">Memory for full fine-tune</div>
+          <div class="param-count" style="color:var(--orange);">~2 TB</div>
+          <div style="font-size:0.8rem; color:var(--text-dim);">Memory for full fine-tune (weights + gradients + optimizer)</div>
         </div>
         <div style="text-align:center; flex:1; min-width:150px;">
           <div class="param-count" style="color:var(--green);">~18M</div>
@@ -818,25 +818,25 @@ canvas { display: block; margin: 0 auto; }
             <td><strong>SFT</strong></td>
             <td>Input → correct output pairs</td>
             <td>Format, classification, translation</td>
-            <td>gpt-4.1, gpt-4.1-mini/nano</td>
+            <td>Current GPT text models</td>
           </tr>
           <tr>
             <td><strong>DPO</strong></td>
             <td>Input → chosen vs. rejected output</td>
             <td>Tone, style, summarization focus</td>
-            <td>gpt-4.1, gpt-4.1-mini/nano</td>
+            <td>Current GPT text models</td>
           </tr>
           <tr>
             <td><strong>RFT</strong></td>
             <td>Input → model generates → expert grades</td>
             <td>Complex reasoning, domain expertise</td>
-            <td>o4-mini (reasoning models)</td>
+            <td>Reasoning models (o-series)</td>
           </tr>
           <tr>
             <td><strong>Vision</strong></td>
             <td>Image + text → correct output</td>
             <td>Image classification, visual QA</td>
-            <td>gpt-4o</td>
+            <td>Multimodal GPT models</td>
           </tr>
         </table>
       </div>
@@ -931,10 +931,12 @@ function updateRank() {
   document.getElementById('stat-lora').textContent = (loraParams / 1e3).toFixed(0) + 'K';
   document.getElementById('stat-savings').textContent = savings + '%';
 
-  // Visual bars
+  // Visual bars — true proportion (r/D) would be invisible at this scale,
+  // so B/A bar height tracks r relative to the slider max (visual aid, not to scale)
   const viz = document.getElementById('rank-viz');
   const maxH = 160;
-  const loraH = Math.max(8, (loraParams / originalParams) * maxH);
+  const rMax = 64;
+  const adapterH = Math.max(8, (r / rMax) * maxH * 0.55);
 
   viz.innerHTML = `
     <div style="text-align:center;">
@@ -945,8 +947,8 @@ function updateRank() {
     <div style="font-size:1.2rem; color:var(--text-dim); align-self:center;">vs</div>
     <div style="text-align:center;">
       <div style="display:flex; gap:4px; align-items:flex-end; justify-content:center; height:${maxH}px;">
-        <div style="width:28px; height:${Math.max(8, (D*r/(D*D))*maxH*2)}px; background:linear-gradient(to top, var(--pink), var(--pink)); border-radius:6px; transition: height 0.3s;"></div>
-        <div style="width:28px; height:${Math.max(8, (r*D/(D*D))*maxH*2)}px; background:linear-gradient(to top, var(--green), var(--green)); border-radius:6px; transition: height 0.3s;"></div>
+        <div style="width:28px; height:${adapterH}px; background:linear-gradient(to top, var(--pink), var(--pink)); border-radius:6px; transition: height 0.3s;"></div>
+        <div style="width:28px; height:${adapterH}px; background:linear-gradient(to top, var(--green), var(--green)); border-radius:6px; transition: height 0.3s;"></div>
       </div>
       <div style="font-size:0.75rem; margin-top:8px; font-family:'JetBrains Mono',monospace;"><span style="color:var(--pink);">B</span> + <span style="color:var(--green);">A</span></div>
       <div style="font-size:0.65rem; color:var(--text-dim);">${D}×${r} + ${r}×${D}</div>

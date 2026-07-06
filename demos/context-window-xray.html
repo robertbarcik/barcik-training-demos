@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Context Window X-Ray — robert@barcik.training</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#f0f4f8;--surface:#ffffff;--surface2:#edf2f7;--border:#e2e8f0;
+    --text:#1a202c;--text-dim:#64748b;--accent:#1e3a5f;--accent2:#2d5a8e;
+    --accent-light:#2563eb;--radius:10px;
+    --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+  }
+  html{font-size:16px;-webkit-text-size-adjust:100%}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+
+  .brand-bar{background:#1e3a5f;padding:0.5rem 1.5rem;font-size:0.82rem;letter-spacing:0.04em}
+  .brand-bar a{color:#fff;text-decoration:none;opacity:0.9;transition:opacity 0.2s}
+  .brand-bar a:hover{opacity:1}
+
+  .page-header{max-width:1280px;margin:0 auto;padding:2rem 1.5rem 1rem;text-align:center}
+  .page-header h1{font-size:1.85rem;font-weight:700;color:var(--accent);margin-bottom:0.35rem}
+  .page-header .subtitle{font-size:1.05rem;color:var(--text-dim)}
+
+  .container{max-width:1280px;margin:0 auto;padding:0 1.5rem 2rem}
+
+  .intro{
+    background:var(--surface);border-left:4px solid var(--accent-light);border-radius:var(--radius);
+    padding:1rem 1.25rem;margin-bottom:1.25rem;box-shadow:var(--shadow);
+    font-size:0.93rem;color:var(--text-dim);line-height:1.7;
+  }
+  .intro strong{color:var(--text)}
+
+  /* Controls */
+  .controls-row{display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:1.25rem;align-items:center}
+  .scrubber{display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap}
+  .scrubber-label,.budget-label{font-size:0.78rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.03em}
+  .turn-dot{
+    min-width:34px;height:30px;padding:0 0.5rem;border:1.5px solid var(--border);border-radius:6px;
+    background:var(--surface);color:var(--text-dim);font-size:0.78rem;font-weight:600;
+    cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;
+  }
+  .turn-dot:hover{border-color:var(--accent-light)}
+  .turn-dot.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .budget-group{display:flex;align-items:center;gap:0.35rem;margin-left:auto}
+  .budget-btn{
+    padding:0.3rem 0.65rem;border:1.5px solid var(--border);border-radius:6px;
+    background:var(--surface);color:var(--text-dim);font-size:0.78rem;font-weight:600;
+    cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;
+  }
+  .budget-btn:hover{border-color:var(--accent-light)}
+  .budget-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* Main grid */
+  .main-grid{display:grid;grid-template-columns:0.9fr 1.1fr;gap:1.25rem;align-items:start;margin-bottom:1.5rem}
+  .main-grid>div{min-width:0}
+  .pane-title{
+    font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--text-dim);margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;
+  }
+  .pane-title .tag{font-size:0.66rem;font-weight:700;padding:0.1rem 0.5rem;border-radius:999px;letter-spacing:0.02em;text-transform:none}
+  .tag-illusion{background:#dbeafe;color:#1d4ed8}
+  .tag-reality{background:#fee2e2;color:#b91c1c}
+
+  /* ── Chat pane (the illusion) ── */
+  .chat-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+  .chat-header{
+    background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#fff;
+    padding:0.7rem 1rem;display:flex;align-items:center;gap:0.6rem;
+  }
+  .chat-avatar{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:0.9rem}
+  .chat-header-name{font-weight:700;font-size:0.9rem}
+  .chat-header-sub{font-size:0.7rem;opacity:0.75}
+  .chat-messages{padding:1rem;display:flex;flex-direction:column;gap:0.7rem;min-height:340px;max-height:440px;overflow-y:auto}
+  .msg{max-width:85%;padding:0.55rem 0.8rem;border-radius:14px;font-size:0.85rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;animation:msgIn 0.35s ease}
+  .msg.user{align-self:flex-end;background:var(--accent-light);color:#fff;border-bottom-right-radius:4px}
+  .msg.assistant{align-self:flex-start;background:var(--surface2);color:var(--text);border-bottom-left-radius:4px}
+  .msg .att-chip{
+    display:inline-flex;align-items:center;gap:0.35rem;background:rgba(255,255,255,0.18);
+    border:1px solid rgba(255,255,255,0.35);border-radius:6px;padding:0.2rem 0.55rem;
+    font-size:0.75rem;font-weight:600;margin-bottom:0.35rem;
+  }
+  .msg .status-line{font-size:0.75rem;font-style:italic;opacity:0.7;display:block;margin-bottom:0.3rem}
+  @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .typing-dots{align-self:flex-start;background:var(--surface2);border-radius:14px;border-bottom-left-radius:4px;padding:0.6rem 0.9rem;display:none}
+  .typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--text-dim);margin:0 2px;animation:blink 1.2s infinite}
+  .typing-dots span:nth-child(2){animation-delay:0.2s}
+  .typing-dots span:nth-child(3){animation-delay:0.4s}
+  @keyframes blink{0%,80%,100%{opacity:0.25}40%{opacity:1}}
+
+  .chat-input-row{border-top:1px solid var(--border);padding:0.7rem;display:flex;gap:0.5rem;align-items:center;background:var(--surface)}
+  .chat-staged-att{
+    display:none;align-items:center;gap:0.4rem;margin:0 0.7rem;margin-top:0.6rem;
+    background:#ecfdf5;border:1px solid #6ee7b7;color:#047857;border-radius:6px;
+    padding:0.3rem 0.6rem;font-size:0.75rem;font-weight:600;align-self:flex-start;
+  }
+  .chat-input{
+    flex:1;border:1.5px solid var(--border);border-radius:999px;padding:0.5rem 1rem;
+    font-size:0.83rem;color:var(--text);background:var(--surface2);font-family:'DM Sans',sans-serif;
+    line-height:1.4;min-height:38px;display:flex;align-items:center;
+  }
+  .chat-input.done{color:var(--text-dim);font-style:italic}
+  .send-btn{
+    border:none;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;
+    font-size:0.83rem;padding:0.5rem 1.1rem;cursor:pointer;font-family:'DM Sans',sans-serif;
+    transition:all 0.2s;white-space:nowrap;
+  }
+  .send-btn:hover:not(:disabled){background:var(--accent2)}
+  .send-btn:disabled{opacity:0.45;cursor:default}
+  .send-btn.pulse{animation:pulse-btn 1.6s ease-in-out infinite}
+  @keyframes pulse-btn{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,0.45)}50%{box-shadow:0 0 0 8px rgba(37,99,235,0)}}
+
+  /* Narrator */
+  .narrator-card{
+    background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:1rem 1.15rem;margin-top:1.25rem;
+  }
+  .narrator-title{
+    font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
+    color:var(--accent);margin-bottom:0.6rem;padding-bottom:0.45rem;border-bottom:2px solid var(--surface2);
+  }
+  .narrator-text{font-size:0.87rem;color:var(--text);line-height:1.7;transition:opacity 0.3s}
+  .narrator-text p{margin-bottom:0.6rem}
+  .narrator-text p:last-child{margin-bottom:0}
+  .narrator-text .hl{font-weight:700;color:var(--accent)}
+  .narrator-text .warn{color:#dc2626;font-weight:700}
+
+  /* ── X-ray pane (the reality) ── */
+  .gap-banner{
+    background:linear-gradient(135deg,#7f1d1d 0%,#b91c1c 100%);color:#fff;border-radius:var(--radius);
+    padding:0.75rem 1.1rem;margin-bottom:0.85rem;box-shadow:var(--shadow-md);
+    font-size:0.88rem;line-height:1.6;display:none;
+  }
+  .gap-banner .gap-big{font-weight:700;font-size:1.02rem}
+  .gap-banner .gap-pct{
+    display:inline-block;background:rgba(255,255,255,0.18);border-radius:4px;
+    padding:0.05rem 0.5rem;font-weight:700;margin-left:0.25rem;
+  }
+
+  .capacity-card{background:var(--surface);border-radius:var(--radius);padding:0.85rem 1.15rem;box-shadow:var(--shadow);margin-bottom:0.85rem}
+  .capacity-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.45rem}
+  .capacity-title{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+  .capacity-count{font-size:0.8rem;font-weight:600;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
+  .capacity-track{height:18px;background:var(--surface2);border-radius:9px;overflow:hidden;position:relative}
+  .capacity-fill{
+    height:100%;border-radius:9px;transition:width 0.6s cubic-bezier(0.22,1,0.36,1);
+    background:linear-gradient(90deg,var(--accent) 0%,var(--accent-light) 100%);width:0%;position:relative;
+  }
+  .capacity-fill.warn{background:linear-gradient(90deg,#f59e0b 0%,#ef4444 100%)}
+  .capacity-pct{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    font-size:0.68rem;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;
+  }
+
+  .xray-window{
+    background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:1rem;min-height:380px;
+  }
+  .xray-label{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:0.65rem}
+  .blocks-container{display:flex;flex-direction:column;gap:0.5rem}
+  .empty-state{
+    display:flex;align-items:center;justify-content:center;min-height:300px;
+    color:var(--text-dim);font-size:0.92rem;font-style:italic;text-align:center;padding:2rem;
+  }
+
+  .ctx-block{
+    border-left:4px solid var(--border);border-radius:8px;background:var(--surface);
+    box-shadow:var(--shadow);overflow:hidden;cursor:pointer;
+    opacity:0;transform:translateX(-24px);transition:opacity 0.4s ease,transform 0.4s ease;
+  }
+  .ctx-block.visible{opacity:1;transform:translateX(0)}
+  .ctx-block.dimmed{opacity:0.5}
+  .block-header{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.8rem;gap:0.5rem}
+  .block-label{font-size:0.8rem;font-weight:700;color:var(--text)}
+  .block-right{display:flex;align-items:center;gap:0.4rem;flex-shrink:0}
+  .block-tokens{
+    font-size:0.7rem;font-weight:600;padding:0.12rem 0.5rem;border-radius:999px;
+    background:var(--surface2);color:var(--text-dim);white-space:nowrap;font-family:'JetBrains Mono',monospace;
+  }
+  .block-badge{font-size:0.62rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:999px;white-space:nowrap;letter-spacing:0.02em}
+  .badge-new{background:#dcfce7;color:#15803d}
+  .badge-compacted{background:#e2e8f0;color:#475569}
+  .badge-truncated{background:#fef3c7;color:#b45309}
+  .badge-evicted{background:#fee2e2;color:#dc2626}
+  .block-preview{
+    padding:0 0.8rem 0.5rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;
+    line-height:1.5;color:var(--text-dim);opacity:0.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .block-body{max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.22,1,0.36,1)}
+  .ctx-block.expanded .block-body{max-height:520px;overflow-y:auto}
+  .ctx-block.expanded .block-preview{display:none}
+  .block-content{
+    padding:0.5rem 0.8rem 0.7rem;font-family:'JetBrains Mono',monospace;font-size:0.74rem;
+    line-height:1.6;color:var(--text-dim);white-space:pre-wrap;word-break:break-word;border-top:1px solid var(--border);
+  }
+
+  .stats-row{display:flex;gap:0.85rem;margin-top:0.85rem;flex-wrap:wrap}
+  .stat-box{
+    flex:1;min-width:140px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:0.65rem 0.9rem;
+  }
+  .stat-label{font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim)}
+  .stat-value{font-size:1.15rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace}
+  .stat-note{font-size:0.68rem;color:var(--text-dim)}
+
+  /* Takeaway */
+  .insight{
+    background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#fff;
+    border-radius:var(--radius);padding:1.15rem 1.35rem;box-shadow:var(--shadow-md);
+    line-height:1.7;font-size:0.93rem;display:none;animation:msgIn 0.5s ease;
+  }
+  .insight-label{
+    display:inline-block;background:rgba(255,255,255,0.18);font-weight:700;font-size:0.75rem;
+    text-transform:uppercase;letter-spacing:0.06em;padding:0.15rem 0.65rem;border-radius:4px;margin-bottom:0.55rem;
+  }
+  .insight ul{margin:0.4rem 0 0 1.1rem}
+  .insight li{margin-bottom:0.35rem}
+  .insight .replay-hint{
+    margin-top:0.7rem;padding-top:0.6rem;border-top:1px solid rgba(255,255,255,0.25);
+    font-size:0.85rem;opacity:0.95;
+  }
+
+  @media(max-width:860px){
+    .main-grid{grid-template-columns:1fr}
+    .budget-group{margin-left:0;width:100%}
+    .page-header h1{font-size:1.4rem}
+    .chat-messages{min-height:240px;max-height:320px}
+    .narrator-card{margin-top:1rem}
+  }
+</style>
+</head>
+<body>
+
+<div class="brand-bar">
+  <a href="../">&larr; All Demos &middot; robert@barcik.training</a>
+</div>
+
+<div class="page-header">
+  <h1>The Context Window X-Ray</h1>
+  <p class="subtitle">You type a sentence. What does the model <em>actually</em> receive?</p>
+</div>
+
+<div class="container">
+
+  <div class="intro">
+    Most people assume the text they type is all the LLM sees. It isn't &mdash; not even close.
+    Modern AI apps <strong>engineer the context window</strong>: on every single call they assemble a fresh payload of
+    system instructions, retrieved memories, skill catalogs, tool definitions, uploaded documents, search results, and
+    conversation history &mdash; and your message is usually the <strong>smallest part of it</strong>.
+    Follow Maya, a customer-operations lead, through six messages to her company's AI assistant.
+    <strong>Left: the chat she sees. Right: the payload the model sees.</strong> Click any block to read its full contents.
+  </div>
+
+  <div class="controls-row">
+    <div class="scrubber" id="scrubber">
+      <span class="scrubber-label">Turn</span>
+      <button class="turn-dot active" data-turn="0">Start</button>
+      <button class="turn-dot" data-turn="1">1</button>
+      <button class="turn-dot" data-turn="2">2</button>
+      <button class="turn-dot" data-turn="3">3</button>
+      <button class="turn-dot" data-turn="4">4</button>
+      <button class="turn-dot" data-turn="5">5</button>
+      <button class="turn-dot" data-turn="6">6</button>
+    </div>
+    <div class="budget-group">
+      <span class="budget-label">Context window</span>
+      <button class="budget-btn" data-size="8000">8K</button>
+      <button class="budget-btn active" data-size="16000">16K</button>
+      <button class="budget-btn" data-size="32000">32K</button>
+      <button class="budget-btn" data-size="200000">200K</button>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- LEFT: the illusion -->
+    <div>
+      <div class="pane-title">What Maya sees <span class="tag tag-illusion">the illusion</span></div>
+      <div class="chat-card">
+        <div class="chat-header">
+          <div class="chat-avatar">&#10024;</div>
+          <div>
+            <div class="chat-header-name">Acme Assistant</div>
+            <div class="chat-header-sub">Your company AI &middot; always here to help</div>
+          </div>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-staged-att" id="stagedAtt">&#128206; refund-policy.pdf</div>
+        <div class="chat-input-row">
+          <div class="chat-input" id="chatInput"></div>
+          <button class="send-btn pulse" id="sendBtn">Send</button>
+        </div>
+      </div>
+
+      <div class="narrator-card">
+        <div class="narrator-title">What's Happening</div>
+        <div class="narrator-text" id="narrator">
+          <p>Maya's first message is staged in the input box. Press <span class="hl">Send</span> and watch the right side.</p>
+          <p>The chat window looks like a clean two-way conversation. The right pane shows what is really shipped to the model each time.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: the reality -->
+    <div>
+      <div class="pane-title">What the model sees <span class="tag tag-reality">the reality</span></div>
+
+      <div class="gap-banner" id="gapBanner"></div>
+
+      <div class="capacity-card">
+        <div class="capacity-header">
+          <span class="capacity-title">Context Window</span>
+          <span class="capacity-count" id="capacityCount">0 / 16,000 tokens</span>
+        </div>
+        <div class="capacity-track">
+          <div class="capacity-fill" id="capacityFill"><span class="capacity-pct" id="capacityPct"></span></div>
+        </div>
+      </div>
+
+      <div class="xray-window">
+        <div class="xray-label">Payload of this API call &mdash; click blocks to inspect</div>
+        <div class="blocks-container" id="blocksContainer">
+          <div class="empty-state" id="emptyState">Nothing has been sent yet.<br>The window is assembled fresh for every call.</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">API calls made</div>
+          <div class="stat-value" id="statCalls">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Maya typed, in total</div>
+          <div class="stat-value" id="statTyped">0 tok</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Sent to model, in total</div>
+          <div class="stat-value" id="statSent">0 tok</div>
+          <div class="stat-note">the whole window is re-sent every call</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="takeaway">
+    <div class="insight-label">Takeaway</div>
+    <strong>The model is stateless. The app is the author.</strong>
+    <ul>
+      <li>Every call starts from zero &mdash; "memory" means the app re-packs everything it wants the model to know, every single time.</li>
+      <li>Across six turns Maya typed a few hundred tokens; the app shipped tens of thousands. Most of the prompt is text she never wrote and never sees.</li>
+      <li>Context is a <em>budget</em>: memories are retrieved selectively (and flagged as possibly stale), skills load lazily, documents get truncated, and old turns are silently compacted away. Deciding what enters the window, and at what fidelity, is <strong>context engineering</strong> &mdash; it is most of what makes a GenAI app good.</li>
+    </ul>
+    <div class="replay-hint">&#128257; Try it again on an <strong>8K window</strong> (top right) &mdash; watch how much the app has to sacrifice, and how early. Then compare with 200K: nothing is lost, but every call re-sends ~15,000 tokens.</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ═════════════ SEGMENT DEFINITIONS ═════════════ */
+  var SEG = {
+    system: {
+      label:"System Prompt", color:"#1e3a5f", tokens:900,
+      preview:"You are Acme Assistant, an AI for Acme Commerce employees...",
+      content:"You are Acme Assistant, an AI assistant for Acme Commerce employees.\n\nYou are helpful, professional, and concise. You have access to tools and\nskills listed below. Use them when they are relevant to the request.\n\nRules:\n- Never share customer personal data outside approved channels.\n- Financial or legal statements must include a disclaimer.\n- If you are not sure, say so. Never invent policy details.\n- Follow the company tone guide: warm, direct, no corporate jargon.\n- When drafting customer-facing text, keep it under 150 words unless asked.\n\nToday's date: 2026-07-06. The user is authenticated as an Acme employee.\nTheir role and preferences may be provided in a memories section below --\ntreat memories as background context that may be outdated."
+    },
+    custom: {
+      label:"Custom Instructions", color:"#0891b2", tokens:200,
+      preview:"From Maya's settings: I lead customer operations. Keep answers short...",
+      content:"From Maya's settings ('How should the assistant respond?'):\n\nI lead customer operations at Acme. Keep answers short and practical.\nI prefer bullet points over long paragraphs. When I ask for a draft,\ngive me the draft first and the explanation after. Use European date\nformats. Our customers are mostly in the EU."
+    },
+    memories: {
+      label:"Memories (3 of 47 retrieved)", color:"#7c3aed", tokens:400,
+      preview:"<memories: may be stale, verify before relying> - Maya prefers...",
+      content:"<memories>\nThe following was saved from past conversations. It may be incomplete\nor outdated -- verify before relying on it.\n\n- [2026-05-12] Maya prefers a warm but direct tone: short sentences,\n  no exclamation marks, sign-off \"-- Maya, Customer Ops\".\n- [2026-06-02] Maya rewrote a draft to remove the phrase \"we apologize\n  for any inconvenience\" -- she considers it corporate filler.\n- [2026-06-20] Maya's team handles ~400 refund tickets/month; escalations\n  go to finance-ops@acme.example.\n</memories>\n\n(44 other stored memories did not match this request and were NOT loaded.)"
+    },
+    skills: {
+      label:"Skill Catalog (compact)", color:"#d97706", tokens:500,
+      preview:"Available skills: draft-email, data-analysis, refund-lookup, translate...",
+      content:"Available skills (one-line descriptions -- full instructions load on demand):\n\n- draft-email: Compose customer-facing emails in the Acme tone\n- data-analysis: Query company databases and analyze results in Python\n- refund-lookup: Look up refund status by order ID\n- translate: Translate customer messages (EU languages)\n- policy-check: Compare a draft against a company policy document\n- summarize-thread: Summarize long support threads\n- escalation: File an escalation to finance-ops\n- report-builder: Build weekly ops reports\n- crm-notes: Read/write CRM contact notes\n- meeting-prep: Prepare briefings from calendar context\n- kb-search: Search the internal knowledge base\n- churn-flags: Flag at-risk customers from ticket sentiment"
+    },
+    skillsFull: {
+      label:"Skill: data-analysis (expanded)", color:"#d97706", tokens:3500,
+      preview:"# Skill: data-analysis -- When to use: the user asks to query...",
+      content:"# Skill: data-analysis\n\n## When to use\nThe user asks to query company data, compute statistics, or produce\ncharts from internal databases.\n\n## Data sources\n- Postgres (read replica): orders, refunds, tickets, customers\n- Snowflake: historical aggregates (>13 months)\n- Never query production primaries.\n\n## How to work\n1. Confirm which tables are needed; ask for schema if not provided.\n2. Write parameterized SQL -- never interpolate raw user input.\n3. Wrap analysis in a single Python script using psycopg + pandas.\n4. Read credentials from env vars (ACME_PG_DSN); never hardcode secrets.\n5. Aggregate before exporting: no row-level customer data in outputs.\n6. Include a plain-language summary of findings after the code.\n\n## Query conventions\n- Timezone: Europe/Prague for all date bucketing.\n- \"Last month\" = previous full calendar month.\n- Refund amounts are in EUR cents -- divide by 100 for reporting.\n- Exclude test accounts (customer.is_test = true).\n\n## Output format\n- Code block first, then a short interpretation.\n- Flag any result that looks anomalous vs. the 3-month average.\n\n[... plus ~2,800 tokens of worked examples, edge cases, and\nerror-handling guidance that ship with the full skill ...]\n\n-- The compact catalog entry for this skill was ~40 tokens.\n-- The full instructions are ~3,000 tokens. This text stays in the\n-- conversation from now on: lazy loading is a one-way door per session."
+    },
+    tools: {
+      label:"Tool Definitions", color:"#db2777", tokens:1400,
+      preview:'{"name":"web_search","description":"Search the web and return snippets"...',
+      content:'Tools the model may call (JSON schemas, sent on every request):\n\n{"name":"web_search",\n "description":"Search the web and return result snippets",\n "parameters":{"query":{"type":"string","required":true}}}\n\n{"name":"read_document",\n "description":"Read an uploaded document by file id",\n "parameters":{"file_id":{"type":"string","required":true}}}\n\n{"name":"refund_db_query",\n "description":"Run a read-only SQL query against the refunds replica",\n "parameters":{"sql":{"type":"string","required":true}}}\n\n{"name":"crm_lookup",\n "description":"Fetch a customer record from the CRM",\n "parameters":{"customer_id":{"type":"string","required":true}}}\n\n{"name":"send_for_review",\n "description":"Send a draft to a human reviewer before it goes out",\n "parameters":{"draft":{"type":"string","required":true},\n               "reviewer":{"type":"string"}}}\n\n{"name":"kb_search",\n "description":"Search the internal knowledge base",\n "parameters":{"query":{"type":"string","required":true}}}\n\nThe model does not "have" these tools -- it only sees these descriptions\nand can emit a structured call. The app executes the call and pastes the\nresult back into the window.'
+    },
+    doc: {
+      label:"Uploaded: refund-policy.pdf", color:"#059669", tokens:4200,
+      preview:"ACME COMMERCE -- REFUND & RETURNS POLICY v3.2 (extracted text, 14 pages)...",
+      content:"ACME COMMERCE -- REFUND & RETURNS POLICY v3.2\n(extracted text of all 14 pages -- the PDF is not \"attached\", its full\ntext is pasted into the window)\n\n1. SCOPE\nThis policy applies to all consumer purchases in the EU and UK...\n\n2. WITHDRAWAL PERIOD\nCustomers may withdraw from a purchase within 14 calendar days of\ndelivery without giving a reason (Directive 2011/83/EU). Acme extends\nthis voluntarily to 30 days for members of the loyalty program...\n\n3. REFUND TIMELINES\nRefunds are issued to the original payment method within 14 days of\nreceiving the returned goods. Where the customer provides proof of\nreturn shipment, the refund may not be withheld beyond 14 days...\n\n4. EXCLUSIONS\nPersonalized items, perishables, unsealed hygiene products...\n\n5. LATE REFUND REMEDIATION\nWhere a refund breaches the 14-day timeline, tier-1 agents may issue\na 10% goodwill credit without escalation. Larger remediation requires\nfinance-ops approval...\n\n[... sections 6-14: partial refunds, exchanges, fraud checks,\nchargebacks, cross-border shipping, warranty interplay, appendices ...]"
+    },
+    docTrunc: {
+      label:"Uploaded: refund-policy.pdf", color:"#059669", tokens:900,
+      preview:"[TRUNCATED to relevant sections] 2. WITHDRAWAL PERIOD... 3. REFUND TIMELINES...",
+      content:"[Document truncated by the app to fit the window -- only the sections\nthat matched the current request were kept. 11 of 14 pages dropped.]\n\n2. WITHDRAWAL PERIOD\nCustomers may withdraw within 14 days of delivery (Directive 2011/83/EU);\nextended to 30 days for loyalty members...\n\n3. REFUND TIMELINES\nRefunds issued within 14 days of receiving returned goods...\n\n5. LATE REFUND REMEDIATION\nTier-1 agents may issue a 10% goodwill credit for breached timelines...\n\n(The model can no longer see sections 1, 4, or 6-14. If Maya asks about\nexclusions now, the answer will be a guess unless the app re-loads them.)"
+    },
+    summary: {
+      label:"Summary of earlier turns", color:"#64748b", tokens:350,
+      preview:"[Auto-generated] Maya drafted an apology for a late refund; tone was...",
+      content:"[Auto-generated summary -- the original turns were removed to save space]\n\nMaya is handling a late-refund complaint. The assistant drafted an\napology email; Maya asked for it in her own voice (short sentences,\nno \"we apologize for any inconvenience\", sign-off \"-- Maya\"). The draft\nwas checked against refund-policy.pdf: compliant, and a 10% goodwill\ncredit is allowed for breached timelines. A web search confirmed that\ncompetitor NordShop announced a 60-day return window on 2026-07-05.\n\n(Nuances, exact wording, and the full reasoning from those turns are\ngone. The model only knows what this summary chose to keep.)"
+    },
+    toolCall: {
+      label:"Tool Call (by the model)", color:"#be185d", tokens:80,
+      preview:'{"tool":"web_search","query":"NordShop return window announcement"}',
+      content:'The model\'s own output from a moment ago, now part of its input:\n\n{"tool":"web_search",\n "query":"NordShop return window policy change announcement July 2026"}\n\nThe model cannot browse. It emitted this structured request, the app\nexecuted the actual search, and the results were pasted in below.'
+    },
+    toolResult: {
+      label:"Tool Result: web search", color:"#4f46e5", tokens:1100,
+      preview:"[1] NordShop press release (2026-07-05): 'NordShop extends returns to 60 days'...",
+      content:"Results returned by the app's search backend (the model never left\nthe window -- this text was fetched and pasted in):\n\n[1] NordShop press release -- 2026-07-05\n\"NordShop extends returns to 60 days across the EU\"\nNordShop announced that starting 1 August 2026, all EU purchases can\nbe returned within 60 days, doubling the statutory minimum...\n\n[2] RetailWatch EU -- 2026-07-05\n\"NordShop bets on generous returns as acquisition play\"\nAnalysts note return-window extensions raise reverse-logistics costs\n12-18% but lift conversion...\n\n[3] Reddit r/ecommerce -- thread, 214 comments\nMixed reactions from sellers; several note NordShop's policy excludes\nmarketplace third-party items...\n\n[... 7 more snippets, ranked by the search backend, not by the model ...]"
+    }
+  };
+
+  /* history exchanges: chat text lives in TURNS; tokens here */
+  var TURNS = [
+    { user:{ text:"Draft a short apology reply to a customer whose refund is 3 weeks late.", words:13, tokens:20 },
+      assistant:{ text:"Here's a draft:\n\n\"Dear customer, I'm sorry your refund has taken longer than it should. I've flagged it to our finance team today and you'll see the amount back on your card within 5 business days. As an apology, I've added a 10% goodwill credit to your account.\"\n\nWant me to make it more formal?", tokens:350 },
+      narrator:'<p><span class="hl">Turn 1 — the “empty” chat that isn’t.</span> Maya typed 13 words. But the call already carries a <span class="hl">system prompt</span> (identity, rules, guardrails), her <span class="hl">custom instructions</span>, a <span class="hl">skill catalog</span> and <span class="hl">tool definitions</span> — over 3,000 tokens she never wrote and never sees.</p><p>Click the blocks on the right to read what\'s actually in them.</p>' },
+
+    { user:{ text:"Hmm, that doesn't sound like me. Rewrite it the way I usually write.", words:13, tokens:30 },
+      assistant:{ text:"Got it — your voice, not mine:\n\n\"Hi, your refund is late. That's on us. I've pushed it to finance today — the money will be back on your card within 5 business days, and I've added a 10% credit for the wait.\n-- Maya, Customer Ops\"", tokens:320 },
+      addMemories:true,
+      narrator:'<p><span class="hl">Turn 2 — memories.</span> “The way I usually write” means nothing to a stateless model. So the app searched Maya\'s <span class="hl">47 stored memories</span>, retrieved the <span class="hl">3 relevant ones</span>, and injected them — wrapped in a warning that they <em>may be stale</em>.</p><p>Apps deliberately teach the model to be skeptical of memories: they were written months ago and the world may have moved on. Notice also that turn 1 is now re-sent as <span class="hl">history</span> — the model doesn\'t remember it; it re-reads it.</p>' },
+
+    { user:{ text:"Does this draft comply with our refund policy?", words:8, tokens:50, attachment:"refund-policy.pdf" },
+      assistant:{ text:"Checked against refund-policy.pdf:\n\n• 5-business-day promise — OK (policy allows up to 14 days, you're well inside)\n• 10% goodwill credit — explicitly allowed for breached timelines (section 5), no escalation needed\n• One gap: policy says refunds go to the original payment method — worth stating that in the email.\n\nVerdict: compliant, with one suggested addition.", tokens:420 },
+      addDoc:true,
+      narrator:'<p><span class="hl">Turn 3 — the upload.</span> The PDF isn\'t “attached” — there is no such thing inside a model call. The app <span class="hl">extracted all 14 pages to text and pasted them into the window</span>: ~4,200 tokens, instantly the biggest block in the payload.</p><p>This is also why apps often chunk large files or retrieve only relevant passages (RAG) — pasting whole documents doesn\'t scale.</p>' },
+
+    { user:{ text:"Wait — didn't NordShop change their return window yesterday? Check what they announced.", words:13, tokens:40 },
+      assistant:{ text:"🔍 Searched the web\n\nYes — yesterday (5 July) NordShop announced 60-day returns across the EU, starting 1 August. That's double the statutory 14 days and double our 30-day loyalty window. Analysts expect it to pressure competitors on acquisition. Note: it excludes marketplace third-party items.", tokens:500 },
+      searchCycle:true,
+      narrator:'<p><span class="hl">Turn 4 — web search.</span> The model never browses. It emitted a <span class="hl">tool call</span> (a small JSON request — that\'s the pink block), the <em>app</em> ran the search, and <span class="hl">pasted ~1,100 tokens of snippets</span> back into the window. Then the model read them like any other text.</p><p>Everything an AI app “does” — search, code, databases — is this same loop: model writes a request, app executes it, result text lands in the window.</p>' },
+
+    { user:{ text:"Write a Python script that pulls last month's refund stats from our database. Here's our schema: [pastes refunds & orders table definitions]", words:110, tokens:460 },
+      assistant:{ text:"Here's the script — it buckets by week, converts cents to EUR, and excludes test accounts per our data conventions:\n\n```python\nimport psycopg, pandas as pd\n# ... connects via ACME_PG_DSN, parameterized query,\n# aggregates refunds for the previous calendar month ...\n```\n\nRun it against the read replica, not production. Want a chart version for the ops report?", tokens:700 },
+      expandSkill:true,
+      narrator:'<p><span class="hl">Turn 5 — lazy loading.</span> The compact <span class="hl">skill catalog</span> (12 one-liners, ~500 tokens) has been in every call since turn 1. Loading every skill\'s <em>full</em> instructions up front would flood the window — so they load on demand.</p><p>This request matched <span class="hl">data-analysis</span>: its full ~3,500-token instructions (data sources, security rules, conventions) just replaced the one-liner. And they\'ll stay in the window for the rest of the session — lazy loading is a one-way door.</p>' },
+
+    { user:{ text:"Great. Now draft the policy-update email to my team covering everything we discussed.", words:13, tokens:35 },
+      assistant:{ text:"Draft for your team:\n\n\"Team — three updates from today:\n1. Late-refund apologies: new template in my voice is in the shared drive; 10% goodwill credit is pre-approved for breached timelines (policy §5).\n2. Competitive: NordShop goes to 60-day returns on 1 Aug. Expect customers to quote it. Our 30-day loyalty window stands for now — flag pushback in the weekly.\n3. Refund stats: new script pulls monthly numbers automatically — dashboard link Friday.\n-- Maya\"", tokens:400 },
+      narrator:'<p><span class="hl">Turn 6 — the window is full.</span> “Everything we discussed” now weighs more than the budget allows. The app had to make room — <span class="warn">without asking</span>.</p><p>Look at the right side: check what got <span class="hl">compacted, truncated, or evicted</span>. The model didn\'t “forget” — the app <em>decided what it would never see</em>. When a chatbot loses track of something you said an hour ago, this is why.</p>' }
+  ];
+
+  /* ═════════════ ASSEMBLY (pure function of turn + window size) ═════════════ */
+
+  function assemble(turnIdx, W){
+    /* Simulates calls 1..turnIdx. Returns state of call #turnIdx. */
+    var threshold = Math.round(W * 0.9);
+    var st = {
+      mem:false, doc:"none",            /* none|full|trunc|evicted */
+      skill:"compact",                  /* compact|full */
+      hist:[],                          /* {kind:'summary'|'exchange', tokens, turns:[a,b]} */
+      events:[]                         /* compaction events of the CURRENT call only */
+    };
+
+    function segTokens(id){ return SEG[id].tokens; }
+
+    function fixedTotal(){
+      var t = segTokens("system") + segTokens("custom") + segTokens("tools");
+      t += (st.skill === "full" ? SEG.skillsFull.tokens : SEG.skills.tokens);
+      if(st.mem) t += SEG.memories.tokens;
+      if(st.doc === "full") t += SEG.doc.tokens;
+      if(st.doc === "trunc") t += SEG.docTrunc.tokens;
+      return t;
+    }
+    function histTotal(){
+      var t = 0;
+      for(var i=0;i<st.hist.length;i++) t += st.hist[i].tokens;
+      return t;
+    }
+
+    var result = null;
+
+    for(var t=0; t<turnIdx; t++){
+      var turn = TURNS[t];
+      st.events = [];
+      if(turn.addMemories) st.mem = true;
+      if(turn.addDoc) st.doc = "full";
+      if(turn.expandSkill) st.skill = "full";
+
+      var callExtra = turn.user.tokens + (turn.searchCycle ? SEG.toolCall.tokens + SEG.toolResult.tokens : 0);
+
+      /* reduction loop */
+      var guard = 0;
+      while(fixedTotal() + histTotal() + callExtra > threshold && guard++ < 10){
+        var exchanges = st.hist.filter(function(h){return h.kind==="exchange"});
+        if(exchanges.length > 1){
+          /* merge all but newest exchange into summary */
+          var newest = exchanges[exchanges.length-1];
+          st.hist = [{kind:"summary", tokens:SEG.summary.tokens}, newest];
+          st.events.push({action:"compacted", label:"Older turns collapsed into a "+SEG.summary.tokens+"-token summary"});
+        } else if(st.doc === "full"){
+          st.doc = "trunc";
+          st.events.push({action:"truncated", label:"refund-policy.pdf cut from "+fmt(SEG.doc.tokens)+" to "+fmt(SEG.docTrunc.tokens)+" tokens (11 of 14 pages dropped)"});
+        } else if(st.mem){
+          st.mem = false;
+          st.events.push({action:"evicted", label:"Memories dropped from the window entirely"});
+        } else if(exchanges.length === 1){
+          var hasSummary = st.hist.some(function(h){return h.kind==="summary"});
+          st.hist = [{kind:"summary", tokens:SEG.summary.tokens}];
+          st.events.push({action:"compacted", label:hasSummary ? "Even the most recent exchange was folded into the summary" : "All previous turns folded into a summary"});
+        } else if(st.doc === "trunc"){
+          st.doc = "evicted";
+          st.events.push({action:"evicted", label:"refund-policy.pdf removed from the window entirely"});
+        } else {
+          st.events.push({action:"overflow", label:"Nothing left to cut — the call barely fits (or fails)"});
+          break;
+        }
+      }
+
+      var total = fixedTotal() + histTotal() + callExtra;
+
+      if(t === turnIdx - 1){
+        result = { total: total, events: st.events.slice(),
+                   mem: st.mem, doc: st.doc, skill: st.skill,
+                   hist: st.hist.slice(), turn: turn };
+      }
+
+      /* absorb this call into history for the next one */
+      var exchangeTokens = turn.user.tokens
+        + (turn.searchCycle ? SEG.toolCall.tokens + SEG.toolResult.tokens : 0)
+        + turn.assistant.tokens;
+      st.hist.push({kind:"exchange", tokens:exchangeTokens, turnNo:t+1});
+    }
+
+    return result; /* null when turnIdx === 0 */
+  }
+
+  /* cumulative tokens sent across calls 1..turnIdx at window size W */
+  function cumulativeSent(turnIdx, W){
+    var sum = 0;
+    for(var t=1; t<=turnIdx; t++){
+      var r = assemble(t, W);
+      if(r) sum += r.total;
+    }
+    return sum;
+  }
+
+  /* ═════════════ STATE + DOM ═════════════ */
+  var viewTurn = 0;
+  var windowSize = 16000;
+  var animating = false;
+
+  var chatMessages = document.getElementById("chatMessages");
+  var chatInput = document.getElementById("chatInput");
+  var sendBtn = document.getElementById("sendBtn");
+  var stagedAtt = document.getElementById("stagedAtt");
+  var narrator = document.getElementById("narrator");
+  var gapBanner = document.getElementById("gapBanner");
+  var blocksContainer = document.getElementById("blocksContainer");
+  var emptyState = document.getElementById("emptyState");
+  var capacityCount = document.getElementById("capacityCount");
+  var capacityFill = document.getElementById("capacityFill");
+  var capacityPct = document.getElementById("capacityPct");
+  var statCalls = document.getElementById("statCalls");
+  var statTyped = document.getElementById("statTyped");
+  var statSent = document.getElementById("statSent");
+  var takeaway = document.getElementById("takeaway");
+
+  function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,","); }
+
+  /* ═════════════ RENDER: chat pane ═════════════ */
+  function renderChat(upTo){
+    chatMessages.innerHTML = "";
+    for(var t=0; t<upTo; t++){
+      var turn = TURNS[t];
+      var u = document.createElement("div");
+      u.className = "msg user";
+      if(turn.user.attachment){
+        var chip = document.createElement("span");
+        chip.className = "att-chip";
+        chip.textContent = "📎 " + turn.user.attachment;
+        u.appendChild(chip);
+        u.appendChild(document.createElement("br"));
+      }
+      u.appendChild(document.createTextNode(turn.user.text));
+      chatMessages.appendChild(u);
+
+      var a = document.createElement("div");
+      a.className = "msg assistant";
+      a.textContent = turn.assistant.text;
+      chatMessages.appendChild(a);
+    }
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    updateInputRow();
+  }
+
+  function updateInputRow(){
+    if(viewTurn >= TURNS.length){
+      chatInput.textContent = "End of scenario — use the turn buttons to revisit any call.";
+      chatInput.classList.add("done");
+      sendBtn.textContent = "Replay";
+      sendBtn.classList.remove("pulse");
+      sendBtn.disabled = false;
+      stagedAtt.style.display = "none";
+    } else {
+      var next = TURNS[viewTurn];
+      chatInput.textContent = next.user.text;
+      chatInput.classList.remove("done");
+      sendBtn.textContent = "Send";
+      sendBtn.classList.add("pulse");
+      sendBtn.disabled = false;
+      stagedAtt.style.display = next.user.attachment ? "inline-flex" : "none";
+    }
+  }
+
+  /* ═════════════ RENDER: x-ray pane ═════════════ */
+  function makeBlock(def, opts){
+    opts = opts || {};
+    var el = document.createElement("div");
+    el.className = "ctx-block";
+    el.style.borderLeftColor = def.color;
+
+    var header = document.createElement("div");
+    header.className = "block-header";
+    var label = document.createElement("span");
+    label.className = "block-label";
+    label.textContent = opts.label || def.label;
+    var right = document.createElement("span");
+    right.className = "block-right";
+    if(opts.badge){
+      var badge = document.createElement("span");
+      badge.className = "block-badge badge-" + opts.badge;
+      badge.textContent = opts.badgeText || opts.badge.toUpperCase();
+      right.appendChild(badge);
+    }
+    var tok = document.createElement("span");
+    tok.className = "block-tokens";
+    tok.textContent = "~" + fmt(opts.tokens != null ? opts.tokens : def.tokens) + " tok";
+    right.appendChild(tok);
+    header.appendChild(label);
+    header.appendChild(right);
+    el.appendChild(header);
+
+    var preview = document.createElement("div");
+    preview.className = "block-preview";
+    preview.textContent = opts.preview || def.preview;
+    el.appendChild(preview);
+
+    var body = document.createElement("div");
+    body.className = "block-body";
+    var content = document.createElement("div");
+    content.className = "block-content";
+    content.textContent = opts.content || def.content;
+    body.appendChild(content);
+    el.appendChild(body);
+
+    el.addEventListener("click", function(){ el.classList.toggle("expanded"); });
+    return el;
+  }
+
+  function buildBlockList(r, turnIdx){
+    /* returns [{def, opts}] in window order */
+    var turn = TURNS[turnIdx-1];
+    var isNew = function(cond){ return cond ? {badge:"new", badgeText:"NEW THIS CALL"} : {}; };
+    var list = [];
+
+    list.push({def:SEG.system, opts: turnIdx===1 ? isNew(true) : {}});
+    list.push({def:SEG.custom, opts: turnIdx===1 ? isNew(true) : {}});
+    if(r.mem){
+      list.push({def:SEG.memories, opts: turn.addMemories ? isNew(true) : {}});
+    } else if(turnIdx >= 2){
+      list.push({def:{
+        label:"Memories", color:"#7c3aed",
+        preview:"(no longer in the window — evicted to make room in an earlier call)",
+        content:"Maya's memories were dropped from the window in an earlier call to make\nroom. The model now knows nothing about her tone preferences or role.\nIf she asks for \"my usual style\" again, the answer will be generic --\nunless the app decides to re-retrieve them."
+      }, opts:{tokens:0, badge:"evicted", dimmed:true}});
+    }
+    if(r.skill === "full"){
+      list.push({def:SEG.skillsFull, opts: turn.expandSkill ? {badge:"new", badgeText:"500 → 3,500 TOK"} : {}});
+    } else {
+      list.push({def:SEG.skills, opts: turnIdx===1 ? isNew(true) : {}});
+    }
+    list.push({def:SEG.tools, opts: turnIdx===1 ? isNew(true) : {}});
+    if(r.doc === "full") list.push({def:SEG.doc, opts: turn.addDoc ? isNew(true) : {}});
+    if(r.doc === "trunc") list.push({def:SEG.docTrunc, opts:{badge:"truncated"}});
+    if(r.doc === "evicted"){
+      list.push({def:{
+        label:"Uploaded: refund-policy.pdf", color:"#059669",
+        preview:"(no longer in the window — evicted to make room in an earlier call)",
+        content:"The uploaded policy document was removed from the window in an earlier\ncall to make room. The model can no longer quote or check it. If Maya\nasks a policy question now, the model will answer from general knowledge\n-- and may confidently get Acme's specifics wrong."
+      }, opts:{tokens:0, badge:"evicted", dimmed:true}});
+    }
+
+    /* history */
+    for(var i=0;i<r.hist.length;i++){
+      var h = r.hist[i];
+      if(h.kind === "summary"){
+        list.push({def:SEG.summary, opts:{badge:"compacted", tokens:h.tokens}});
+      } else {
+        var tn = h.turnNo;
+        list.push({def:{
+          label:"History: turn "+tn+" (verbatim)", color:"#2563eb",
+          preview: "User: " + TURNS[tn-1].user.text,
+          content: "Re-sent word for word — the model has no memory of it:\n\nUser: " + TURNS[tn-1].user.text + "\n\nAssistant: " + TURNS[tn-1].assistant.text
+        }, opts:{tokens:h.tokens}});
+      }
+    }
+
+    /* current user message */
+    list.push({def:{
+      label:"Maya's message (this turn)", color:"#dc2626",
+      preview: turn.user.text,
+      content: (turn.user.attachment ? "[attachment handled separately above]\n\n" : "") + turn.user.text
+    }, opts:{tokens:turn.user.tokens, badge:"new", badgeText:"WHAT MAYA TYPED"}});
+
+    /* tool cycle happens after the user message */
+    if(turn.searchCycle){
+      list.push({def:SEG.toolCall, opts:isNew(true)});
+      list.push({def:SEG.toolResult, opts:isNew(true)});
+    }
+
+    /* overflow — show as ghost note at the end */
+    r.events.forEach(function(ev){
+      if(ev.action === "overflow"){
+        list.push({def:{
+          label:"⚠ Window overflow", color:"#dc2626",
+          preview: ev.label,
+          content: ev.label + "\n\nThe app made its cuts silently. Maya was not asked and was not told."
+        }, opts:{tokens:0, badge:"evicted", badgeText:"OVERFLOW", dimmed:true}});
+      }
+    });
+
+    return list;
+  }
+
+  function updateCapacity(used){
+    capacityCount.textContent = fmt(used) + " / " + fmt(windowSize) + " tokens";
+    var pct = Math.min((used / windowSize) * 100, 100);
+    capacityFill.style.width = pct + "%";
+    capacityFill.classList.toggle("warn", pct > 80);
+    capacityPct.textContent = pct >= 4 ? Math.round(pct) + "%" : "";
+  }
+
+  function updateGap(r, turn){
+    var pctApp = Math.round((1 - turn.user.tokens / r.total) * 1000) / 10;
+    gapBanner.style.display = "block";
+    gapBanner.innerHTML =
+      '<span class="gap-big">Maya typed ' + turn.user.words + ' words (~' + fmt(turn.user.tokens) + ' tokens).</span><br>' +
+      'The model received <span class="gap-big">~' + fmt(r.total) + ' tokens</span> — ' +
+      '<span class="gap-pct">' + pctApp + '%</span> of the prompt was assembled by the app, not typed by her.';
+  }
+
+  function updateStats(){
+    var typed = 0;
+    for(var t=0;t<viewTurn;t++) typed += TURNS[t].user.tokens;
+    statCalls.textContent = viewTurn;
+    statTyped.textContent = fmt(typed) + " tok";
+    statSent.textContent = fmt(cumulativeSent(viewTurn, windowSize)) + " tok";
+  }
+
+  function appendCompactionNarration(r){
+    if(!r.events.length) return "";
+    var items = r.events.map(function(ev){
+      var cls = ev.action === "overflow" ? "warn" : "hl";
+      return '<span class="' + cls + '">' + ev.action.toUpperCase() + ':</span> ' + ev.label;
+    });
+    return '<p><span class="warn">The window overflowed on this call.</span> To make it fit, the app silently did the following:<br>' + items.join('<br>') + '</p>';
+  }
+
+  function renderXray(turnIdx, animate){
+    if(turnIdx === 0){
+      blocksContainer.innerHTML = "";
+      blocksContainer.appendChild(emptyState);
+      emptyState.style.display = "flex";
+      gapBanner.style.display = "none";
+      updateCapacity(0);
+      updateStats();
+      return;
+    }
+    var r = assemble(turnIdx, windowSize);
+    var list = buildBlockList(r, turnIdx);
+    var turn = TURNS[turnIdx-1];
+
+    blocksContainer.innerHTML = "";
+    emptyState.style.display = "none";
+
+    var els = list.map(function(item){
+      var el = makeBlock(item.def, item.opts);
+      if(item.opts && item.opts.dimmed) el.classList.add("dimmed");
+      blocksContainer.appendChild(el);
+      return el;
+    });
+
+    updateGap(r, turn);
+    updateStats();
+
+    if(animate){
+      animating = true;
+      updateCapacity(0);
+      var shown = 0;
+      els.forEach(function(el, i){
+        setTimeout(function(){
+          el.classList.add("visible");
+          shown++;
+          /* progressive capacity: approximate by fraction of blocks shown */
+          updateCapacity(Math.round(r.total * (shown / els.length)));
+          if(shown === els.length){
+            updateCapacity(r.total);
+            animating = false;
+          }
+        }, 250 * i);
+      });
+    } else {
+      els.forEach(function(el){ el.classList.add("visible"); });
+      updateCapacity(r.total);
+    }
+  }
+
+  function setNarrator(html){
+    narrator.style.opacity = 0;
+    setTimeout(function(){
+      narrator.innerHTML = html;
+      narrator.style.opacity = 1;
+    }, 180);
+  }
+
+  /* ═════════════ RENDER: full view for a turn ═════════════ */
+  function renderView(turnIdx, animate){
+    viewTurn = turnIdx;
+    document.querySelectorAll(".turn-dot").forEach(function(d){
+      d.classList.toggle("active", parseInt(d.getAttribute("data-turn"),10) === turnIdx);
+    });
+    renderChat(turnIdx);
+    renderXray(turnIdx, animate);
+
+    if(turnIdx === 0){
+      setNarrator('<p>Maya\'s first message is staged in the input box. Press <span class="hl">Send</span> and watch the right side.</p><p>The chat window looks like a clean two-way conversation. The right pane shows what is really shipped to the model each time.</p>');
+    } else {
+      var r = assemble(turnIdx, windowSize);
+      setNarrator(TURNS[turnIdx-1].narrator + appendCompactionNarration(r));
+    }
+    takeaway.style.display = (turnIdx === TURNS.length) ? "block" : "none";
+  }
+
+  /* ═════════════ SEND FLOW (animated) ═════════════ */
+  function handleSend(){
+    if(animating) return;
+    if(viewTurn >= TURNS.length){
+      renderView(0, false);   /* Replay */
+      return;
+    }
+    var next = viewTurn + 1;
+    viewTurn = next;
+    document.querySelectorAll(".turn-dot").forEach(function(d){
+      d.classList.toggle("active", parseInt(d.getAttribute("data-turn"),10) === next);
+    });
+
+    /* chat: show messages up to previous turn + the new user msg */
+    renderChat(next - 1);
+    var turn = TURNS[next-1];
+    var u = document.createElement("div");
+    u.className = "msg user";
+    if(turn.user.attachment){
+      var chip = document.createElement("span");
+      chip.className = "att-chip";
+      chip.textContent = "📎 " + turn.user.attachment;
+      u.appendChild(chip);
+      u.appendChild(document.createElement("br"));
+    }
+    u.appendChild(document.createTextNode(turn.user.text));
+    chatMessages.appendChild(u);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    /* typing indicator while the x-ray assembles */
+    var dots = document.createElement("div");
+    dots.className = "typing-dots";
+    dots.style.display = "block";
+    dots.innerHTML = "<span></span><span></span><span></span>";
+    chatMessages.appendChild(dots);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    sendBtn.disabled = true;
+    sendBtn.classList.remove("pulse");
+    stagedAtt.style.display = "none";
+    chatInput.textContent = "";
+
+    renderXray(next, true);
+    var r = assemble(next, windowSize);
+    setNarrator(turn.narrator + appendCompactionNarration(r));
+
+    /* assistant reply arrives after the assembly animation */
+    var blockCount = blocksContainer.children.length;
+    var wait = 250 * blockCount + 500;
+    setTimeout(function(){
+      dots.remove();
+      var a = document.createElement("div");
+      a.className = "msg assistant";
+      a.textContent = turn.assistant.text;
+      chatMessages.appendChild(a);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      updateInputRow();
+      takeaway.style.display = (next === TURNS.length) ? "block" : "none";
+      if(next === TURNS.length){
+        takeaway.scrollIntoView({behavior:"smooth", block:"nearest"});
+      }
+    }, wait);
+  }
+
+  /* ═════════════ EVENTS ═════════════ */
+  sendBtn.addEventListener("click", handleSend);
+
+  document.getElementById("scrubber").addEventListener("click", function(e){
+    var dot = e.target.closest(".turn-dot");
+    if(!dot || animating) return;
+    renderView(parseInt(dot.getAttribute("data-turn"),10), false);
+  });
+
+  document.querySelector(".budget-group").addEventListener("click", function(e){
+    var btn = e.target.closest(".budget-btn");
+    if(!btn || animating) return;
+    document.querySelectorAll(".budget-btn").forEach(function(b){b.classList.remove("active")});
+    btn.classList.add("active");
+    windowSize = parseInt(btn.getAttribute("data-size"),10);
+    renderView(viewTurn, false);
+    if(viewTurn > 0){
+      var r = assemble(viewTurn, windowSize);
+      var note = r.events.length
+        ? '<p><span class="warn">At ' + fmt(windowSize) + ' tokens, this call doesn\'t fit.</span> The same conversation now requires sacrifices:</p>'
+        : '<p><span class="hl">At ' + fmt(windowSize) + ' tokens, everything fits' + (windowSize >= 32000 ? ' comfortably' : '') + '.</span>' + (windowSize >= 200000 ? ' But nothing is free: every call still re-sends the entire window — bigger windows mean slower, costlier calls, so apps compact anyway.' : '') + '</p>';
+      setNarrator(note + TURNS[viewTurn-1].narrator + appendCompactionNarration(r));
+    }
+  });
+
+  /* Init */
+  renderView(0, false);
+})();
+</script>
+</body>
+</html>

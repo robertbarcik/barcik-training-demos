@@ -1063,40 +1063,43 @@ const graphExamples = {
     callout: { layer: 2, idx: 0, text: '"She" resolves to "Mary" via coreference!' }
   },
   poetry: {
-    tokens: ['Roses', 'are', 'red', ',', 'violets', 'are', 'blue', ',', 'the', 'bunny', 'hopped', 'into', 'a'],
+    /* Anthropic's real rhyme-planning example: "He saw a carrot and had to grab it, /
+       his hunger was like a starving ___" — the model plans "rabbit" (rhymes with
+       "grab it", fits the carrot context); suppressing it yields "habit". */
+    tokens: ['He', 'saw', 'a', 'carrot', 'and', 'had', 'to', 'grab', 'it', ',', 'his', 'hunger', 'was', 'like', 'a', 'starving'],
     layer1: [
-      { label: 'Rhyming pattern', color: '#8b5cf6', active: true, activation: 0.88 },
-      { label: 'Rabbit/bunny', color: '#f59e0b', active: true, activation: 0.82, suppressible: true },
-      { label: 'Color words', color: '#94a3b8', active: false, activation: 0.12 },
+      { label: 'Rhyming couplet', color: '#8b5cf6', active: true, activation: 0.88 },
+      { label: 'Rabbit concept', color: '#f59e0b', active: true, activation: 0.82, suppressible: true },
+      { label: 'Food/vegetable', color: '#94a3b8', active: false, activation: 0.12 },
       { label: 'Punctuation', color: '#94a3b8', active: false, activation: 0.05 },
       { label: 'Poetry meter', color: '#94a3b8', active: false, activation: 0.07 }
     ],
     layer2: [
-      { label: 'Rhymes w/ blue', color: '#6366f1', active: true, activation: 0.91, key: true },
+      { label: 'Rhymes w/ "grab it"', color: '#6366f1', active: true, activation: 0.91, key: true },
       { label: 'Rabbit', color: '#f59e0b', active: true, activation: 0.85, suppressible: true },
       { label: 'Verse structure', color: '#94a3b8', active: false, activation: 0.1 },
-      { label: 'Animal motion', color: '#94a3b8', active: false, activation: 0.08 },
+      { label: 'Hunger/appetite', color: '#94a3b8', active: false, activation: 0.08 },
       { label: 'Nursery rhyme', color: '#94a3b8', active: false, activation: 0.06 }
     ],
     output: 'rabbit',
     outputAlt: 'habit',
     edges: [
-      { from: [0, 2], to: [1, 0], weight: 0.7, label: '' },
-      { from: [0, 6], to: [1, 0], weight: 0.85, label: '' },
-      { from: [0, 9], to: [1, 1], weight: 0.82, label: '' },
+      { from: [0, 7], to: [1, 0], weight: 0.85, label: '' },
+      { from: [0, 8], to: [1, 0], weight: 0.7, label: '' },
+      { from: [0, 3], to: [1, 1], weight: 0.82, label: '' },
       { from: [1, 0], to: [2, 0], weight: 0.9, label: '' },
       { from: [1, 1], to: [2, 1], weight: 0.85, label: '' },
       { from: [2, 0], to: [3, 0], weight: 0.88, label: '' },
       { from: [2, 1], to: [3, 0], weight: 0.8, label: '' }
     ],
     edgesAlt: [
-      { from: [0, 2], to: [1, 0], weight: 0.7, label: '' },
-      { from: [0, 6], to: [1, 0], weight: 0.85, label: '' },
+      { from: [0, 7], to: [1, 0], weight: 0.85, label: '' },
+      { from: [0, 8], to: [1, 0], weight: 0.7, label: '' },
       { from: [1, 0], to: [2, 0], weight: 0.9, label: '' },
       { from: [2, 0], to: [3, 0], weight: 0.92, label: '' }
     ],
-    summary: '<strong>Planning ahead:</strong> The model recognizes the rhyming pattern (red/blue) and combines it with the "bunny" context to predict "rabbit" &mdash; a word that both rhymes with "habit" and fits the content.',
-    summaryAlt: '<strong>Intervention result:</strong> Removing the "rabbit" feature changed the output! The "words rhyming with blue" feature is still active, but without the bunny context it produces "habit" instead. This proves the feature causally contributes to behavior.',
+    summary: '<strong>Planning ahead:</strong> Before writing the second line, the model already planned its ending: "rabbit" both rhymes with "grab it" and fits the carrot context. The rhyme was chosen at the line break &mdash; not improvised word by word.',
+    summaryAlt: '<strong>Intervention result:</strong> Removing the "rabbit" feature changed the output! The rhymes-with-"grab it" feature is still active, so the model still lands a rhyme &mdash; but without the rabbit concept it produces "habit" instead. This proves the feature causally contributes to behavior.',
     callout: { layer: 2, idx: 0, text: 'Rhyme constraints guide the output!' }
   }
 };
@@ -1647,7 +1650,7 @@ document.getElementById('animate-btn').addEventListener('click', () => {
       }
       // Special emphasis for key tokens
       const tok = ex.tokens[i];
-      if (tok === 'Dallas' || tok === 'Mary' || tok === 'bunny' || tok === 'She' || tok === 'blue') {
+      if (tok === 'Dallas' || tok === 'Mary' || tok === 'carrot' || tok === 'She' || tok === 'grab') {
         if (rect) {
           rect.setAttribute('fill', '#fef3c7');
           rect.setAttribute('stroke', '#f59e0b');

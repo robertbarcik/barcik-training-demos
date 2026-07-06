@@ -250,7 +250,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
       </div>
       <div class="cost-card" id="cardGpu" onclick="selectDelivery('gpu')">
         <h4>Self-Hosted Cloud GPU</h4>
-        <div class="cc-model">Llama 70B (open-source)</div>
+        <div class="cc-model">70B-class open-weight model (e.g. Llama 4)</div>
         <div class="cc-slider" onclick="event.stopPropagation()">
           <label>Monthly GPU cost</label>
           <input type="range" id="gpuCostSlider" min="500" max="10000" value="3000" step="100" oninput="updateCosts()">
@@ -268,7 +268,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
       </div>
       <div class="cost-card" id="cardLocal" onclick="selectDelivery('local')">
         <h4>Tiny Local Model</h4>
-        <div class="cc-model">Mistral 7B (local)</div>
+        <div class="cc-model">Small open-weight model (7&ndash;8B, local)</div>
         <div class="cc-slider" onclick="event.stopPropagation()">
           <label>Monthly electricity + amort.</label>
           <input type="range" id="localCostSlider" min="100" max="2000" value="500" step="50" oninput="updateCosts()">

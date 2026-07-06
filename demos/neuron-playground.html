@@ -530,9 +530,9 @@ footer {
           <div class="signal-bar-fill" id="signal-bar" style="width:0%; background:#94a3b8;"></div>
         </div>
         <div class="signal-bar-label">
-          <span>-1</span>
+          <span>0</span>
           <span>Signal Strength</span>
-          <span>+1</span>
+          <span>max</span>
         </div>
       </div>
     </div>
@@ -547,7 +547,7 @@ footer {
   </div>
   <div class="card card-scale">
     <div class="card-title">Scale: From One Neuron to Trillions of Weights</div>
-    <p>In a real neural network: GPT-4 is estimated to have ~1.8 trillion weights across its network. Each weight was learned during training by processing billions of text examples. This single neuron demonstrates the fundamental building block that, when combined in layers of millions, gives rise to language understanding.</p>
+    <p>In a real neural network: today's frontier models are estimated to have on the order of a trillion or more weights (exact figures are no longer disclosed &mdash; GPT-4 was famously rumored at ~1.8T back in 2023). Each weight was learned during training by processing trillions of text tokens. This single neuron demonstrates the fundamental building block that, when combined in layers of millions, gives rise to language understanding.</p>
   </div>
 </div>
 
@@ -654,13 +654,14 @@ footer {
 
   // === Draw activation graph ===
   function drawGraph(z) {
+    // setupCanvas() applies a dpr transform, so all drawing here is in CSS pixels
     var dpr = window.devicePixelRatio || 1;
-    var w = canvas.width;
-    var h = canvas.height;
+    var w = canvas.width / dpr;
+    var h = canvas.height / dpr;
 
     ctx.clearRect(0, 0, w, h);
 
-    var pad = 35 * dpr;
+    var pad = 35;
     var gw = w - pad * 2;
     var gh = h - pad * 2;
 
@@ -703,17 +704,17 @@ footer {
 
     // Axis labels
     ctx.fillStyle = '#94a3b8';
-    ctx.font = (10 * dpr) + 'px -apple-system, sans-serif';
+    ctx.font = '10px -apple-system, sans-serif';
     ctx.textAlign = 'center';
     for (var lx = Math.ceil(xMin); lx <= Math.floor(xMax); lx++) {
       if (lx === 0) continue;
-      ctx.fillText(lx, toCanvasX(lx), zeroY + 14 * dpr);
+      ctx.fillText(lx, toCanvasX(lx), zeroY + 14);
     }
     ctx.textAlign = 'right';
     for (var ly = Math.ceil(yMin / yStep) * yStep; ly <= yMax; ly += yStep) {
       if (Math.abs(ly) < 0.01) continue;
       var rounded = Math.round(ly * 100) / 100;
-      ctx.fillText(rounded, zeroX - 6 * dpr, toCanvasY(ly) + 4 * dpr);
+      ctx.fillText(rounded, zeroX - 6, toCanvasY(ly) + 4);
     }
 
     // Activation curve

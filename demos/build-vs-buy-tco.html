@@ -179,7 +179,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
         <button class="radio-btn selected" data-val="high" onclick="selectRadio('quality','high')">High quality</button>
         <button class="radio-btn" data-val="frontier" onclick="selectRadio('quality','frontier')">Frontier-level</button>
       </div>
-      <div class="hint">Good = open-source 7B | High = 70B/Sonnet | Frontier = Opus/GPT-4o</div>
+      <div class="hint">Good = small open-source (7&ndash;8B) | High = 70B-class / Claude Sonnet | Frontier = Claude Opus / GPT-5.x</div>
     </div>
     <div class="form-group">
       <label>Monthly Request Volume</label>
@@ -207,9 +207,9 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
       <label>API Model</label>
       <select id="apiModel" onchange="renderChart()">
         <option value="sonnet" selected>Claude Sonnet (€0.009/call)</option>
-        <option value="opus">Claude Opus (€0.045/call)</option>
-        <option value="gpt4o">GPT-4o (€0.015/call)</option>
-        <option value="gpt4omini">GPT-4o-mini (€0.003/call)</option>
+        <option value="opus">Claude Opus (€0.015/call)</option>
+        <option value="gpt5">GPT-5.x (€0.012/call)</option>
+        <option value="gpt5mini">GPT-5 mini (€0.002/call)</option>
       </select>
     </div>
     <div class="chart-container">
@@ -268,9 +268,9 @@ const selections = { quality: 'high', volume: 'medium', talent: 'yes' };
 
 const apiPricing = {
   sonnet: { name: 'Claude Sonnet', costPerCall: 0.009 },
-  opus: { name: 'Claude Opus', costPerCall: 0.045 },
-  gpt4o: { name: 'GPT-4o', costPerCall: 0.015 },
-  gpt4omini: { name: 'GPT-4o-mini', costPerCall: 0.003 }
+  opus: { name: 'Claude Opus', costPerCall: 0.015 },
+  gpt5: { name: 'GPT-5.x', costPerCall: 0.012 },
+  gpt5mini: { name: 'GPT-5 mini', costPerCall: 0.002 }
 };
 
 const volumeMultiplier = { low: 0.5, medium: 3, high: 15 };
@@ -400,13 +400,17 @@ function renderStep3() {
     insights.push({ type: 'warning', title: 'Frontier Quality = Serious Hardware', text: 'Self-hosting frontier-level models requires A100/H100 GPUs. The gap between open-source and commercial frontier models is shrinking but still matters for complex reasoning tasks.' });
   }
   if (selections.volume === 'high') {
-    insights.push({ type: 'positive', title: 'High Volume Favors Self-Hosting', text: 'At 100K+ requests/month, API costs scale linearly while self-hosted costs stay relatively flat. If you have the team, self-hosting becomes very attractive at scale.' });
+    if (selfTotal < apiTotal) {
+      insights.push({ type: 'positive', title: 'High Volume Favors Self-Hosting Here', text: `At 100K+ requests/month, API costs scale linearly with every call. With your inputs, self-hosting comes out ${fmtEur(apiTotal - selfTotal)} ahead over 12 months — high, steady GPU utilization is exactly where owning the hardware pays off.` });
+    } else {
+      insights.push({ type: 'warning', title: 'High Volume Isn\'t Automatically Self-Host Territory', text: `API costs scale linearly with calls — but so does serving: more traffic means more GPUs, more electricity, more ops time. With your inputs, vendor API is still ${fmtEur(selfTotal - apiTotal)} cheaper over 12 months. Self-hosting wins at scale only with high utilization, an efficient model, and a disciplined ops team.` });
+    }
   }
   if (selections.volume === 'low') {
     insights.push({ type: 'positive', title: 'Low Volume Favors API', text: 'At under 10K requests/month, the upfront hardware cost of self-hosting is hard to justify. API lets you pay only for what you use.' });
   }
   if (selections.talent === 'yes' && selections.quality !== 'frontier') {
-    insights.push({ type: 'positive', title: 'Your Team Can Handle Self-Hosting', text: 'With ML engineers on staff, the operational burden of self-hosting is manageable. Open-source models like Llama and Mistral offer excellent quality for most use cases.' });
+    insights.push({ type: 'positive', title: 'Your Team Can Handle Self-Hosting', text: 'With ML engineers on staff, the operational burden of self-hosting is manageable. Open-weight models like Llama 4, Qwen, and DeepSeek offer excellent quality for most use cases.' });
   }
 
   if (insights.length < 2) {

@@ -868,7 +868,7 @@
     const mx = (e.clientX - rect.left) * scaleX;
     const my = (e.clientY - rect.top) * scaleY;
 
-    // Find closest visible word within 20 units
+    // Find closest visible word within 25 units
     let closest = null;
     let closestDist = Infinity;
     getVisibleWords().forEach(w => {

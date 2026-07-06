@@ -19,8 +19,8 @@
     --key-light: #ecfeff;
     --value: #059669;
     --value-light: #ecfdf5;
-    --highlight: #1e3a5f;
-    --highlight-light: #e8edf4;
+    --highlight: #f2cc8f;
+    --highlight-light: #fbf0dc;
     --neuron: #7c3aed;
     --neuron-light: #f3ecff;
     --attention: #0d9488;
@@ -126,7 +126,7 @@
   }
   .tab.active .tab-num {
     background: var(--highlight);
-    color: #fff;
+    color: var(--bg-dark);
   }
 
   /* ===== FOCUS-VISIBLE ===== */
@@ -231,7 +231,7 @@
   }
   .word-pill.selected {
     background: var(--highlight);
-    color: #fff;
+    color: var(--bg-dark);
     box-shadow: 0 0 20px rgba(242,204,143,0.3);
     transform: scale(1.08);
   }
@@ -649,7 +649,7 @@
     background: var(--bg-dark);
     color: var(--text-light);
   }
-  .nav-btn.next:hover { background: #2A2A4E; }
+  .nav-btn.next:hover { background: #2d5a8e; }
   .nav-btn:disabled {
     opacity: 0.3;
     cursor: not-allowed;
@@ -706,7 +706,7 @@
   }
   .toggle-btn.active-toggle {
     background: var(--highlight);
-    color: #fff;
+    color: var(--bg-dark);
   }
 </style>
 </head>
@@ -1142,7 +1142,7 @@ function renderDemo() {
     const norm = max > 0 ? weights[i] / max : 0;
     if (i === 2) {
       el.style.background = 'var(--highlight)';
-      el.style.color = 'var(--text-light)';
+      el.style.color = 'var(--bg-dark)';
       el.style.fontWeight = '700';
       el.style.transform = 'none';
     } else if (norm > 0.6) {
