@@ -319,7 +319,6 @@ header .brand { font-size: 0.75rem; color: #64748b; letter-spacing: 0.03em; marg
 .header-links { margin-top: 0.45rem; font-size: 0.78rem; }
 .header-links a { color: #93c5fd; text-decoration: none; }
 .header-links a:hover { text-decoration: underline; }
-.header-links-sep { color: #64748b; margin: 0 0.4rem; }
 .self-contained-note {
   max-width: 960px; margin: 0 auto; padding: 0.55rem 1.25rem;
   font-size: 0.78rem; color: #94a3b8; text-align: center;
@@ -327,14 +326,18 @@ header .brand { font-size: 0.75rem; color: #64748b; letter-spacing: 0.03em; marg
 </style>
 </head>
 <body>
+<a class="all-demos-link" href="../">&larr; All Demos</a>
+<style>
+  .all-demos-link{position:fixed;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
+  .all-demos-link:hover{opacity:1}
+  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+</style>
 
 <header>
   <h1>The Operator's Dilemma</h1>
   <div class="subtitle">LLM-Human Interaction Design Patterns for Operations</div>
   <div class="brand">robert@barcik.training</div>
   <div class="header-links">
-    <a href="https://demos.barcik.training/">&larr; All demos</a>
-    <span class="header-links-sep">&middot;</span>
     <a href="https://publications.barcik.training/llm-human-interaction-patterns/">Read the booklet</a>
   </div>
 </header>

@@ -39,12 +39,6 @@
     border-bottom: 1px solid var(--border);
     position: relative;
   }
-  .back-link {
-    position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
-    color: #94a3b8; text-decoration: none; font-size: 0.85rem; font-weight: 600;
-    display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;
-  }
-  .back-link:hover { color: var(--accent); }
   header h1 {
     font-size: 2rem;
     font-weight: 700;
@@ -461,12 +455,18 @@
 </style>
 </head>
 <body>
+<a class="all-demos-link" href="../">&larr; All Demos</a>
+<style>
+  .all-demos-link{position:fixed;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
+  .all-demos-link:hover{opacity:1}
+  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+</style>
 
-<div class="brand-bar" style="background:#1e3a5f;padding:0.5rem 1.5rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:0.82rem;letter-spacing:0.04em;"><a href="../" style="color:#fff;text-decoration:none;opacity:0.9;">&larr; All Demos &middot; robert@barcik.training</a></div>
 
 <header>
   <h1>RAG Explorer</h1>
   <p>An interactive walkthrough of Retrieval Augmented Generation using IT support tickets. Step through the process to build intuition for how RAG works and <em>why</em> we need it.</p>
+  <p style="font-size:0.78rem;color:var(--text-dim);opacity:0.75;margin-top:8px;">robert@barcik.training</p>
 </header>
 
 <main>

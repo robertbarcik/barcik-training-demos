@@ -46,17 +46,14 @@
   /* ── Branding ── */
   .branding {
     position: fixed;
-    top: 1.2rem;
-    left: 1.4rem;
+    bottom: 1.2rem;
+    right: 1.4rem;
     z-index: 3;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     letter-spacing: 0.02em;
     color: var(--text-dim);
-    text-decoration: none;
-    transition: color 0.25s ease;
   }
-  .branding:hover { color: var(--accent); }
 
   /* ── Intro title (fades out on start) ── */
   .intro {
@@ -288,9 +285,16 @@
 </style>
 </head>
 <body>
+<a class="all-demos-link" href="../">&larr; All Demos</a>
+<style>
+  .all-demos-link{position:fixed;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
+  .all-demos-link:hover{opacity:1}
+  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+</style>
+
   <canvas id="scene"></canvas>
 
-  <a class="branding" href="../" title="All demos">&larr; robert@barcik.training</a>
+  <span class="branding">robert@barcik.training</span>
 
   <div class="toggles">
     <button class="toggle" id="ambientBtn" title="Ambient mode — hide the interface">&#9728;</button>

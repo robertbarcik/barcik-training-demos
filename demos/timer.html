@@ -430,9 +430,8 @@
   .branding {
     position: fixed;
     bottom: 0.8rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.9rem;
+    right: 1.2rem;
+    font-size: 0.75rem;
     color: var(--accent);
     letter-spacing: 0.06em;
     z-index: 2;
@@ -452,6 +451,13 @@
 </style>
 </head>
 <body>
+<a class="all-demos-link" href="../">&larr; All Demos</a>
+<style>
+  .all-demos-link{position:fixed;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
+  .all-demos-link:hover{opacity:1}
+  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+</style>
+
 
 <canvas id="bg-canvas"></canvas>
 
@@ -513,7 +519,7 @@
   </div>
 </div>
 
-<a href="../" class="branding" style="text-decoration:none;color:inherit;" title="All Demos">&larr; robert@barcik.training</a>
+<span class="branding">robert@barcik.training</span>
 
 <script>
 // ══════════════════════════════════════════

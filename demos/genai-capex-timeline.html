@@ -15,8 +15,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 .site-header{background:#1e3a5f;color:#fff;padding:1.4rem 2rem;text-align:center;position:relative}
 .site-header h1{font-size:1.5rem;font-weight:700;margin-bottom:0.15rem}
 .site-header .brand{font-size:0.85rem;color:#94a3b8}
-.back-link{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:#94a3b8;text-decoration:none;font-size:0.92rem}
-.back-link:hover{color:#fff}
 
 /* ── Main content ── */
 .container{max-width:1140px;margin:0 auto;padding:32px 32px 48px}
@@ -57,15 +55,19 @@ footer.credits{text-align:center;margin-top:32px;font-size:12px;color:#94a3b8}
   .container{padding:24px 14px 40px}
   .legend{gap:16px}
   .info-content{flex-direction:column;gap:10px}
-  .back-link{position:static;display:block;transform:none;margin-bottom:0.5rem}
   .site-header{padding:1rem}
 }
 </style>
 </head>
 <body>
+<a class="all-demos-link" href="../">&larr; All Demos</a>
+<style>
+  .all-demos-link{position:fixed;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
+  .all-demos-link:hover{opacity:1}
+  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+</style>
 
 <header class="site-header">
-  <a href="../" class="back-link">&larr; All demos</a>
   <h1>Where Does the Money Go?</h1>
   <div class="brand">robert@barcik.training</div>
 </header>
