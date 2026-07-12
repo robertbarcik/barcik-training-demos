@@ -5,205 +5,391 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Paper Trail — An EU AI Act Provider Simulation | robert@barcik.training</title>
 <meta name="description" content="You classified your AI system high-risk. Now survive conformity: build the evidence pack, pick the assessment route, handle the customer call, and manage a post-market incident — scored, with article citations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;0,700;1,500&family=Public+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* ═══ EU AI ACT LAB · design tokens (Official Journal direction · dossier temperament) ═══ */
+:root {
+  --paper: #f3efe4;
+  --paper-deep: #e9e3d2;
+  --card: #fffdf6;
+  --ink: #22273a;
+  --ink-soft: #5c6274;
+  --eu-blue: #003d8f;
+  --eu-blue-deep: #00205b;
+  --eu-gold: #f0be00;
+  --stamp-red: #9e1b1b;
+  --seal-green: #14683f;
+  --warn-amber: #8a5a00;
+  --warn-bg: #faf0d3;
+  --rule: #d6cfb8;
+  --rule-soft: #e5dfcb;
+}
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f0f4f8; color: #1a202c; min-height: 100vh; line-height: 1.5;
+  font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--paper); color: var(--ink); min-height: 100vh; line-height: 1.55;
 }
-header { background: #1e3a5f; color: #fff; padding: 1.4rem 2rem; text-align: center; position: relative; }
-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
-header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
-.intro { max-width: 880px; margin: 1.5rem auto 0; padding: 0 1.25rem; text-align: center; }
-.intro p { font-size: 0.95rem; color: #4a5568; max-width: 720px; margin: 0 auto; line-height: 1.65; }
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(rgba(0,32,91,0.03) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
 
-.disclaimer { max-width: 880px; margin: 1.25rem auto 0; padding: 0 1.25rem; }
+/* ── Masthead ── */
+.gold-bar { height: 6px; background: linear-gradient(90deg, var(--eu-gold) 0%, #ffd94d 50%, var(--eu-gold) 100%); position: relative; z-index: 2; }
+.masthead {
+  background: var(--eu-blue-deep); color: #fff; padding: 1.6rem 2rem 1.5rem;
+  position: relative; z-index: 1; overflow: hidden;
+}
+.masthead::after {
+  content: ''; position: absolute; right: -70px; top: 50%; transform: translateY(-50%);
+  width: 340px; height: 340px; border-radius: 50%;
+  border: 1px solid rgba(240,190,0,0.22); pointer-events: none;
+}
+.mh-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; gap: 1.4rem; }
+.mh-seal { flex-shrink: 0; width: 72px; height: 72px; }
+.mh-text { text-align: left; }
+.mh-eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; font-weight: 500;
+  letter-spacing: 0.22em; color: var(--eu-gold); text-transform: uppercase; margin-bottom: 0.45rem;
+}
+.masthead h1 {
+  font-family: 'Spectral', Georgia, serif; font-weight: 700; font-size: 2.15rem;
+  line-height: 1.05; letter-spacing: -0.01em; margin-bottom: 0.35rem;
+}
+.mh-sub { font-size: 0.92rem; color: #b8c4dd; font-weight: 400; }
+.double-rule {
+  height: 7px; position: relative; z-index: 1;
+  border-top: 2px solid var(--eu-blue-deep); border-bottom: 1px solid var(--eu-blue-deep);
+  background: var(--paper);
+}
+
+.sheet { max-width: 900px; margin: 0 auto; padding: 0 1.25rem; position: relative; z-index: 1; }
+
+/* ── Disclaimer recital ── */
 .disclaimer-inner {
-  background: #fef3cd; border: 1px solid #e67e22; border-radius: 10px;
-  padding: 0.9rem 1.1rem; font-size: 0.85rem; color: #92400e; text-align: left;
+  background: var(--warn-bg); border: 1px solid #d9b970; border-left: 4px solid var(--eu-gold);
+  padding: 1rem 1.2rem; font-size: 0.84rem; color: var(--warn-amber);
+  margin-top: 1.5rem; line-height: 1.65; border-radius: 2px;
 }
-.disclaimer-inner strong { color: #78350f; }
-.disclaimer-inner a { color: #78350f; }
+.disclaimer-inner::before {
+  content: 'Recital · read first'; display: block;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.45rem; color: #a06e00;
+}
+.disclaimer-inner strong { color: #6e4700; }
+.disclaimer-inner a { color: #6e4700; }
 
-/* Progress */
-.progress-bar { max-width: 880px; margin: 1.5rem auto 0; padding: 0 1.25rem; }
-.progress-track { display: flex; gap: 0.35rem; }
-.progress-step { flex: 1; height: 6px; border-radius: 3px; background: #e2e8f0; transition: background 0.3s; }
-.progress-step.active { background: #1e3a5f; }
-.progress-step.done { background: #27ae60; }
-.progress-labels { display: flex; gap: 0.35rem; margin-top: 0.4rem; }
-.progress-labels span { flex: 1; text-align: center; font-size: 0.6rem; color: #94a3b8; font-weight: 600; }
-.progress-labels span.active { color: #1e3a5f; }
+.intro { text-align: center; margin-top: 1.6rem; }
+.intro p {
+  font-family: 'Spectral', Georgia, serif; font-size: 1.02rem; color: #3d445c;
+  max-width: 700px; margin: 0 auto; line-height: 1.7;
+}
+.intro a { color: var(--eu-blue); }
 
-/* Steps */
-.step { display: none; max-width: 880px; margin: 1.5rem auto; padding: 0 1.25rem; }
+/* ── Case-file tabs (progress) ── */
+.progress-bar { margin-top: 1.8rem; }
+.progress-track { display: flex; gap: 3px; }
+.progress-step { flex: 1; height: 5px; background: var(--rule-soft); transition: background 0.3s; }
+.progress-step.active { background: var(--eu-gold); }
+.progress-step.done { background: var(--eu-blue); }
+.progress-labels { display: flex; gap: 3px; margin-top: 0.45rem; }
+.progress-labels span {
+  flex: 1; text-align: center; font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.56rem; letter-spacing: 0.04em; text-transform: uppercase;
+  color: #9aa0b0; font-weight: 500;
+}
+.progress-labels span.active { color: var(--eu-blue-deep); font-weight: 600; }
+
+/* ── Steps & panels ── */
+.step { display: none; margin: 1.6rem auto; }
 .step.active { display: block; }
-.panel { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 1.25rem; }
-.panel-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 1rem; font-weight: 600; }
-.panel .lead { font-size: 0.88rem; color: #4a5568; margin-bottom: 1rem; }
-.cite { font-size: 0.72rem; font-weight: 700; color: #2563eb; background: #eff6ff; border-radius: 6px; padding: 0.1rem 0.4rem; white-space: nowrap; }
-
-/* Scene narration */
-.scene {
-  background: #1e3a5f; color: #e2e8f0; border-radius: 12px; padding: 1.3rem 1.5rem;
-  font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.25rem;
+.panel {
+  background: var(--card); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 1.6rem 1.7rem; margin-bottom: 1.25rem;
+  box-shadow: 0 1px 0 var(--rule), 0 6px 18px rgba(0,32,91,0.05);
 }
-.scene .scene-tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-weight: 700; margin-bottom: 0.5rem; }
-.scene strong { color: #fff; }
-.scene em { color: #93c5fd; font-style: normal; font-weight: 600; }
-.scene .voice { border-left: 3px solid #2563eb; padding-left: 0.9rem; margin: 0.7rem 0; color: #cbd5e0; font-style: italic; }
+.panel-title {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.16em; color: var(--eu-blue);
+  margin-bottom: 1.1rem; padding-bottom: 0.55rem; border-bottom: 1px solid var(--rule-soft);
+}
+.panel .lead { font-size: 0.88rem; color: #454c63; margin-bottom: 1rem; }
 
-/* Decisions */
-.decision { margin-bottom: 1.4rem; }
-.decision h3 { font-size: 0.98rem; font-weight: 700; color: #1e3a5f; margin-bottom: 0.3rem; }
-.decision .d-context { font-size: 0.84rem; color: #4a5568; margin-bottom: 0.7rem; }
+.cite {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.64rem; font-weight: 600;
+  letter-spacing: 0.02em; color: var(--eu-blue); background: rgba(0,61,143,0.06);
+  border: 1px solid rgba(0,61,143,0.22); border-radius: 2px;
+  padding: 0.08rem 0.38rem; white-space: nowrap; vertical-align: 8%;
+}
+
+/* ── Scene: the case-file memo ── */
+.scene {
+  background: var(--eu-blue-deep); color: #cdd6e8; border-radius: 3px;
+  padding: 1.5rem 1.7rem 1.4rem; font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.25rem;
+  position: relative; border-left: 6px solid var(--eu-gold);
+}
+.scene .scene-tag {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; text-transform: uppercase;
+  letter-spacing: 0.2em; color: var(--eu-gold); font-weight: 600; margin-bottom: 0.65rem;
+}
+.scene strong { color: #fff; }
+.scene em { color: #ffd94d; font-style: normal; font-weight: 600; }
+.scene .voice {
+  border-left: 3px solid rgba(240,190,0,0.55); padding-left: 0.9rem; margin: 0.8rem 0;
+  color: #dfe5f2; font-family: 'Spectral', Georgia, serif; font-style: italic; font-size: 0.98rem;
+}
+.scene .cite { background: rgba(255,255,255,0.1); color: #ffd94d; border-color: rgba(255,217,77,0.35); }
+
+/* ── Decisions ── */
+.decision { margin-bottom: 1.5rem; }
+.decision h3 {
+  font-family: 'Spectral', Georgia, serif; font-size: 1.08rem; font-weight: 600;
+  color: var(--eu-blue-deep); margin-bottom: 0.35rem;
+}
+.decision .d-context { font-size: 0.83rem; color: var(--ink-soft); margin-bottom: 0.75rem; }
 .d-options { display: flex; flex-direction: column; gap: 0.45rem; }
 .d-opt {
-  padding: 0.65rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px;
-  font-size: 0.86rem; cursor: pointer; transition: all 0.15s; background: #fff; color: #1a202c;
+  padding: 0.7rem 1rem 0.7rem 1.15rem; border: 1px solid var(--rule); border-left: 3px solid var(--rule);
+  border-radius: 2px; font-size: 0.86rem; cursor: pointer; transition: all 0.15s; background: var(--card); color: var(--ink);
 }
-.d-opt:hover { border-color: #1e3a5f; }
-.d-opt.picked { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
-.d-opt.locked { cursor: default; opacity: 0.75; }
-.d-opt.reveal-good { background: #f0fdf4; border-color: #27ae60; opacity: 1; }
-.d-opt.reveal-bad { background: #fef2f2; border-color: #c0392b; opacity: 1; }
-.d-opt.picked.reveal-good { background: #27ae60; color: #fff; }
-.d-opt.picked.reveal-bad { background: #c0392b; color: #fff; }
-.d-feedback {
-  display: none; margin-top: 0.6rem; border-radius: 8px; padding: 0.75rem 0.95rem;
-  font-size: 0.83rem; line-height: 1.6;
-}
-.d-feedback.good { display: block; background: #f0fdf4; border: 1px solid #27ae60; color: #14532d; }
-.d-feedback.bad { display: block; background: #fef2f2; border: 1px solid #c0392b; color: #7f1d1d; }
-.d-feedback .cite { background: rgba(37,99,235,0.1); }
+.d-opt:hover { border-left-color: var(--eu-gold); background: #fffef9; }
+.d-opt.picked { background: var(--eu-blue); color: #fff; border-color: var(--eu-blue); border-left-color: var(--eu-gold); }
+.d-opt.locked { cursor: default; opacity: 0.72; }
+.d-opt.reveal-good { background: #eef6ef; border-color: #9dc4a8; border-left-color: var(--seal-green); opacity: 1; }
+.d-opt.reveal-bad { background: #f9ecec; border-color: #d3a3a3; border-left-color: var(--stamp-red); opacity: 1; }
+.d-opt.picked.reveal-good { background: var(--seal-green); color: #fff; }
+.d-opt.picked.reveal-bad { background: var(--stamp-red); color: #fff; }
 
-/* Evidence pack builder (Act 2) */
+/* stamped feedback */
+.d-feedback {
+  display: none; margin-top: 0.6rem; border-radius: 2px; padding: 0.85rem 1rem 0.85rem 1.05rem;
+  font-size: 0.83rem; line-height: 1.6; position: relative;
+}
+.d-feedback::before {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  display: inline-block; padding: 0.14rem 0.5rem; border: 1.5px solid currentColor;
+  border-radius: 2px; transform: rotate(-2deg); margin-bottom: 0.5rem;
+  animation: stamp-in 0.35s cubic-bezier(.2,1.4,.4,1) both;
+}
+@keyframes stamp-in {
+  from { transform: rotate(-2deg) scale(1.7); opacity: 0; }
+  65% { transform: rotate(-2deg) scale(0.94); opacity: 1; }
+  to { transform: rotate(-2deg) scale(1); }
+}
+.d-feedback.good { display: block; background: #eef6ef; border: 1px solid #9dc4a8; border-left: 3px solid var(--seal-green); color: #1d4a30; }
+.d-feedback.good::before { content: 'Sound · on the record'; color: var(--seal-green); }
+.d-feedback.bad { display: block; background: #f9ecec; border: 1px solid #d3a3a3; border-left: 3px solid var(--stamp-red); color: #5e1c1c; }
+.d-feedback.bad::before { content: 'Defect · noted in file'; color: var(--stamp-red); }
+.d-feedback .cite { background: rgba(0,61,143,0.07); }
+
+/* ── Evidence pack builder ── */
 .evi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
 .evi-card {
-  padding: 0.75rem 0.9rem; border: 2px solid #e2e8f0; border-radius: 10px;
-  cursor: pointer; transition: all 0.15s; background: #fff;
+  padding: 0.8rem 0.95rem; border: 1px solid var(--rule); border-top: 3px solid var(--rule);
+  border-radius: 2px; cursor: pointer; transition: all 0.15s; background: var(--card);
 }
-.evi-card:hover { border-color: #1e3a5f; }
-.evi-card.picked { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+.evi-card:hover { border-top-color: var(--eu-gold); }
+.evi-card.picked { background: var(--eu-blue); border-color: var(--eu-blue); border-top-color: var(--eu-gold); color: #fff; }
 .evi-card.locked { cursor: default; }
-.evi-card.reveal-good { border-color: #27ae60; background: #f0fdf4; color: #1a202c; }
-.evi-card.reveal-bad { border-color: #c0392b; background: #fef2f2; color: #1a202c; }
-.evi-card.picked.reveal-good { background: #27ae60; color: #fff; }
-.evi-card.picked.reveal-bad { background: #c0392b; color: #fff; }
-.evi-name { font-size: 0.86rem; font-weight: 700; }
-.evi-sub { font-size: 0.74rem; color: #64748b; margin-top: 0.2rem; line-height: 1.45; }
-.evi-card.picked .evi-sub { color: #cbd5e0; }
+.evi-card.reveal-good { border-color: #9dc4a8; border-top-color: var(--seal-green); background: #eef6ef; color: var(--ink); }
+.evi-card.reveal-bad { border-color: #d3a3a3; border-top-color: var(--stamp-red); background: #f9ecec; color: var(--ink); }
+.evi-card.picked.reveal-good { background: var(--seal-green); color: #fff; }
+.evi-card.picked.reveal-bad { background: var(--stamp-red); color: #fff; }
+.evi-name { font-family: 'Spectral', Georgia, serif; font-size: 0.95rem; font-weight: 600; }
+.evi-sub { font-size: 0.74rem; color: var(--ink-soft); margin-top: 0.25rem; line-height: 1.45; }
+.evi-card.picked .evi-sub { color: #c3cde2; }
 .evi-card.picked.reveal-good .evi-sub, .evi-card.picked.reveal-bad .evi-sub { color: rgba(255,255,255,0.85); }
 
 .check-btn {
-  margin-top: 1rem; padding: 0.6rem 1.4rem; border: none; border-radius: 8px;
-  background: #e67e22; color: #fff; font-size: 0.88rem; font-weight: 700; cursor: pointer;
+  margin-top: 1rem; padding: 0.6rem 1.4rem; border: 1px solid var(--eu-blue-deep); border-radius: 2px;
+  background: var(--eu-blue-deep); color: var(--eu-gold);
+  font-family: 'Public Sans', sans-serif; font-size: 0.86rem; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.02em;
 }
 .check-btn:disabled { opacity: 0.4; cursor: default; }
 
-/* Timer (Act 5) */
+/* ── Day stamp (timer) ── */
 .timer-strip {
-  display: flex; align-items: center; gap: 0.8rem; background: #fef2f2; border: 1px solid #c0392b;
-  border-radius: 10px; padding: 0.7rem 1rem; margin-bottom: 1.1rem;
+  display: flex; align-items: center; gap: 1rem; background: var(--card);
+  border: 1px solid #d3a3a3; border-left: 6px solid var(--stamp-red);
+  border-radius: 2px; padding: 0.8rem 1rem; margin-bottom: 1.2rem;
 }
-.timer-days { font-size: 1.5rem; font-weight: 800; color: #c0392b; min-width: 5.5rem; text-align: center; }
-.timer-note { font-size: 0.8rem; color: #7f1d1d; line-height: 1.5; }
+.timer-days {
+  font-family: 'IBM Plex Mono', monospace; font-size: 1.15rem; font-weight: 600;
+  color: var(--stamp-red); min-width: 6.2rem; text-align: center;
+  border: 2px solid var(--stamp-red); border-radius: 2px; padding: 0.35rem 0.4rem;
+  transform: rotate(-2deg); letter-spacing: 0.04em;
+}
+.timer-note { font-size: 0.8rem; color: #5e1c1c; line-height: 1.5; }
 
-/* Scorecard */
-.score-strip { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
-.score-chip {
-  flex: 1; min-width: 130px; background: #fff; border-radius: 10px; padding: 0.8rem 1rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center;
+/* ── Debrief ── */
+.record-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  border-bottom: 2px solid var(--eu-blue-deep); padding-bottom: 0.8rem; margin-bottom: 1.3rem;
 }
-.score-chip .sc-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: #94a3b8; font-weight: 700; }
-.score-chip .sc-val { font-size: 1.4rem; font-weight: 800; color: #1e3a5f; margin-top: 0.15rem; }
-.verdict-card { border-radius: 12px; padding: 1.4rem 1.5rem; color: #fff; margin-bottom: 1.25rem; }
-.verdict-card.v-good { background: #27ae60; }
-.verdict-card.v-mid { background: #e67e22; }
-.verdict-card.v-bad { background: #c0392b; }
-.verdict-card .v-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em; opacity: 0.8; font-weight: 700; margin-bottom: 0.3rem; }
-.verdict-card .v-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 0.35rem; }
+.record-head .rh-text .rh-eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--eu-blue); font-weight: 600; margin-bottom: 0.25rem;
+}
+.record-head .rh-text h2 { font-family: 'Spectral', Georgia, serif; font-size: 1.5rem; font-weight: 700; color: var(--eu-blue-deep); }
+.record-head .rh-seal { width: 64px; height: 64px; flex-shrink: 0; animation: seal-press 0.6s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes seal-press { from { transform: rotate(-14deg) scale(1.5); opacity: 0; } 65% { transform: rotate(-8deg) scale(0.96); opacity: 1; } to { transform: rotate(-8deg) scale(1); } }
+
+.score-strip { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.score-chip {
+  flex: 1; min-width: 128px; background: var(--card); border: 1px solid var(--rule); border-radius: 2px;
+  padding: 0.8rem 1rem; text-align: center; box-shadow: 0 1px 0 var(--rule);
+}
+.score-chip .sc-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.56rem; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--ink-soft); font-weight: 600;
+}
+.score-chip .sc-val { font-family: 'Spectral', Georgia, serif; font-size: 1.5rem; font-weight: 700; color: var(--eu-blue-deep); margin-top: 0.15rem; }
+
+.verdict-card {
+  border-radius: 3px; padding: 1.4rem 1.5rem 1.4rem 1.6rem; color: #fff; margin-bottom: 1.25rem;
+  border-left: 6px solid rgba(255,255,255,0.35);
+}
+.verdict-card.v-good { background: var(--seal-green); }
+.verdict-card.v-mid { background: #a04a12; }
+.verdict-card.v-bad { background: var(--stamp-red); }
+.verdict-card .v-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; text-transform: uppercase;
+  letter-spacing: 0.16em; opacity: 0.85; font-weight: 600; margin-bottom: 0.4rem;
+}
+.verdict-card .v-name { font-family: 'Spectral', Georgia, serif; font-size: 1.45rem; font-weight: 700; margin-bottom: 0.4rem; }
 .verdict-card .v-desc { font-size: 0.88rem; opacity: 0.95; line-height: 1.6; }
 
-.debrief-item { padding: 0.6rem 0; border-bottom: 1px solid #f0f4f8; font-size: 0.86rem; color: #374151; }
+.debrief-item { padding: 0.62rem 0; border-bottom: 1px dotted var(--rule); font-size: 0.86rem; color: #3a4157; }
 .debrief-item:last-child { border-bottom: none; }
-.debrief-item .db-act { font-weight: 700; color: #1e3a5f; }
+.debrief-item .db-act { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; font-weight: 600; color: var(--eu-blue); }
 
-.cta-panel { background: #1e3a5f; border-radius: 12px; padding: 1.3rem 1.5rem; color: #cbd5e0; font-size: 0.87rem; line-height: 1.65; }
+.cta-panel {
+  background: var(--eu-blue-deep); border-radius: 3px; padding: 1.4rem 1.6rem; color: #b8c4dd;
+  font-size: 0.87rem; line-height: 1.65; border-top: 4px solid var(--eu-gold);
+}
 .cta-panel strong { color: #fff; }
-.cta-panel a { color: #93c5fd; }
+.cta-panel a { color: #ffd94d; }
 
-/* Nav */
-.nav-bar { max-width: 880px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; }
-.nav-btn { padding: 0.6rem 1.5rem; border: 2px solid #1e3a5f; background: #fff; color: #1e3a5f; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.nav-btn:hover { background: #1e3a5f; color: #fff; }
-.nav-btn.primary { background: #1e3a5f; color: #fff; }
+/* ── Nav & export ── */
+.nav-bar { max-width: 900px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; position: relative; z-index: 1; }
+.nav-btn {
+  padding: 0.6rem 1.5rem; border: 1px solid var(--eu-blue); background: var(--card); color: var(--eu-blue);
+  border-radius: 2px; font-family: 'Public Sans', sans-serif; font-size: 0.86rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 0 var(--rule);
+}
+.nav-btn:hover { background: var(--eu-blue); color: #fff; }
+.nav-btn.primary { background: var(--eu-blue); color: #fff; }
+.nav-btn.primary:hover { background: var(--eu-blue-deep); }
 .nav-btn:disabled { opacity: 0.4; cursor: default; }
 
-.export-bar { display: flex; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 880px; padding: 0 1.25rem; flex-wrap: wrap; }
-.export-btn { padding: 0.6rem 1.5rem; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
-.export-btn.primary { background: #1e3a5f; color: #fff; }
-.export-btn.secondary { background: #e2e8f0; color: #1e3a5f; }
-footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
+.export-bar { display: flex; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 900px; padding: 0 1.25rem; flex-wrap: wrap; position: relative; z-index: 1; }
+.export-btn { padding: 0.6rem 1.5rem; border: 1px solid var(--rule); border-radius: 2px; font-family: 'Public Sans', sans-serif; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
+.export-btn.primary { background: var(--eu-blue-deep); color: #fff; border-color: var(--eu-blue-deep); }
+.export-btn.secondary { background: var(--card); color: var(--eu-blue); }
+footer { text-align: center; padding: 2.2rem 1rem; font-size: 0.76rem; color: #8b91a3; font-family: 'IBM Plex Mono', monospace; position: relative; z-index: 1; }
 
 @media print {
   body { background: #fff; }
-  header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body::before { display: none; }
+  .gold-bar, .masthead, .double-rule { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .progress-bar, .nav-bar, .export-bar, footer, .all-demos-link { display: none !important; }
   #step7 { display: block !important; }
   .step:not(#step7) { display: none !important; }
-  .panel { box-shadow: none; border: 1px solid #e2e8f0; }
+  .panel { box-shadow: none; }
   .verdict-card, .scene, .cta-panel { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 @media (max-width: 740px) {
   .evi-grid { grid-template-columns: 1fr; }
-  .progress-labels span { font-size: 0.5rem; }
+  .progress-labels span { font-size: 0.46rem; letter-spacing: 0; }
+  .masthead h1 { font-size: 1.55rem; }
+  .mh-seal { width: 54px; height: 54px; }
+  .record-head .rh-seal { width: 52px; height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .record-head .rh-seal { animation: none; transform: rotate(-8deg); }
+  .d-feedback::before { animation: none; }
+  * { transition: none !important; }
 }
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:fixed;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
+  .all-demos-link{position:fixed;top:1rem;left:1rem;z-index:9999;background:var(--eu-blue-deep);color:#fff;border:1px solid rgba(240,190,0,.45);text-decoration:none;font:600 0.95rem/1 'Public Sans',-apple-system,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,32,91,.3);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
   .all-demos-link:hover{opacity:1}
   @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
 </style>
 
-<header>
-  <h1>The Paper Trail</h1>
-  <div class="brand">An EU AI Act provider simulation &middot; robert@barcik.training</div>
-</header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <path id="eu-star" d="M0,-5.2 L1.53,-1.61 5.2,-1.61 2.25,0.78 3.21,4.33 0,2.17 -3.21,4.33 -2.25,0.78 -5.2,-1.61 -1.53,-1.61 Z"/>
+    <g id="star-ring-12">
+      <use href="#eu-star" transform="rotate(0) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(30) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(60) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(90) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(120) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(150) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(180) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(210) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(240) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(270) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(300) translate(0,-24)"/>
+      <use href="#eu-star" transform="rotate(330) translate(0,-24)"/>
+    </g>
+  </defs>
+</svg>
 
-<div class="disclaimer">
+<div class="gold-bar"></div>
+<header class="masthead">
+  <div class="mh-inner">
+    <svg class="mh-seal" viewBox="-32 -32 64 64" aria-hidden="true">
+      <circle r="30" fill="none" stroke="rgba(240,190,0,0.5)" stroke-width="1"/>
+      <use href="#star-ring-12" fill="var(--eu-gold)"/>
+    </svg>
+    <div class="mh-text">
+      <div class="mh-eyebrow">EU AI Act Lab &middot; Instrument II &middot; Conformity</div>
+      <h1>The Paper Trail</h1>
+      <div class="mh-sub">An EU AI Act provider simulation &middot; robert@barcik.training</div>
+    </div>
+  </div>
+</header>
+<div class="double-rule"></div>
+
+<div class="sheet">
   <div class="disclaimer-inner">
     <strong>Take this with a grain of salt.</strong> This is an educational simulation, not legal advice, and I can't be held liable for decisions based on it — consult your legal representative before making real compliance decisions. The scenario is fictional; the articles, deadlines and traps are real, grounded in Regulation (EU) 2024/1689 and the agreed 2026 Digital Omnibus (dates pending Official Journal publication as of 12 July 2026 — verify on <a href="https://eur-lex.europa.eu/oj/direct-access.html">EUR-Lex</a>).
   </div>
-</div>
 
-<div class="intro">
-  <p style="margin-top:1.25rem">In <a href="ai-act-navigator.html" style="color:#2563eb">The Navigator</a> you classified an AI system. This is what happens next. You run engineering at a company whose product just landed in the high-risk tier — and for the next eighteen months, every decision you make either builds your paper trail or burns it. Five acts, scored, with the real article behind every answer.</p>
-</div>
+  <div class="intro">
+    <p style="margin-top:1.4rem">In <a href="ai-act-navigator.html">The Navigator</a> you classified an AI system. This is what happens next. You run engineering at a company whose product just landed in the high-risk tier — and for the next eighteen months, every decision you make either builds your paper trail or burns it. Five acts, scored, with the real article behind every answer.</p>
+  </div>
 
-<div class="progress-bar">
-  <div class="progress-track">
-    <div class="progress-step active" id="ps1"></div>
-    <div class="progress-step" id="ps2"></div>
-    <div class="progress-step" id="ps3"></div>
-    <div class="progress-step" id="ps4"></div>
-    <div class="progress-step" id="ps5"></div>
-    <div class="progress-step" id="ps6"></div>
-    <div class="progress-step" id="ps7"></div>
+  <div class="progress-bar">
+    <div class="progress-track">
+      <div class="progress-step active" id="ps1"></div>
+      <div class="progress-step" id="ps2"></div>
+      <div class="progress-step" id="ps3"></div>
+      <div class="progress-step" id="ps4"></div>
+      <div class="progress-step" id="ps5"></div>
+      <div class="progress-step" id="ps6"></div>
+      <div class="progress-step" id="ps7"></div>
+    </div>
+    <div class="progress-labels">
+      <span class="active" id="pl1">Briefing</span>
+      <span id="pl2">Act 1 · Runway</span>
+      <span id="pl3">Act 2 · Evidence</span>
+      <span id="pl4">Act 3 · The Route</span>
+      <span id="pl5">Act 4 · The Call</span>
+      <span id="pl6">Act 5 · Incident</span>
+      <span id="pl7">Debrief</span>
+    </div>
   </div>
-  <div class="progress-labels">
-    <span class="active" id="pl1">Briefing</span>
-    <span id="pl2">Act 1 · Runway</span>
-    <span id="pl3">Act 2 · Evidence</span>
-    <span id="pl4">Act 3 · The Route</span>
-    <span id="pl5">Act 4 · The Call</span>
-    <span id="pl6">Act 5 · Incident</span>
-    <span id="pl7">Debrief</span>
-  </div>
-</div>
 
 <!-- Step 1: Briefing -->
 <div class="step active" id="step1">
@@ -257,7 +443,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 <div class="step" id="step3">
   <div class="scene">
     <div class="scene-tag">Act 2 — The evidence pack</div>
-    Three months in. You're assembling the <strong>technical documentation</strong> — the Annex IV file that has to exist <em>before</em> SkillRank's compliance deadline, and the artifact an authority will ask for first <span class="cite" style="background:rgba(255,255,255,0.15);color:#93c5fd">Art 11</span>. Your team dumped everything they have into a shared folder. Not all of it counts as evidence.
+    Three months in. You're assembling the <strong>technical documentation</strong> — the Annex IV file that has to exist <em>before</em> SkillRank's compliance deadline, and the artifact an authority will ask for first <span class="cite">Art 11</span>. Your team dumped everything they have into a shared folder. Not all of it counts as evidence.
   </div>
   <div class="panel">
     <div class="panel-title">Select the artifacts that belong in your Annex IV / Chapter III Section 2 evidence pack (pick exactly 5)</div>
@@ -434,6 +620,17 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 
 <!-- Step 7: Debrief -->
 <div class="step" id="step7">
+  <div class="record-head">
+    <div class="rh-text">
+      <div class="rh-eyebrow">Case file closed &middot; The Paper Trail</div>
+      <h2>Your conformity record</h2>
+    </div>
+    <svg class="rh-seal" viewBox="-32 -32 64 64" aria-hidden="true">
+      <circle r="30" fill="none" stroke="var(--eu-blue)" stroke-width="1.5"/>
+      <circle r="24.5" fill="none" stroke="rgba(0,61,143,0.3)" stroke-width="0.75"/>
+      <use href="#star-ring-12" fill="var(--eu-blue)" transform="scale(0.78)"/>
+    </svg>
+  </div>
   <div id="verdictArea"></div>
   <div class="score-strip" id="scoreStrip"></div>
   <div class="panel">
@@ -452,6 +649,8 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
   </div>
 </div>
 
+</div><!-- /sheet -->
+
 <div class="nav-bar">
   <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>&larr; Back</button>
   <button class="nav-btn primary" id="nextBtn" onclick="navigate(1)">Begin &rarr;</button>
@@ -462,7 +661,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
   <button class="export-btn secondary" onclick="location.reload()">&#8634; Play again</button>
 </div>
 
-<footer>&copy; 2026 robert@barcik.training &middot; Educational simulation, not legal advice &middot; Data refresh: 12 July 2026</footer>
+<footer>&copy; 2026 robert@barcik.training &middot; educational simulation, not legal advice &middot; data refresh: 12 July 2026</footer>
 
 <script>
 let currentStep = 1;
@@ -578,7 +777,7 @@ function pick(el) {
   const fb = FEEDBACK[q][v];
   const box = document.getElementById('f-' + q);
   box.className = 'd-feedback ' + fb[0];
-  box.innerHTML = (fb[0] === 'good' ? '&#10003; ' : '&#10007; ') + fb[1];
+  box.innerHTML = fb[1];
   if (ACT_OF[q] === 5) {
     timerDay += (q === 'd5a' ? 4 : q === 'd5b' ? 5 : 3);
     document.getElementById('timerDays').textContent = 'Day ' + timerDay;
@@ -612,8 +811,8 @@ function checkEvidence() {
   const perfect = good === 5;
   box.className = 'd-feedback ' + (perfect ? 'good' : 'bad');
   box.innerHTML = (perfect
-    ? `&#10003; Clean pack. `
-    : `&#10007; ${good}/5 were real evidence; ${bad} would embarrass you in an audit. `)
+    ? `Clean pack. `
+    : `${good}/5 were real evidence; ${bad} would embarrass you in an audit. `)
     + `The five that belong map to the Section 2 requirements: risk register <span class="cite">Art 9</span>, dataset documentation <span class="cite">Art 10</span>, logging design <span class="cite">Art 12</span>, declared accuracy + robustness results <span class="cite">Art 15</span>, human-oversight design <span class="cite">Art 14</span> — all of it lands in the Annex IV technical documentation <span class="cite">Art 11</span>. The three traps: a vendor's public model card is marketing until its claims are verified for YOUR use; an investor-deck accuracy number you can't reproduce is a liability, not evidence; and buying an ISO/IEC 42001 certification project is a management-system aid, not conformity — "ISO 42001 = compliant" is a myth.`;
   document.getElementById('eviCheck').disabled = true;
 }
