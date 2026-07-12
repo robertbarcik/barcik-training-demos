@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Paper Trail — An EU AI Act Provider Simulation | robert@barcik.training</title>
+<meta name="description" content="You classified your AI system high-risk. Now survive conformity: build the evidence pack, pick the assessment route, handle the customer call, and manage a post-market incident — scored, with article citations.">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8; color: #1a202c; min-height: 100vh; line-height: 1.5;
+}
+header { background: #1e3a5f; color: #fff; padding: 1.4rem 2rem; text-align: center; position: relative; }
+header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
+header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
+.intro { max-width: 880px; margin: 1.5rem auto 0; padding: 0 1.25rem; text-align: center; }
+.intro p { font-size: 0.95rem; color: #4a5568; max-width: 720px; margin: 0 auto; line-height: 1.65; }
+
+.disclaimer { max-width: 880px; margin: 1.25rem auto 0; padding: 0 1.25rem; }
+.disclaimer-inner {
+  background: #fef3cd; border: 1px solid #e67e22; border-radius: 10px;
+  padding: 0.9rem 1.1rem; font-size: 0.85rem; color: #92400e; text-align: left;
+}
+.disclaimer-inner strong { color: #78350f; }
+.disclaimer-inner a { color: #78350f; }
+
+/* Progress */
+.progress-bar { max-width: 880px; margin: 1.5rem auto 0; padding: 0 1.25rem; }
+.progress-track { display: flex; gap: 0.35rem; }
+.progress-step { flex: 1; height: 6px; border-radius: 3px; background: #e2e8f0; transition: background 0.3s; }
+.progress-step.active { background: #1e3a5f; }
+.progress-step.done { background: #27ae60; }
+.progress-labels { display: flex; gap: 0.35rem; margin-top: 0.4rem; }
+.progress-labels span { flex: 1; text-align: center; font-size: 0.6rem; color: #94a3b8; font-weight: 600; }
+.progress-labels span.active { color: #1e3a5f; }
+
+/* Steps */
+.step { display: none; max-width: 880px; margin: 1.5rem auto; padding: 0 1.25rem; }
+.step.active { display: block; }
+.panel { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 1.25rem; }
+.panel-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 1rem; font-weight: 600; }
+.panel .lead { font-size: 0.88rem; color: #4a5568; margin-bottom: 1rem; }
+.cite { font-size: 0.72rem; font-weight: 700; color: #2563eb; background: #eff6ff; border-radius: 6px; padding: 0.1rem 0.4rem; white-space: nowrap; }
+
+/* Scene narration */
+.scene {
+  background: #1e3a5f; color: #e2e8f0; border-radius: 12px; padding: 1.3rem 1.5rem;
+  font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.25rem;
+}
+.scene .scene-tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-weight: 700; margin-bottom: 0.5rem; }
+.scene strong { color: #fff; }
+.scene em { color: #93c5fd; font-style: normal; font-weight: 600; }
+.scene .voice { border-left: 3px solid #2563eb; padding-left: 0.9rem; margin: 0.7rem 0; color: #cbd5e0; font-style: italic; }
+
+/* Decisions */
+.decision { margin-bottom: 1.4rem; }
+.decision h3 { font-size: 0.98rem; font-weight: 700; color: #1e3a5f; margin-bottom: 0.3rem; }
+.decision .d-context { font-size: 0.84rem; color: #4a5568; margin-bottom: 0.7rem; }
+.d-options { display: flex; flex-direction: column; gap: 0.45rem; }
+.d-opt {
+  padding: 0.65rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px;
+  font-size: 0.86rem; cursor: pointer; transition: all 0.15s; background: #fff; color: #1a202c;
+}
+.d-opt:hover { border-color: #1e3a5f; }
+.d-opt.picked { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+.d-opt.locked { cursor: default; opacity: 0.75; }
+.d-opt.reveal-good { background: #f0fdf4; border-color: #27ae60; opacity: 1; }
+.d-opt.reveal-bad { background: #fef2f2; border-color: #c0392b; opacity: 1; }
+.d-opt.picked.reveal-good { background: #27ae60; color: #fff; }
+.d-opt.picked.reveal-bad { background: #c0392b; color: #fff; }
+.d-feedback {
+  display: none; margin-top: 0.6rem; border-radius: 8px; padding: 0.75rem 0.95rem;
+  font-size: 0.83rem; line-height: 1.6;
+}
+.d-feedback.good { display: block; background: #f0fdf4; border: 1px solid #27ae60; color: #14532d; }
+.d-feedback.bad { display: block; background: #fef2f2; border: 1px solid #c0392b; color: #7f1d1d; }
+.d-feedback .cite { background: rgba(37,99,235,0.1); }
+
+/* Evidence pack builder (Act 2) */
+.evi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.evi-card {
+  padding: 0.75rem 0.9rem; border: 2px solid #e2e8f0; border-radius: 10px;
+  cursor: pointer; transition: all 0.15s; background: #fff;
+}
+.evi-card:hover { border-color: #1e3a5f; }
+.evi-card.picked { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+.evi-card.locked { cursor: default; }
+.evi-card.reveal-good { border-color: #27ae60; background: #f0fdf4; color: #1a202c; }
+.evi-card.reveal-bad { border-color: #c0392b; background: #fef2f2; color: #1a202c; }
+.evi-card.picked.reveal-good { background: #27ae60; color: #fff; }
+.evi-card.picked.reveal-bad { background: #c0392b; color: #fff; }
+.evi-name { font-size: 0.86rem; font-weight: 700; }
+.evi-sub { font-size: 0.74rem; color: #64748b; margin-top: 0.2rem; line-height: 1.45; }
+.evi-card.picked .evi-sub { color: #cbd5e0; }
+.evi-card.picked.reveal-good .evi-sub, .evi-card.picked.reveal-bad .evi-sub { color: rgba(255,255,255,0.85); }
+
+.check-btn {
+  margin-top: 1rem; padding: 0.6rem 1.4rem; border: none; border-radius: 8px;
+  background: #e67e22; color: #fff; font-size: 0.88rem; font-weight: 700; cursor: pointer;
+}
+.check-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* Timer (Act 5) */
+.timer-strip {
+  display: flex; align-items: center; gap: 0.8rem; background: #fef2f2; border: 1px solid #c0392b;
+  border-radius: 10px; padding: 0.7rem 1rem; margin-bottom: 1.1rem;
+}
+.timer-days { font-size: 1.5rem; font-weight: 800; color: #c0392b; min-width: 5.5rem; text-align: center; }
+.timer-note { font-size: 0.8rem; color: #7f1d1d; line-height: 1.5; }
+
+/* Scorecard */
+.score-strip { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.score-chip {
+  flex: 1; min-width: 130px; background: #fff; border-radius: 10px; padding: 0.8rem 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center;
+}
+.score-chip .sc-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: #94a3b8; font-weight: 700; }
+.score-chip .sc-val { font-size: 1.4rem; font-weight: 800; color: #1e3a5f; margin-top: 0.15rem; }
+.verdict-card { border-radius: 12px; padding: 1.4rem 1.5rem; color: #fff; margin-bottom: 1.25rem; }
+.verdict-card.v-good { background: #27ae60; }
+.verdict-card.v-mid { background: #e67e22; }
+.verdict-card.v-bad { background: #c0392b; }
+.verdict-card .v-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em; opacity: 0.8; font-weight: 700; margin-bottom: 0.3rem; }
+.verdict-card .v-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 0.35rem; }
+.verdict-card .v-desc { font-size: 0.88rem; opacity: 0.95; line-height: 1.6; }
+
+.debrief-item { padding: 0.6rem 0; border-bottom: 1px solid #f0f4f8; font-size: 0.86rem; color: #374151; }
+.debrief-item:last-child { border-bottom: none; }
+.debrief-item .db-act { font-weight: 700; color: #1e3a5f; }
+
+.cta-panel { background: #1e3a5f; border-radius: 12px; padding: 1.3rem 1.5rem; color: #cbd5e0; font-size: 0.87rem; line-height: 1.65; }
+.cta-panel strong { color: #fff; }
+.cta-panel a { color: #93c5fd; }
+
+/* Nav */
+.nav-bar { max-width: 880px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; }
+.nav-btn { padding: 0.6rem 1.5rem; border: 2px solid #1e3a5f; background: #fff; color: #1e3a5f; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.nav-btn:hover { background: #1e3a5f; color: #fff; }
+.nav-btn.primary { background: #1e3a5f; color: #fff; }
+.nav-btn:disabled { opacity: 0.4; cursor: default; }
+
+.export-bar { display: flex; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 880px; padding: 0 1.25rem; flex-wrap: wrap; }
+.export-btn { padding: 0.6rem 1.5rem; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+.export-btn.primary { background: #1e3a5f; color: #fff; }
+.export-btn.secondary { background: #e2e8f0; color: #1e3a5f; }
+footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
+
+@media print {
+  body { background: #fff; }
+  header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .progress-bar, .nav-bar, .export-bar, footer, .all-demos-link { display: none !important; }
+  #step7 { display: block !important; }
+  .step:not(#step7) { display: none !important; }
+  .panel { box-shadow: none; border: 1px solid #e2e8f0; }
+  .verdict-card, .scene, .cta-panel { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+@media (max-width: 740px) {
+  .evi-grid { grid-template-columns: 1fr; }
+  .progress-labels span { font-size: 0.5rem; }
+}
+</style>
+</head>
+<body>
+<a class="all-demos-link" href="../">&larr; All Demos</a>
+<style>
+  .all-demos-link{position:fixed;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
+  .all-demos-link:hover{opacity:1}
+  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+</style>
+
+<header>
+  <h1>The Paper Trail</h1>
+  <div class="brand">An EU AI Act provider simulation &middot; robert@barcik.training</div>
+</header>
+
+<div class="disclaimer">
+  <div class="disclaimer-inner">
+    <strong>Take this with a grain of salt.</strong> This is an educational simulation, not legal advice, and I can't be held liable for decisions based on it — consult your legal representative before making real compliance decisions. The scenario is fictional; the articles, deadlines and traps are real, grounded in Regulation (EU) 2024/1689 and the agreed 2026 Digital Omnibus (dates pending Official Journal publication as of 12 July 2026 — verify on <a href="https://eur-lex.europa.eu/oj/direct-access.html">EUR-Lex</a>).
+  </div>
+</div>
+
+<div class="intro">
+  <p style="margin-top:1.25rem">In <a href="ai-act-navigator.html" style="color:#2563eb">The Navigator</a> you classified an AI system. This is what happens next. You run engineering at a company whose product just landed in the high-risk tier — and for the next eighteen months, every decision you make either builds your paper trail or burns it. Five acts, scored, with the real article behind every answer.</p>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-track">
+    <div class="progress-step active" id="ps1"></div>
+    <div class="progress-step" id="ps2"></div>
+    <div class="progress-step" id="ps3"></div>
+    <div class="progress-step" id="ps4"></div>
+    <div class="progress-step" id="ps5"></div>
+    <div class="progress-step" id="ps6"></div>
+    <div class="progress-step" id="ps7"></div>
+  </div>
+  <div class="progress-labels">
+    <span class="active" id="pl1">Briefing</span>
+    <span id="pl2">Act 1 · Runway</span>
+    <span id="pl3">Act 2 · Evidence</span>
+    <span id="pl4">Act 3 · The Route</span>
+    <span id="pl5">Act 4 · The Call</span>
+    <span id="pl6">Act 5 · Incident</span>
+    <span id="pl7">Debrief</span>
+  </div>
+</div>
+
+<!-- Step 1: Briefing -->
+<div class="step active" id="step1">
+  <div class="scene">
+    <div class="scene-tag">Briefing — Tallinn, July 2026</div>
+    You are the <strong>Head of Engineering at Skilline O&Uuml;</strong>, an Estonian HR-tech company of 40 people. Your product, <em>SkillRank</em>, plugs into applicant-tracking systems and scores, ranks and filters candidates for mid-size employers across the EU.
+    <div class="voice">"Legal finished the classification memo," says Marta, your CEO. "Annex III point 4(a) — recruitment and selection. It profiles natural persons, so no Article 6(3) escape. SkillRank is <strong>high-risk</strong>. The obligations bite on 2 December 2027. You own getting us there."</div>
+    Eighteen months sounds like a long time. Your notified-body-adjacent friends tell you it isn't. Every act in this simulation is a moment where providers really win or lose their conformity story — and the score at the end tells you what kind of paper trail you built.
+  </div>
+  <div class="panel">
+    <div class="panel-title">Your starting position</div>
+    <p class="lead">
+      &bull; SkillRank is <strong>already on the market</strong> — you're not launching, you're retrofitting compliance.<br>
+      &bull; The model is built in-house on candidate data from customers; a hosted LLM writes candidate summaries.<br>
+      &bull; You have: a data science team of six, one overworked compliance officer (Priit), and a CEO who reads the fines table before breakfast.<br>
+      &bull; What you don't have yet: a QMS, technical documentation, a post-market monitoring plan, or any idea what "conformity assessment" means for a company your size.
+    </p>
+  </div>
+</div>
+
+<!-- Step 2: Act 1 — Runway -->
+<div class="step" id="step2">
+  <div class="scene">
+    <div class="scene-tag">Act 1 — The runway</div>
+    Monday morning, planning meeting. Marta wants a compliance timeline on one slide. Priit has been reading LinkedIn thought-leadership all weekend and arrives with three plans. The date on the wall says <strong>2 December 2027</strong> — the post-Omnibus application date for Annex III high-risk systems.
+  </div>
+  <div class="panel">
+    <div class="decision" id="d1a">
+      <h3>Decision 1 — Which plan do you commit to?</h3>
+      <div class="d-context">Harmonised standards for the AI Act are still being drafted; the Art 6(5) classification guidelines are still a draft; the Omnibus itself is awaiting Official Journal publication.</div>
+      <div class="d-options">
+        <div class="d-opt" data-q="d1a" data-v="wait-standards" onclick="pick(this)">Wait for the harmonised standards to be published, then implement against them — no point building twice.</div>
+        <div class="d-opt" data-q="d1a" data-v="start-now" onclick="pick(this)">Start now: stand up the QMS and risk-management skeleton, build documentation as you go, adopt standards when they land.</div>
+        <div class="d-opt" data-q="d1a" data-v="wait-oj" onclick="pick(this)">Pause everything until the Omnibus is in the Official Journal — the dates aren't even law yet.</div>
+      </div>
+      <div class="d-feedback" id="f-d1a"></div>
+    </div>
+    <div class="decision" id="d1b">
+      <h3>Decision 2 — Marta asks: "What happens between now and Dec 2027? Are we unregulated?"</h3>
+      <div class="d-options">
+        <div class="d-opt" data-q="d1b" data-v="unregulated" onclick="pick(this)">"Correct — high-risk obligations don't apply yet, so legally nothing constrains SkillRank until then."</div>
+        <div class="d-opt" data-q="d1b" data-v="layers" onclick="pick(this)">"No. Prohibitions and AI literacy have applied since Feb 2025, Art 50 transparency hits our LLM-written candidate summaries from 2 Aug 2026, and GDPR never went away. Only the high-risk layer waits until Dec 2027."</div>
+        <div class="d-opt" data-q="d1b" data-v="everything-2027" onclick="pick(this)">"Everything AI Act moved to 2027 with the Omnibus — that was the whole point of the delay."</div>
+      </div>
+      <div class="d-feedback" id="f-d1b"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: Act 2 — Evidence pack -->
+<div class="step" id="step3">
+  <div class="scene">
+    <div class="scene-tag">Act 2 — The evidence pack</div>
+    Three months in. You're assembling the <strong>technical documentation</strong> — the Annex IV file that has to exist <em>before</em> SkillRank's compliance deadline, and the artifact an authority will ask for first <span class="cite" style="background:rgba(255,255,255,0.15);color:#93c5fd">Art 11</span>. Your team dumped everything they have into a shared folder. Not all of it counts as evidence.
+  </div>
+  <div class="panel">
+    <div class="panel-title">Select the artifacts that belong in your Annex IV / Chapter III Section 2 evidence pack (pick exactly 5)</div>
+    <div class="evi-grid" id="eviGrid">
+      <div class="evi-card" data-v="riskreg" data-good="1" onclick="pickEvi(this)">
+        <div class="evi-name">Living risk register with mitigations &amp; test results</div>
+        <div class="evi-sub">Risks identified per release, mitigation owner, residual-risk sign-off.</div>
+      </div>
+      <div class="evi-card" data-v="datasheet" data-good="1" onclick="pickEvi(this)">
+        <div class="evi-name">Dataset documentation: provenance, representativeness, bias checks</div>
+        <div class="evi-sub">Where training data came from, who's under-represented, what you did about it.</div>
+      </div>
+      <div class="evi-card" data-v="vendorcard" data-good="0" onclick="pickEvi(this)">
+        <div class="evi-name">The LLM vendor's public model card, printed to PDF</div>
+        <div class="evi-sub">"The upstream provider says it's safe" — surely their homework covers ours.</div>
+      </div>
+      <div class="evi-card" data-v="logs" data-good="1" onclick="pickEvi(this)">
+        <div class="evi-name">Automatic event logging design + retention config</div>
+        <div class="evi-sub">What gets logged per ranking decision, where it lives, how long it's kept.</div>
+      </div>
+      <div class="evi-card" data-v="accuracy" data-good="1" onclick="pickEvi(this)">
+        <div class="evi-name">Declared accuracy metrics + robustness test suite results</div>
+        <div class="evi-sub">The numbers you're prepared to state in the instructions for use, and the tests behind them.</div>
+      </div>
+      <div class="evi-card" data-v="slides" data-good="0" onclick="pickEvi(this)">
+        <div class="evi-name">The investor deck saying "SkillRank is 94% accurate"</div>
+        <div class="evi-sub">Marketing already made the claim — reusing it saves time.</div>
+      </div>
+      <div class="evi-card" data-v="oversight" data-good="1" onclick="pickEvi(this)">
+        <div class="evi-name">Human-oversight design: what recruiters see, can override, and are warned about</div>
+        <div class="evi-sub">Interface measures that make oversight possible in practice, not just in policy.</div>
+      </div>
+      <div class="evi-card" data-v="iso" data-good="0" onclick="pickEvi(this)">
+        <div class="evi-name">A signed purchase order for ISO/IEC 42001 certification services</div>
+        <div class="evi-sub">"We bought the management-system standard, so we're compliant."</div>
+      </div>
+    </div>
+    <button class="check-btn" id="eviCheck" onclick="checkEvidence()" disabled>Check my evidence pack</button>
+    <div class="d-feedback" id="f-evi"></div>
+  </div>
+  <div class="panel">
+    <div class="decision" id="d2b">
+      <h3>Decision — The bias test needs sensitive data</h3>
+      <div class="d-context">Your data scientists say they can't measure whether SkillRank disadvantages candidates by ethnicity without processing special-category data. Priit turns pale and cites GDPR.</div>
+      <div class="d-options">
+        <div class="d-opt" data-q="d2b" data-v="skip" onclick="pick(this)">Skip the ethnicity analysis — processing special-category data is too risky; test only what's already in the dataset.</div>
+        <div class="d-opt" data-q="d2b" data-v="art10" onclick="pick(this)">Use the AI Act's own legal basis: special-category data may be processed for bias detection and correction, under strict safeguards — document the necessity and the safeguards.</div>
+        <div class="d-opt" data-q="d2b" data-v="proxy" onclick="pick(this)">Quietly infer ethnicity from names and postcodes — it's not "really" special-category data if you derived it yourself.</div>
+      </div>
+      <div class="d-feedback" id="f-d2b"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4: Act 3 — The route -->
+<div class="step" id="step4">
+  <div class="scene">
+    <div class="scene-tag">Act 3 — The route</div>
+    Month nine. The documentation is taking shape. Now the question that decides your budget: <strong>who assesses SkillRank's conformity?</strong> Priit got three consultancy quotes; the most expensive one assumes a notified body and bills accordingly. Marta wants to know if you really need one.
+  </div>
+  <div class="panel">
+    <div class="decision" id="d3a">
+      <h3>Decision 1 — Which conformity route applies to SkillRank (Annex III point 4, employment)?</h3>
+      <div class="d-options">
+        <div class="d-opt" data-q="d3a" data-v="notified" onclick="pick(this)">A notified body must audit us — it's high-risk, and high-risk means third-party assessment.</div>
+        <div class="d-opt" data-q="d3a" data-v="internal" onclick="pick(this)">Internal control: we run the conformity assessment ourselves against the requirements, then declare conformity and CE-mark.</div>
+        <div class="d-opt" data-q="d3a" data-v="none" onclick="pick(this)">Neither — conformity assessment is only for physical products; software just needs the documentation.</div>
+      </div>
+      <div class="d-feedback" id="f-d3a"></div>
+    </div>
+    <div class="decision" id="d3b">
+      <h3>Decision 2 — What's the correct order of the final four steps?</h3>
+      <div class="d-context">The launch checklist has four items: EU declaration of conformity, CE marking, EU-database registration, and the conformity assessment itself.</div>
+      <div class="d-options">
+        <div class="d-opt" data-q="d3b" data-v="right" onclick="pick(this)">Conformity assessment &rarr; declaration of conformity &rarr; CE marking &rarr; registration in the EU database — all before the system is on the market in its high-risk-regulated form.</div>
+        <div class="d-opt" data-q="d3b" data-v="register-later" onclick="pick(this)">CE-mark now for the sales deck, run the assessment in parallel, register within 12 months of the deadline.</div>
+        <div class="d-opt" data-q="d3b" data-v="declare-first" onclick="pick(this)">Sign the declaration of conformity first — it's a statement of intent — then do the assessment to back it up.</div>
+      </div>
+      <div class="d-feedback" id="f-d3b"></div>
+    </div>
+    <div class="decision" id="d3c">
+      <h3>Decision 3 — Priit asks how long the paperwork has to live</h3>
+      <div class="d-options">
+        <div class="d-opt" data-q="d3c" data-v="5y" onclick="pick(this)">Five years — same as most commercial records.</div>
+        <div class="d-opt" data-q="d3c" data-v="10y" onclick="pick(this)">Ten years after SkillRank is placed on the market — technical documentation, QMS records, the declaration, all of it.</div>
+        <div class="d-opt" data-q="d3c" data-v="forever" onclick="pick(this)">Indefinitely — EU law never lets you delete anything.</div>
+      </div>
+      <div class="d-feedback" id="f-d3c"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 5: Act 4 — The call -->
+<div class="step" id="step5">
+  <div class="scene">
+    <div class="scene-tag">Act 4 — The customer call</div>
+    Month fourteen. Nordvik Retail, your biggest customer, books a call. Their procurement lead has discovered the AI Act and has <em>opinions</em>. Their legal counsel joins. So does Marta, which means you can't improvise.
+    <div class="voice">"Two things," says Nordvik's counsel. "First: what do we get from you so <strong>our</strong> obligations as deployer are manageable? Second: we'd like to white-label SkillRank as 'Nordvik TalentEngine' — our brand, your engine. Fine, yes?"</div>
+  </div>
+  <div class="panel">
+    <div class="decision" id="d4a">
+      <h3>Decision 1 — What is YOUR side of the deployer's compliance story?</h3>
+      <div class="d-options">
+        <div class="d-opt" data-q="d4a" data-v="nothing" onclick="pick(this)">"Deployer obligations are Nordvik's problem — we sell the tool, they figure out how to use it."</div>
+        <div class="d-opt" data-q="d4a" data-v="instructions" onclick="pick(this)">"You get instructions for use that make oversight possible: what SkillRank can and can't do, its declared accuracy, the oversight measures, what to monitor. Your Art 26 duties are built on our Art 13 transparency."</div>
+        <div class="d-opt" data-q="d4a" data-v="indemnify" onclick="pick(this)">"We'll contractually indemnify you against AI Act fines — that transfers the obligations to us."</div>
+      </div>
+      <div class="d-feedback" id="f-d4a"></div>
+    </div>
+    <div class="decision" id="d4b">
+      <h3>Decision 2 — The white-label request</h3>
+      <div class="d-options">
+        <div class="d-opt" data-q="d4b" data-v="sure" onclick="pick(this)">"Sure — it's just branding. The engine doesn't change, so the compliance story doesn't either."</div>
+        <div class="d-opt" data-q="d4b" data-v="art25" onclick="pick(this)">"Careful. If you put your name on a high-risk system, YOU become its provider under the Act — the full provider obligation set moves to Nordvik. Let's talk about what that means before anyone signs."</div>
+        <div class="d-opt" data-q="d4b" data-v="refuse" onclick="pick(this)">"Absolutely not — the AI Act prohibits white-labeling high-risk AI systems."</div>
+      </div>
+      <div class="d-feedback" id="f-d4b"></div>
+    </div>
+    <div class="decision" id="d4c">
+      <h3>Decision 3 — Nordvik's counsel asks: "Do we owe anyone a fundamental-rights impact assessment?"</h3>
+      <div class="d-context">Nordvik Retail is a private retailer using SkillRank to hire shop staff.</div>
+      <div class="d-options">
+        <div class="d-opt" data-q="d4c" data-v="always" onclick="pick(this)">"Yes — every deployer of every high-risk system must do a FRIA before first use."</div>
+        <div class="d-opt" data-q="d4c" data-v="scoped" onclick="pick(this)">"For a private retailer hiring staff — generally no. The FRIA duty targets public bodies, private providers of public services, and deployers of credit-scoring and life/health-insurance systems. But your worker-information and oversight duties under Art 26 stand regardless."</div>
+        <div class="d-opt" data-q="d4c" data-v="never" onclick="pick(this)">"No — FRIAs were deleted by the Digital Omnibus."</div>
+      </div>
+      <div class="d-feedback" id="f-d4c"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 6: Act 5 — Incident -->
+<div class="step" id="step6">
+  <div class="scene">
+    <div class="scene-tag">Act 5 — The incident</div>
+    Three months after your conformity milestone. Your post-market monitoring dashboard — the one Art 72 made you build and you're now glad exists — flags a pattern: at one customer, <strong>SkillRank has been systematically down-ranking candidates who list a career gap for parental leave</strong>. A recruiter noticed too, and posted about it. The post is getting traction. Marta is calling.
+  </div>
+  <div class="panel">
+    <div class="timer-strip">
+      <div class="timer-days" id="timerDays">Day 0</div>
+      <div class="timer-note">The clock in this act is real: reporting windows under the AI Act are counted in days, and "we were still investigating" is not a pause button. Your choices advance the clock.</div>
+    </div>
+    <div class="decision" id="d5a">
+      <h3>Decision 1 — First move, Day 0</h3>
+      <div class="d-options">
+        <div class="d-opt" data-q="d5a" data-v="pr" onclick="pick(this)">Get PR to respond to the post first — contain the narrative, then investigate quietly.</div>
+        <div class="d-opt" data-q="d5a" data-v="investigate" onclick="pick(this)">Trigger the incident procedure from your QMS: preserve the logs, reproduce the behaviour, assess whether this is a "serious incident" under the Act, and start corrective-action planning in parallel.</div>
+        <div class="d-opt" data-q="d5a" data-v="patch" onclick="pick(this)">Hotfix the model tonight and retrain — if the behaviour is gone, there's nothing to report.</div>
+      </div>
+      <div class="d-feedback" id="f-d5a"></div>
+    </div>
+    <div class="decision" id="d5b">
+      <h3>Decision 2 — Day 4: the investigation confirms it</h3>
+      <div class="d-context">The pattern is real, reproducible, and traces to a feature introduced two releases ago. Systematic disadvantage in access to employment is on the table — this reads as an infringement of fundamental-rights protections, which the Act treats as a serious incident. Legal wants "another two weeks to be sure."</div>
+      <div class="d-options">
+        <div class="d-opt" data-q="d5b" data-v="wait" onclick="pick(this)">Give legal their two weeks — you can't report what you haven't fully characterised.</div>
+        <div class="d-opt" data-q="d5b" data-v="report" onclick="pick(this)">Report to the market surveillance authority now: the causal link is established, and the reporting window (15 days at most, shorter for the gravest categories) started counting when you established it — completeness can follow in the investigation report.</div>
+        <div class="d-opt" data-q="d5b" data-v="customer-only" onclick="pick(this)">Inform the affected customer and fix it — authority reporting is only for deaths and physical harm.</div>
+      </div>
+      <div class="d-feedback" id="f-d5b"></div>
+    </div>
+    <div class="decision" id="d5c">
+      <h3>Decision 3 — Day 9: corrective action</h3>
+      <div class="d-context">The fix is validated. Deployment is ready. What's the complete corrective-action move?</div>
+      <div class="d-options">
+        <div class="d-opt" data-q="d5c" data-v="deploy-only" onclick="pick(this)">Ship the fix to all customers. Done — the non-conformity no longer exists.</div>
+        <div class="d-opt" data-q="d5c" data-v="full" onclick="pick(this)">Ship the fix, inform every affected deployer (and your distributor) with instructions, update the risk register and technical documentation, record it all in the QMS, and cooperate with the authority's follow-up.</div>
+        <div class="d-opt" data-q="d5c" data-v="recall" onclick="pick(this)">Recall SkillRank from the market entirely — any serious incident legally requires full withdrawal.</div>
+      </div>
+      <div class="d-feedback" id="f-d5c"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 7: Debrief -->
+<div class="step" id="step7">
+  <div id="verdictArea"></div>
+  <div class="score-strip" id="scoreStrip"></div>
+  <div class="panel">
+    <div class="panel-title">Decision-by-decision debrief</div>
+    <div id="debriefList"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">What this simulation compressed</div>
+    <p class="lead" style="margin-bottom:0.5rem">Real conformity work is slower and lumpier than five acts: standing up a QMS takes months, notified-body queues (where they apply) run long, and the standards landscape is still settling. Three honest simplifications:</p>
+    <p class="lead" style="margin-bottom:0.4rem">&bull; We compressed role nuances — importer and distributor duties (Art 23–24) never entered the story.</p>
+    <p class="lead" style="margin-bottom:0.4rem">&bull; The serious-incident definition and windows have more structure than one decision can carry (Art 3(49), Art 73) — the lesson that survives compression: establish the causal link, then the clock is already running.</p>
+    <p class="lead">&bull; Registration mechanics (Art 49, Annex VIII) got one checklist line; in reality the EU database has its own workflow.</p>
+  </div>
+  <div class="cta-panel">
+    <strong>Where this comes from.</strong> The Paper Trail dramatizes the provider chapters of Regulation (EU) 2024/1689 — Articles 8–22, 43–49 and 72–73 — the way I teach them: as an engineering discipline where the deliverable is evidence, not vibes. Classify your own system first with <a href="ai-act-navigator.html">The Navigator</a>. For trainings on engineering AI Act compliance: <a href="https://barcik.training/">barcik.training</a> &middot; Official sources: <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32024R1689">the Act on EUR-Lex</a>, the <a href="https://ai-act-service-desk.ec.europa.eu/">EC AI Act Service Desk</a>.
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>&larr; Back</button>
+  <button class="nav-btn primary" id="nextBtn" onclick="navigate(1)">Begin &rarr;</button>
+</div>
+
+<div class="export-bar" id="exportBar" style="display:none">
+  <button class="export-btn primary" onclick="window.print()">&#128424; Save debrief as PDF</button>
+  <button class="export-btn secondary" onclick="location.reload()">&#8634; Play again</button>
+</div>
+
+<footer>&copy; 2026 robert@barcik.training &middot; Educational simulation, not legal advice &middot; Data refresh: 12 July 2026</footer>
+
+<script>
+let currentStep = 1;
+const totalSteps = 7;
+
+/* answers: qid -> chosen value; scoring at debrief */
+const answers = {};
+let eviPicked = new Set();
+let eviChecked = false;
+let timerDay = 0;
+
+const CORRECT = {
+  d1a: 'start-now',
+  d1b: 'layers',
+  d2b: 'art10',
+  d3a: 'internal',
+  d3b: 'right',
+  d3c: '10y',
+  d4a: 'instructions',
+  d4b: 'art25',
+  d4c: 'scoped',
+  d5a: 'investigate',
+  d5b: 'report',
+  d5c: 'full'
+};
+
+const FEEDBACK = {
+  d1a: {
+    'start-now': ['good', `Right. Risk management <span class="cite">Art 9</span> is explicitly a <em>continuous, iterative lifecycle process</em> — it cannot be bolted on at the end, and the QMS <span class="cite">Art 17</span> is the container everything else lives in. Standards will refine your work, not replace it. Parliament and Council made 2 Dec 2027 a fixed calendar date — deliberately NOT conditional on standards being ready.`],
+    'wait-standards': ['bad', `Tempting, and wrong twice. The date is fixed — the Omnibus explicitly rejected making it conditional on standards availability. And the requirements bind you whether or not a harmonised standard exists to presume conformity against; risk management <span class="cite">Art 9</span> is a lifecycle process you can't retrofit in the final quarter.`],
+    'wait-oj': ['bad', `The Omnibus changes the <em>date</em>, not the obligations — Chapter III has been enacted law since 2024. And even in the unlikely event publication slipped past 2 Aug 2026, that would restore the EARLIER date, making waiting strictly worse. Nothing about pending publication pauses your prep.`]
+  },
+  d1b: {
+    'layers': ['good', `Exactly. The tiers stack and stagger: prohibitions + AI literacy since 2 Feb 2025 <span class="cite">Art 5</span> <span class="cite">Art 4</span>, Art 50 transparency from 2 Aug 2026 (your LLM-generated candidate summaries need machine-readable marking as AI-generated <span class="cite">Art 50(2)</span>), penalties framework live since Aug 2025. Only the high-risk layer waits for Dec 2027.`],
+    'unregulated': ['bad', `Dangerous answer to give a CEO. Prohibitions have applied since 2 Feb 2025 <span class="cite">Art 5</span>, AI literacy too <span class="cite">Art 4</span>, and Art 50 transparency hits from 2 Aug 2026 — SkillRank's LLM-written summaries are synthetic text needing machine-readable marking <span class="cite">Art 50(2)</span>. "Nothing applies yet" is how companies discover fine tiers.`],
+    'everything-2027': ['bad', `This is the single most common Omnibus misreading. Only the <em>high-risk</em> dates moved (Annex III &rarr; 2 Dec 2027, Annex I &rarr; 2 Aug 2028). Art 50 transparency was NOT deferred — it applies from 2 Aug 2026, weeks away in this scenario.`]
+  },
+  d2b: {
+    'art10': ['good', `Correct — and one of the Act's least-known provisions. Processing special categories of personal data is permitted where strictly necessary for bias detection and correction, under strict safeguards <span class="cite">Art 10(5)</span> — and the agreed Omnibus extends this legal basis beyond high-risk systems. The documentation of necessity and safeguards IS the compliance artifact.`],
+    'skip': ['bad', `Skipping the analysis doesn't make the bias go away — it makes it undocumented. Data governance <span class="cite">Art 10</span> requires examination of possible biases; the Act gives you a legal basis to do this properly <span class="cite">Art 10(5)</span>. An evidence pack with a hole where the ethnicity analysis should be is worse than one with an uncomfortable finding and a mitigation.`],
+    'proxy': ['bad', `Inferring ethnicity from names and postcodes IS processing data revealing racial or ethnic origin — deriving it yourself doesn't launder it, it just adds an undocumented, unconsented inference step. This is the worst of both worlds: the GDPR exposure without the Art 10(5) safeguards.`]
+  },
+  d3a: {
+    'internal': ['good', `Right — and this surprises almost everyone. For Annex III points 2–8 (employment included), the provider runs conformity assessment by <strong>internal control</strong> against Annex VI <span class="cite">Art 43</span>. Notified bodies enter for Annex III point 1 biometrics (in defined cases) and the Annex I product world. "Internal" doesn't mean "casual" — you're signing a declaration with your name on it.`],
+    'notified': ['bad', `A very expensive assumption — and the consultancy quote was counting on it. High-risk &ne; notified body: for Annex III points 2–8, conformity assessment is internal control against Annex VI <span class="cite">Art 43</span>. Save the budget for the actual engineering.`],
+    'none': ['bad', `Conformity assessment applies squarely to high-risk AI systems, software included <span class="cite">Art 43</span> — it's the procedure that lets you sign the declaration of conformity and CE-mark <span class="cite">Art 47</span> <span class="cite">Art 48</span>. For SkillRank it's internal control against Annex VI.`]
+  },
+  d3b: {
+    'right': ['good', `Correct order, and the order is the point: assessment produces the basis for the declaration <span class="cite">Art 47</span>, the declaration underwrites the CE mark <span class="cite">Art 48</span>, and registration in the EU database happens BEFORE placing on the market <span class="cite">Art 49(1)</span>. Each artifact certifies the one before it.`],
+    'register-later': ['bad', `Registration is a precondition, not an afterthought — providers register themselves and the system in the EU database <em>before</em> placing it on the market <span class="cite">Art 49(1)</span>. And a CE mark on the sales deck before the assessment exists is a false statement of conformity, the kind that shows up in the Art 99(4) fine tier.`],
+    'declare-first': ['bad', `The declaration of conformity <span class="cite">Art 47</span> is not a statement of intent — it's a signed legal statement that the requirements ARE met, backed by the completed assessment <span class="cite">Art 43</span>. Signing it first is signing a blank cheque with regulatory consequences.`]
+  },
+  d3c: {
+    '10y': ['good', `Ten years after market placement <span class="cite">Art 18</span> — technical documentation, QMS records, the declaration of conformity, notified-body correspondence where applicable. Your documentation system needs to outlive most of your product decisions.`],
+    '5y': ['bad', `The Act says ten years after the system is placed on the market <span class="cite">Art 18</span>. Plan storage, ownership and format for a horizon longer than most employees' tenure.`],
+    'forever': ['bad', `Ten years after market placement <span class="cite">Art 18</span> — long, but bounded. "Keep everything forever" produces its own GDPR problems.`]
+  },
+  d4a: {
+    'instructions': ['good', `This is the handshake the Act designs: your transparency and instructions for use <span class="cite">Art 13</span> are what make the deployer's duties — oversight competence, input-data care, monitoring <span class="cite">Art 26</span> — actually performable. A deployer who can't comply because your instructions are vague is your problem too.`],
+    'nothing': ['bad', `The value chain doesn't work like that. Deployer duties <span class="cite">Art 26</span> are built on top of provider transparency <span class="cite">Art 13</span> — instructions for use, declared accuracy, oversight measures. Stonewalling your deployers is also commercially fatal: their procurement now asks for exactly this.`],
+    'indemnify': ['bad', `Public-law obligations don't transfer by private contract — Nordvik stays the deployer with Art 26 duties no matter what your indemnity says. Contracts can allocate costs, not regulatory roles. (The one contract that DOES shift roles is the one in the next question — be careful with it.)`]
+  },
+  d4b: {
+    'art25': ['good', `Exactly right, and it's the deal-saving answer. Under <span class="cite">Art 25(1)(a)</span>, putting your name or trademark on a high-risk system makes you its provider — QMS, documentation, conformity assessment, the lot — unless contractual arrangements allocate the obligations otherwise. Nordvik's counsel needs to hear this BEFORE the rebrand, and the original provider must hand over the info the new provider needs <span class="cite">Art 25(2)</span>.`],
+    'sure': ['bad', `You just made your customer a provider without telling them. White-labeling a high-risk system triggers <span class="cite">Art 25(1)(a)</span>: Nordvik would inherit the full provider obligation set. When they find out — and their counsel will — the deal and the relationship both blow up.`],
+    'refuse': ['bad', `Overcorrection. White-labeling isn't prohibited — it's role-shifting. <span class="cite">Art 25(1)(a)</span> makes the rebrander the provider (with a carve-out where contracts allocate obligations). The right move is informed structuring, not refusal.`]
+  },
+  d4c: {
+    'scoped': ['good', `Correct scoping. The FRIA <span class="cite">Art 27</span> targets deployers that are public bodies or private providers of public services, plus deployers of credit-scoring and life/health-insurance systems (Annex III 5(b)–(c)). A private retailer hiring shop staff isn't on that list — but Art 26 duties (worker information <span class="cite">Art 26(7)</span>, oversight, monitoring) apply to every high-risk deployer.`],
+    'always': ['bad', `Wider than the Act. The FRIA duty <span class="cite">Art 27</span> is scoped: public bodies, private providers of public services, and deployers of Annex III 5(b)–(c) systems (credit, life/health insurance). Telling every customer they owe a FRIA creates compliance theatre — and erodes trust when their counsel checks.`],
+    'never': ['bad', `The Omnibus did not delete Art 27 — FRIAs survive, with their original scoping. What the Omnibus actually touched: dates, safety-component definition, Art 25 info-sharing, registration details. Beware confident LinkedIn summaries.`]
+  },
+  d5a: {
+    'investigate': ['good', `Textbook first move. Your QMS incident procedure <span class="cite">Art 17</span> exists for exactly this; the logs you kept <span class="cite">Art 12</span> <span class="cite">Art 19</span> are your forensic record; and the serious-incident assessment <span class="cite">Art 73</span> starts the regulatory clock question. Corrective-action planning in parallel <span class="cite">Art 20</span> — investigation and remedy are not sequential luxuries.`],
+    'pr': ['bad', `The post is not the incident — the ranking behaviour is. Every day spent on narrative management is a day inside reporting windows that count in days <span class="cite">Art 73</span>. Nothing stops comms from working in parallel, but the QMS incident procedure leads.`],
+    'patch': ['bad', `Two problems. Hotfixing before preserving logs destroys your forensic record — the logs <span class="cite">Art 12</span> exist for exactly this moment. And "the behaviour is gone" doesn't erase a serious incident that already occurred; reporting duties <span class="cite">Art 73</span> attach to what happened, not to what remains.`]
+  },
+  d5b: {
+    'report': ['good', `Right. Once the causal link between system and incident is established, the reporting window is running — at most 15 days, with shorter windows for the gravest categories <span class="cite">Art 73</span>. Report what you know, follow with the full investigation report. Regulators handle "early and incomplete" far better than "late and polished."`],
+    'wait': ['bad', `Legal's two weeks puts you at Day 18 — past the maximum 15-day window that started when the causal link was established <span class="cite">Art 73</span>. The report isn't a legal brief; it's a notification. Completeness follows in the investigation report.`],
+    'customer-only': ['bad', `Serious incidents aren't limited to deaths and physical harm — infringement of fundamental-rights protections is in the definition, and systematic disadvantage in hiring reads as exactly that. The report goes to the market surveillance authority <span class="cite">Art 73</span>, not just the customer.`]
+  },
+  d5c: {
+    'full': ['good', `Complete. Corrective action under <span class="cite">Art 20</span> is fix + inform (deployers, distributors, importers as relevant) + investigate; the documentation updates keep your Annex IV file true <span class="cite">Art 11</span>; the QMS record closes the loop <span class="cite">Art 17</span>; cooperation with authorities is its own duty <span class="cite">Art 21</span>. Your post-market monitoring plan <span class="cite">Art 72</span> just proved it was worth building.`],
+    'deploy-only': ['bad', `The fix is a third of it. <span class="cite">Art 20</span> pairs corrective action with informing the operators in your value chain; your technical documentation must be updated to stay true <span class="cite">Art 11</span>; and the authority follow-up <span class="cite">Art 21</span> doesn't end because you shipped. Undocumented fixes read as cover-ups in an audit.`],
+    'recall': ['bad', `Recall is IN the corrective-action toolbox <span class="cite">Art 20</span> — withdrawal, disabling, recall — proportionate to the non-conformity. A validated fix deployed with full communication is the proportionate response here; reflexive full recall punishes your deployers without protecting anyone.`]
+  }
+};
+
+/* which act each question belongs to, for scoring */
+const ACT_OF = { d1a: 1, d1b: 1, d2b: 2, d3a: 3, d3b: 3, d3c: 3, d4a: 4, d4b: 4, d4c: 4, d5a: 5, d5b: 5, d5c: 5 };
+const ACT_NAMES = { 1: 'Act 1 · Runway', 2: 'Act 2 · Evidence', 3: 'Act 3 · The Route', 4: 'Act 4 · The Call', 5: 'Act 5 · Incident' };
+const Q_TITLES = {
+  d1a: 'The compliance plan', d1b: '"Are we unregulated until 2027?"',
+  evi: 'The evidence pack', d2b: 'Bias testing & special-category data',
+  d3a: 'Conformity route', d3b: 'Order of the final four steps', d3c: 'Documentation retention',
+  d4a: 'What the deployer gets from you', d4b: 'The white-label request', d4c: 'The FRIA question',
+  d5a: 'First move', d5b: 'Report or wait', d5c: 'Corrective action'
+};
+
+function pick(el) {
+  const q = el.dataset.q;
+  if (answers[q] !== undefined) return; // locked after first pick
+  const v = el.dataset.v;
+  answers[q] = v;
+  const correct = CORRECT[q];
+  document.querySelectorAll(`[data-q="${q}"]`).forEach(o => {
+    o.classList.add('locked');
+    if (o.dataset.v === v) o.classList.add('picked');
+    if (o.dataset.v === correct) o.classList.add('reveal-good');
+    else if (o.dataset.v === v) o.classList.add('reveal-bad');
+  });
+  const fb = FEEDBACK[q][v];
+  const box = document.getElementById('f-' + q);
+  box.className = 'd-feedback ' + fb[0];
+  box.innerHTML = (fb[0] === 'good' ? '&#10003; ' : '&#10007; ') + fb[1];
+  if (ACT_OF[q] === 5) {
+    timerDay += (q === 'd5a' ? 4 : q === 'd5b' ? 5 : 3);
+    document.getElementById('timerDays').textContent = 'Day ' + timerDay;
+  }
+}
+
+/* Evidence pack */
+function pickEvi(el) {
+  if (eviChecked) return;
+  const v = el.dataset.v;
+  if (eviPicked.has(v)) { eviPicked.delete(v); el.classList.remove('picked'); }
+  else if (eviPicked.size < 5) { eviPicked.add(v); el.classList.add('picked'); }
+  document.getElementById('eviCheck').disabled = eviPicked.size !== 5;
+}
+
+function checkEvidence() {
+  eviChecked = true;
+  let good = 0, bad = 0;
+  document.querySelectorAll('.evi-card').forEach(c => {
+    c.classList.add('locked');
+    const isGood = c.dataset.good === '1';
+    if (eviPicked.has(c.dataset.v)) {
+      if (isGood) { c.classList.add('reveal-good'); good++; }
+      else { c.classList.add('reveal-bad'); bad++; }
+    } else if (isGood) {
+      c.classList.add('reveal-good'); // show what was missed
+    }
+  });
+  answers['evi'] = { good, bad };
+  const box = document.getElementById('f-evi');
+  const perfect = good === 5;
+  box.className = 'd-feedback ' + (perfect ? 'good' : 'bad');
+  box.innerHTML = (perfect
+    ? `&#10003; Clean pack. `
+    : `&#10007; ${good}/5 were real evidence; ${bad} would embarrass you in an audit. `)
+    + `The five that belong map to the Section 2 requirements: risk register <span class="cite">Art 9</span>, dataset documentation <span class="cite">Art 10</span>, logging design <span class="cite">Art 12</span>, declared accuracy + robustness results <span class="cite">Art 15</span>, human-oversight design <span class="cite">Art 14</span> — all of it lands in the Annex IV technical documentation <span class="cite">Art 11</span>. The three traps: a vendor's public model card is marketing until its claims are verified for YOUR use; an investor-deck accuracy number you can't reproduce is a liability, not evidence; and buying an ISO/IEC 42001 certification project is a management-system aid, not conformity — "ISO 42001 = compliant" is a myth.`;
+  document.getElementById('eviCheck').disabled = true;
+}
+
+/* Navigation */
+function navigate(dir) {
+  const next = currentStep + dir;
+  if (next < 1 || next > totalSteps) return;
+  document.getElementById('step' + currentStep).classList.remove('active');
+  currentStep = next;
+  document.getElementById('step' + currentStep).classList.add('active');
+  if (currentStep === 7) renderDebrief();
+  updateProgressBar();
+  document.getElementById('prevBtn').disabled = currentStep === 1;
+  document.getElementById('nextBtn').textContent = currentStep === totalSteps ? 'Done ✓' : (currentStep === 1 ? 'Begin →' : 'Next →');
+  document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+  document.getElementById('exportBar').style.display = currentStep === totalSteps ? 'flex' : 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgressBar() {
+  for (let i = 1; i <= totalSteps; i++) {
+    const ps = document.getElementById('ps' + i);
+    const pl = document.getElementById('pl' + i);
+    ps.className = 'progress-step';
+    pl.className = '';
+    if (i < currentStep) ps.classList.add('done');
+    else if (i === currentStep) { ps.classList.add('active'); pl.classList.add('active'); }
+  }
+}
+
+/* Debrief */
+function renderDebrief() {
+  let right = 0, total = 0;
+  const perAct = {};
+  Object.keys(CORRECT).forEach(q => {
+    total++;
+    const act = ACT_OF[q];
+    perAct[act] = perAct[act] || { right: 0, total: 0 };
+    perAct[act].total++;
+    if (answers[q] === CORRECT[q]) { right++; perAct[act].right++; }
+  });
+  // evidence pack counts as one scored item in act 2
+  total++;
+  perAct[2].total++;
+  const evi = answers['evi'];
+  const eviRight = evi && evi.good === 5 && evi.bad === 0;
+  if (eviRight) { right++; perAct[2].right++; }
+
+  const pct = Math.round((right / total) * 100);
+  let vClass, vName, vDesc;
+  if (pct >= 85) {
+    vClass = 'v-good'; vName = 'Audit-ready';
+    vDesc = 'Your paper trail would survive a market surveillance authority\'s reasoned request. More importantly, most of what you built — the risk register, the logs, the monitoring plan — was useful engineering before it was compliance.';
+  } else if (pct >= 55) {
+    vClass = 'v-mid'; vName = 'Survivable, with scars';
+    vDesc = 'You\'d get through an audit, but some answers would cost you: an expensive assumption here, a missed reporting window there. The debrief below shows exactly where the trail thins out.';
+  } else {
+    vClass = 'v-bad'; vName = 'The inquiry would not go well';
+    vDesc = 'Several of your choices are the ones that turn incidents into enforcement stories: undocumented gaps, misread deadlines, obligations assumed away. Good news: this was a simulation, and the debrief below is the study guide.';
+  }
+
+  const answered = Object.keys(CORRECT).filter(q => answers[q] !== undefined).length;
+  const skippedNote = answered < Object.keys(CORRECT).length || !evi
+    ? `<div class="v-desc" style="margin-top:0.5rem;opacity:0.85">(Unanswered decisions counted as missed — play again and answer everything for a fair grade.)</div>` : '';
+
+  document.getElementById('verdictArea').innerHTML =
+    `<div class="verdict-card ${vClass}"><div class="v-label">Your conformity verdict — ${right}/${total} decisions sound</div><div class="v-name">${vName}</div><div class="v-desc">${vDesc}</div>${skippedNote}</div>`;
+
+  document.getElementById('scoreStrip').innerHTML = Object.keys(perAct).map(a =>
+    `<div class="score-chip"><div class="sc-label">${ACT_NAMES[a]}</div><div class="sc-val">${perAct[a].right}/${perAct[a].total}</div></div>`).join('');
+
+  let list = '';
+  const order = ['d1a','d1b','evi','d2b','d3a','d3b','d3c','d4a','d4b','d4c','d5a','d5b','d5c'];
+  order.forEach(q => {
+    if (q === 'evi') {
+      const ok = eviRight;
+      const state = evi ? (ok ? '&#10003;' : '&#10007;') : '&mdash;';
+      list += `<div class="debrief-item">${state} <span class="db-act">[Act 2]</span> <strong>${Q_TITLES[q]}</strong> — ${evi ? (ok ? 'clean five-artifact pack (Art 9/10/12/14/15 → Annex IV).' : `${evi.good}/5 genuine artifacts; traps picked: ${evi.bad}. The pack maps to Art 9/10/12/14/15, filed under Art 11 / Annex IV.`) : 'not attempted.'}</div>`;
+      return;
+    }
+    const a = answers[q];
+    const ok = a === CORRECT[q];
+    const state = a === undefined ? '&mdash;' : ok ? '&#10003;' : '&#10007;';
+    const lesson = FEEDBACK[q][CORRECT[q]][1].replace(/<[^>]*>/g, '').split('.').slice(0, 2).join('.') + '.';
+    list += `<div class="debrief-item">${state} <span class="db-act">[${ACT_NAMES[ACT_OF[q]]}]</span> <strong>${Q_TITLES[q]}</strong> — ${a === undefined ? 'not attempted. ' : ''}${lesson}</div>`;
+  });
+  document.getElementById('debriefList').innerHTML = list;
+}
+</script>
+</body>
+</html>
