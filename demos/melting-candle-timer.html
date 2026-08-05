@@ -277,6 +277,30 @@
   .toggle:hover { color: var(--text); border-color: rgba(120,200,210,0.4); }
   .toggle.on { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 14px var(--accent-glow); }
 
+  /* ── Scene name toast (flashes when the background changes) ── */
+  .scene-toast {
+    position: fixed;
+    z-index: 3;
+    top: 4.1rem;
+    right: 1.2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(6,14,24,0.66);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 0.34rem 0.62rem;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .scene-toast.show { opacity: 1; transform: translateY(0); }
+
   @media (max-width: 480px) {
     .dock { bottom: 1.3rem; gap: 0.8rem; }
     .btn { height: 48px; }
@@ -297,9 +321,12 @@
   <span class="branding">robert@barcik.training</span>
 
   <div class="toggles">
+    <button class="toggle" id="bgBtn" title="Change the background scene (B)">&#10038;</button>
     <button class="toggle" id="ambientBtn" title="Ambient mode — hide the interface">&#9728;</button>
     <button class="toggle" id="soundBtn" title="Sound on/off">&#128263;</button>
   </div>
+
+  <div class="scene-toast" id="sceneToast">Midnight</div>
 
   <div class="intro" id="intro">
     <h1>Melting <b>Candle</b> Timer</h1>
@@ -327,7 +354,7 @@
       <button class="btn icon" id="resetBtn" title="Reset" disabled>&#8635;</button>
       <button class="btn primary" id="startBtn">Light the candle</button>
     </div>
-    <div class="hint" id="hint">Pick a length, then <b>light the candle</b>. Press <b>&#9728;</b> for pure ambient mode.</div>
+    <div class="hint" id="hint">Pick a length, then <b>light the candle</b>. <b>&#10038;</b> changes the background, <b>&#9728;</b> hides the interface.</div>
   </div>
 
 <script>
@@ -440,21 +467,340 @@
     ctx.closePath();
   }
 
-  function drawBackground(intensity) {
-    // deep vertical wash
+  // ───────────────────────── Background scenes ─────────────────────────
+  // Each scene paints the whole frame BEHIND the candle and owns its own particles.
+  // House rule: stay dim and low-contrast — the flame must remain the brightest
+  // thing on screen, and the readout has to stay legible on top of every scene.
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const TAU = Math.PI * 2;
+
+  function wash(stops) {                       // full-screen vertical gradient
     const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#0b1929');
-    g.addColorStop(0.6, '#081320');
-    g.addColorStop(1, '#050c15');
+    for (const [p, c] of stops) g.addColorStop(p, c);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
+  }
 
-    // vignette
+  function vignette(strength) {
     const vg = ctx.createRadialGradient(W / 2, H * 0.5, Math.min(W, H) * 0.2, W / 2, H * 0.55, Math.max(W, H) * 0.75);
     vg.addColorStop(0, 'rgba(0,0,0,0)');
-    vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+    vg.addColorStop(1, `rgba(0,0,0,${strength})`);
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, W, H);
+  }
+
+  // particle counts scale with the viewport so phones stay smooth
+  const density = () => Math.max(0.45, Math.min(1.5, (W * H) / (1440 * 900)));
+
+  const SCENES = [
+    {
+      id: 'midnight',
+      name: 'Midnight',
+      // the original look — deep blue wash, nothing moving but the candle
+      draw() {
+        wash([[0, '#0b1929'], [0.6, '#081320'], [1, '#050c15']]);
+        vignette(0.55);
+      },
+    },
+
+    {
+      id: 'stars',
+      name: 'Starfield',
+      stars: [],
+      shot: null,
+      nextShot: 4000,
+      init() {
+        const n = Math.round(170 * density());
+        this.stars = Array.from({ length: n }, () => ({
+          x: Math.random() * W, y: Math.random() * H,
+          r: rand(0.4, 1.6), tw: Math.random() * TAU,
+          sp: rand(0.15, 0.55), cool: Math.random() < 0.28,
+        }));
+      },
+      update(dt) {
+        for (const s of this.stars) {
+          s.x -= s.sp * dt * 0.014;                  // slow parallax drift
+          if (s.x < -3) { s.x = W + 3; s.y = Math.random() * H; }
+        }
+        this.nextShot -= dt;
+        if (!this.shot && this.nextShot <= 0) {
+          this.shot = { x: rand(W * 0.25, W * 0.95), y: rand(H * 0.04, H * 0.34), life: 1 };
+          this.nextShot = rand(6000, 14000);
+        }
+        if (this.shot) {
+          this.shot.x -= dt * 0.62;
+          this.shot.y += dt * 0.24;
+          this.shot.life -= dt / 950;
+          if (this.shot.life <= 0) this.shot = null;
+        }
+      },
+      draw(t) {
+        wash([[0, '#070d1c'], [0.55, '#050a15'], [1, '#03060d']]);
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        // faint galactic band across the sky
+        const mb = ctx.createLinearGradient(W * 0.9, 0, W * 0.15, H);
+        mb.addColorStop(0, 'rgba(90,120,190,0)');
+        mb.addColorStop(0.5, 'rgba(120,150,215,0.075)');
+        mb.addColorStop(1, 'rgba(90,120,190,0)');
+        ctx.fillStyle = mb;
+        ctx.fillRect(0, 0, W, H);
+
+        for (const s of this.stars) {
+          const a = 0.30 + 0.48 * (Math.sin(t * 1.7 + s.tw) * 0.5 + 0.5);
+          ctx.fillStyle = s.cool ? `rgba(165,220,255,${a})` : `rgba(255,244,222,${a})`;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, TAU);
+          ctx.fill();
+        }
+
+        if (this.shot) {
+          const a = Math.sin(this.shot.life * Math.PI) * 0.75;
+          const tx = this.shot.x + 150, ty = this.shot.y - 58;
+          const sg = ctx.createLinearGradient(this.shot.x, this.shot.y, tx, ty);
+          sg.addColorStop(0, `rgba(255,255,255,${a})`);
+          sg.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.strokeStyle = sg;
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(this.shot.x, this.shot.y);
+          ctx.lineTo(tx, ty);
+          ctx.stroke();
+        }
+        ctx.restore();
+        vignette(0.5);
+      },
+    },
+
+    {
+      id: 'aurora',
+      name: 'Aurora',
+      stars: [],
+      bands: [
+        { y: 0.30, amp: 0.052, h: 0.20, f: 1.7, sp: 0.16, ph: 0.0, c: [78, 205, 196], a: 0.15 },
+        { y: 0.24, amp: 0.070, h: 0.26, f: 1.1, sp: -0.11, ph: 2.1, c: [110, 240, 170], a: 0.12 },
+        { y: 0.38, amp: 0.045, h: 0.17, f: 2.3, sp: 0.23, ph: 4.2, c: [150, 130, 245], a: 0.10 },
+      ],
+      init() {
+        const n = Math.round(90 * density());
+        this.stars = Array.from({ length: n }, () => ({
+          x: Math.random() * W, y: Math.random() * H * 0.75,
+          r: rand(0.4, 1.2), tw: Math.random() * TAU,
+        }));
+      },
+      draw(t) {
+        wash([[0, '#04101c'], [0.55, '#050d18'], [1, '#03080f']]);
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+
+        for (const s of this.stars) {
+          const a = 0.22 + 0.30 * (Math.sin(t * 1.3 + s.tw) * 0.5 + 0.5);
+          ctx.fillStyle = `rgba(226,238,255,${a})`;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, TAU);
+          ctx.fill();
+        }
+
+        // curtains: a wavy ribbon, then vertical rays inside it so it reads as a
+        // curtain of light rather than a smear of colour
+        const step = Math.max(8, W / 90);
+        for (const b of this.bands) {
+          const h = H * b.h;
+          const top = H * (b.y - b.amp) - h * 0.2;
+          const g = ctx.createLinearGradient(0, top, 0, H * b.y + h);
+          g.addColorStop(0, `rgba(${b.c[0]},${b.c[1]},${b.c[2]},0)`);
+          g.addColorStop(0.32, `rgba(${b.c[0]},${b.c[1]},${b.c[2]},${b.a})`);
+          g.addColorStop(1, `rgba(${b.c[0]},${b.c[1]},${b.c[2]},0)`);
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, H);
+          for (let x = 0; x <= W + step; x += step) {
+            const u = x / W;
+            const y = H * b.y
+              + Math.sin(u * TAU * b.f + t * b.sp + b.ph) * H * b.amp
+              + Math.sin(u * TAU * b.f * 2.7 + t * b.sp * 1.9) * H * b.amp * 0.32;
+            ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W + step, H);
+          ctx.closePath();
+          ctx.clip();
+
+          ctx.fillStyle = g;
+          ctx.fillRect(0, top, W, H - top);
+
+          // rays: vertical strips of uneven width and brightness, rippling sideways.
+          // The width jitter is what stops it reading as a barcode.
+          const rw = Math.max(9, W / 110);
+          for (let x = 0; x < W; ) {
+            const u = x / W;
+            const jitter = 0.55 + 0.95 * (Math.sin(u * 57.3 + b.ph * 3.1) * 0.5 + 0.5);
+            const w = rw * jitter;
+            const k = 0.30 + 0.70
+              * (Math.sin(u * 41 + b.ph) * 0.5 + 0.5)
+              * (Math.sin(u * 13 - t * b.sp * 3.1) * 0.5 + 0.5)
+              * (0.55 + 0.45 * (Math.sin(u * 6.1 + t * b.sp * 1.3) * 0.5 + 0.5));
+            ctx.globalAlpha = k * 0.7;
+            ctx.fillRect(x, top, w * 0.78, H - top);
+            x += w;
+          }
+          ctx.globalAlpha = 1;
+          ctx.restore();
+        }
+        ctx.restore();
+        vignette(0.58);
+      },
+    },
+
+    {
+      id: 'rain',
+      name: 'Rain',
+      drops: [],
+      init() {
+        const n = Math.round(340 * density());
+        this.drops = Array.from({ length: n }, () => {
+          const near = Math.random() < 0.22;          // a few close, fast, brighter streaks
+          return {
+            x: Math.random() * (W + 120) - 60,
+            y: Math.random() * H,
+            len: near ? rand(26, 46) : rand(11, 28),
+            sp: near ? rand(1.0, 1.5) : rand(0.42, 0.95),   // px per ms
+            a: near ? rand(0.26, 0.44) : rand(0.13, 0.30),
+            near,
+          };
+        });
+      },
+      update(dt, t) {
+        const wind = 0.16 + Math.sin(t * 0.23) * 0.10;
+        for (const d of this.drops) {
+          d.y += d.sp * dt;
+          d.x += d.sp * dt * wind;
+          if (d.y > H) { d.y = -d.len - Math.random() * 40; d.x = Math.random() * (W + 120) - 60; }
+          if (d.x > W + 60) d.x -= W + 120;
+        }
+        this._wind = wind;
+      },
+      draw() {
+        wash([[0, '#0a141f'], [0.6, '#07101a'], [1, '#040a11']]);
+        const wind = this._wind || 0.16;
+        ctx.save();
+        ctx.lineCap = 'round';
+        for (const d of this.drops) {
+          ctx.strokeStyle = `rgba(178,212,232,${d.a})`;
+          ctx.lineWidth = d.near ? 1.5 : 0.9;
+          ctx.beginPath();
+          ctx.moveTo(d.x, d.y);
+          ctx.lineTo(d.x + d.len * wind, d.y + d.len);
+          ctx.stroke();
+        }
+        // low mist so the rain dissolves into the floor instead of stopping dead
+        const mg = ctx.createLinearGradient(0, H * 0.62, 0, H);
+        mg.addColorStop(0, 'rgba(120,170,200,0)');
+        mg.addColorStop(1, 'rgba(120,170,200,0.07)');
+        ctx.fillStyle = mg;
+        ctx.fillRect(0, H * 0.62, W, H * 0.38);
+        ctx.restore();
+        vignette(0.5);
+      },
+    },
+
+    {
+      id: 'embers',
+      name: 'Embers',
+      parts: [],
+      init() {
+        const n = Math.round(70 * density());
+        this.parts = Array.from({ length: n }, () => this.seed(Math.random() * H));
+      },
+      seed(y) {
+        return {
+          x: Math.random() * W,
+          y: y != null ? y : H + rand(0, 60),
+          r: rand(0.9, 2.6),
+          sp: rand(0.012, 0.042),                     // rise speed, px per ms
+          sway: Math.random() * TAU,
+          swayAmp: rand(0.1, 0.5),
+          tw: Math.random() * TAU,
+          life: 1,
+          fade: rand(0.00016, 0.00046),
+        };
+      },
+      update(dt) {
+        for (let i = 0; i < this.parts.length; i++) {
+          const p = this.parts[i];
+          p.y -= p.sp * dt;
+          p.sway += dt * 0.0016;
+          p.x += Math.sin(p.sway) * p.swayAmp * dt * 0.05;
+          p.life -= p.fade * dt;
+          if (p.life <= 0 || p.y < -20) this.parts[i] = this.seed();
+        }
+      },
+      draw(t, intensity) {
+        wash([[0, '#150c09'], [0.55, '#0d0707'], [1, '#060404']]);
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+
+        // hearth glow along the floor, breathing with the flame's own flicker
+        const hg = ctx.createRadialGradient(W / 2, H * 1.02, 0, W / 2, H * 1.02, Math.max(W, H) * 0.7);
+        hg.addColorStop(0, `rgba(255,120,40,${0.13 + intensity * 0.04})`);
+        hg.addColorStop(0.5, 'rgba(255,90,30,0.045)');
+        hg.addColorStop(1, 'rgba(255,90,30,0)');
+        ctx.fillStyle = hg;
+        ctx.fillRect(0, 0, W, H);
+
+        for (const p of this.parts) {
+          const a = p.life * (0.45 + 0.55 * (Math.sin(t * 5.5 + p.tw) * 0.5 + 0.5));
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3.4);
+          g.addColorStop(0, `rgba(255,215,150,${0.85 * a})`);
+          g.addColorStop(0.35, `rgba(255,140,50,${0.45 * a})`);
+          g.addColorStop(1, 'rgba(255,110,40,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * 3.4, 0, TAU);
+          ctx.fill();
+        }
+        ctx.restore();
+        vignette(0.52);
+      },
+    },
+
+    {
+      id: 'void',
+      name: 'Void',
+      // near-black: for projectors and rooms where the candle should be the only light
+      draw() {
+        wash([[0, '#050506'], [1, '#000000']]);
+        vignette(0.62);
+      },
+    },
+  ];
+
+  // ── scene selection, crossfade & persistence ──
+  const SCENE_KEY = 'candleTimer.scene';
+  let sceneIdx = 0;
+  let prevIdx = -1;
+  let fadeK = 1;                                  // 0 → 1 crossfade from prev to current
+
+  function initScenes() { for (const s of SCENES) if (s.init) s.init(); }
+
+  function tickScenes(dt, t) {
+    const cur = SCENES[sceneIdx];
+    if (cur.update) cur.update(dt, t);
+    if (fadeK < 1) {
+      const old = SCENES[prevIdx];
+      if (old && old.update) old.update(dt, t);
+      fadeK = Math.min(1, fadeK + dt / 900);
+      if (fadeK >= 1) prevIdx = -1;
+    }
+  }
+
+  function drawBackground(intensity, t) {
+    if (prevIdx >= 0 && fadeK < 1) {
+      SCENES[prevIdx].draw(t, intensity);
+      ctx.globalAlpha = fadeK;
+    }
+    SCENES[sceneIdx].draw(t, intensity);
+    ctx.globalAlpha = 1;
   }
 
   function drawHalo(geo, intensity, flameY) {
@@ -852,7 +1198,8 @@
     // `cool` = how settled/cooled the molten wax is after the flame is gone
     const cool = state.cool;
 
-    drawBackground(intensity);
+    tickScenes(dt, t);
+    drawBackground(intensity, t);
     drawHalo(geo, intensity, geo.topY - 34 * geo.scale);
     drawSurface(geo, lit);
     drawCandle(geo, lit, cool);
@@ -973,7 +1320,7 @@
     document.body.classList.add('running');
     startBtn.textContent = 'Pause';
     resetBtn.disabled = false;
-    hint.innerHTML = 'Burning… press <b>&#9728;</b> for pure ambient mode.';
+    hint.innerHTML = 'Burning… <b>&#10038;</b> changes the background, <b>&#9728;</b> hides the interface.';
     chime(false);
   }
   function pause() {
@@ -986,6 +1333,49 @@
     state.running ? pause() : start();
   });
   resetBtn.addEventListener('click', () => { resetTimer(); hint.innerHTML = 'Pick a length, then <b>light the candle</b>.'; });
+
+  // ───────────────────────── Background scene switching ─────────────────────────
+  const bgBtn = document.getElementById('bgBtn');
+  const sceneToast = document.getElementById('sceneToast');
+  let toastTimer = 0;
+
+  function setScene(idx, announce) {
+    idx = ((idx % SCENES.length) + SCENES.length) % SCENES.length;
+    if (idx === sceneIdx && announce !== 'silent') return;
+    if (idx !== sceneIdx) { prevIdx = sceneIdx; fadeK = 0; sceneIdx = idx; }
+    const s = SCENES[sceneIdx];
+    bgBtn.classList.toggle('on', sceneIdx !== 0);
+    bgBtn.title = `Background: ${s.name} — click for the next scene (B)`;
+    try { localStorage.setItem(SCENE_KEY, s.id); } catch (e) {}
+    if (announce !== 'silent') {
+      sceneToast.textContent = s.name;
+      sceneToast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => sceneToast.classList.remove('show'), 1600);
+    }
+  }
+
+  bgBtn.addEventListener('click', () => setScene(sceneIdx + 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'b' || e.key === 'B') {
+      if (document.activeElement === customInput) return;   // don't hijack typing
+      setScene(sceneIdx + 1);
+    }
+  });
+
+  initScenes();
+  window.addEventListener('resize', initScenes);            // reseed particles for the new viewport
+  (function restoreScene() {
+    // ?scene=aurora wins over the remembered choice — handy for linking straight
+    // into a look, e.g. from a slide deck
+    let saved = null;
+    try { saved = new URLSearchParams(location.search).get('scene'); } catch (e) {}
+    if (!saved) { try { saved = localStorage.getItem(SCENE_KEY); } catch (e) {} }
+    const i = SCENES.findIndex(s => s.id === saved);
+    sceneIdx = i > 0 ? i : 0;
+    fadeK = 1;
+    setScene(sceneIdx, 'silent');
+  })();
 
   // ambient mode
   let ambient = false;
@@ -1061,6 +1451,8 @@
     setTotal(val, u) { unit = u || unit; applyUnitLabels(); selectedVal = val; resetTimer(); },
     start, pause, state,
     finishNow() { state.remainingMs = 0; },
+    scenes: SCENES.map(s => s.id),
+    setScene(id) { const i = SCENES.findIndex(s => s.id === id); if (i >= 0) { prevIdx = -1; fadeK = 1; sceneIdx = i; setScene(i, 'silent'); } },
     drips,                 // live reference to the drip particle array (for diagnostics)
     geom: () => geometry(),// current geometry (topY/baseY/scale) for monotonicity probes
     setManual(b) { manual = !!b; if (b && !simClock) simClock = performance.now(); }, // pause rAF, drive by tick()
