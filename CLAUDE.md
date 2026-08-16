@@ -50,4 +50,13 @@ a professional GenAI/ML/Data Science training platform.
 - Include a brief explanation of the concept being demonstrated
 - Use vanilla HTML/CSS/JS (no build step needed)
 - Color scheme: use a professional blue/white palette
+- **AI transparency pill (mandatory since 2026-08-16):** every demo ends with a small fixed
+  `<details class="ai-transparency-pill" id="ai-transparency">` before `</body>` (corner tab that
+  expands into the notice: scripted simulation, nothing sent to an AI model, built with generative AI,
+  reviewed by Robert who is responsible for what is published; voluntary, in the spirit of Art 50 EU AI Act).
+  Add it to new demos with `python3 ../training-ops/web/ai_transparency_label.py demo demos/<file>.html`
+  (idempotent). If a demo has its own bottom-right fixed element, override the pill to bottom-left
+  (see timer.html). The index carries the same statement in a `.ai-notice` block above the footer.
+  Demos must stay free of live AI calls; if one ever calls a model, the pill wording (and Art 50(1))
+  need revisiting.
 
