@@ -34,7 +34,7 @@
   header .inner {
     max-width: 1400px;
     margin: 0 auto;
-    padding-left: 7rem;
+    padding-left: 8.5rem; /* clears the fixed "All Demos" pill at narrow viewports */
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -339,6 +339,7 @@
     header .inner {
       flex-direction: column;
       text-align: center;
+      padding-left: 0;
     }
     .filter-bar {
       justify-content: center;
