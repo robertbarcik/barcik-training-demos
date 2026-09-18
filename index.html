@@ -55,6 +55,36 @@
             color: #e2e8f0;
             border-color: #e2e8f0;
         }
+        .hero-announce {
+            display: inline-block;
+            margin-top: 1.4rem;
+            padding: 0.55rem 1.1rem;
+            max-width: 620px;
+            border: 1px solid rgba(148,163,184,0.35);
+            border-radius: 14px;
+            background: rgba(37,99,235,0.12);
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            text-decoration: none;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .hero-announce:hover { background: rgba(37,99,235,0.22); border-color: rgba(148,163,184,0.6); }
+        .hero-announce strong { color: #fff; }
+        .hero-announce .announce-tag {
+            display: inline-block;
+            margin-right: 0.35rem;
+            padding: 0.05rem 0.5rem;
+            border-radius: 100px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            vertical-align: 0.08em;
+        }
+        .hero-announce .announce-more { white-space: nowrap; border-bottom: 1px dashed rgba(203,213,225,0.5); }
         .hero-divider {
             width: 48px;
             height: 3px;
@@ -189,6 +219,7 @@
         <div class="hero-desc">
             Small interactive demos that accompany my lectures on Generative AI, machine learning, and data science for corporate teams.
         </div>
+        <a class="hero-announce" href="https://publications.barcik.training/claudius-mailbox/"><span class="announce-tag">New</span> Questions about a demo or the ideas behind it? My AI assistant <strong>Claudius</strong> now has its own, openly labelled mailbox. I read every reply before it is sent. <span class="announce-more">How it works &rarr;</span></a>
     </div>
 
     <main>
