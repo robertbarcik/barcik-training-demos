@@ -525,6 +525,7 @@
 // ══════════════════════════════════════════
 // AI / ML FUN FACTS
 // ══════════════════════════════════════════
+const RECENT_CAT = "New in 2026";
 const AI_FACTS = [
   // ── HISTORY & MILESTONES ──
   { text: 'The term "Artificial Intelligence" was coined at a 1956 Dartmouth workshop. The organizers proposed they could crack it in a 2-month, 10-person summer study.', cat: "History" },
@@ -532,7 +533,7 @@ const AI_FACTS = [
   { text: "ELIZA (1966) was the first chatbot. Its creator's own secretary asked him to leave the room so she could have a private conversation with it.", cat: "History" },
   { text: "Isaac Asimov wrote the Three Laws of Robotics in 1942 — decades before any real AI existed. They're still cited in AI ethics debates today.", cat: "History" },
   { text: "The first industrial robot, Unimate, started welding car parts at a General Motors plant in 1961. The task was deemed too dangerous for humans.", cat: "History" },
-  { text: "LISP, the first programming language for AI research, was created in 1958. Variants of it are still used today — 67 years later.", cat: "History" },
+  { text: "LISP, the first programming language for AI research, was created in 1958. Variants of it are still used today, almost 70 years later.", cat: "History" },
   { text: 'AI has gone through multiple "AI Winters" — periods where hype collapsed, funding dried up, and researchers had to find new careers.', cat: "History" },
   { text: "In 1997, IBM's Deep Blue defeated world chess champion Garry Kasparov. Kasparov accused the machine of cheating — he couldn't believe a computer could play that creatively.", cat: "History" },
   { text: 'Alan Turing predicted in 1950 that in "about fifty years" a computer with ~1 GB of storage could fool human interrogators. Both his storage estimate and his insight that machines should learn like children proved remarkably accurate.', cat: "History" },
@@ -548,7 +549,7 @@ const AI_FACTS = [
   { text: "GPT-3 has 175 billion parameters. Training it on a single GPU would take ~355 years and cost an estimated $4.6 million.", cat: "Scale" },
   { text: "The number of possible board positions in Go exceeds 10¹⁷⁰ — more than the number of atoms in the observable universe.", cat: "Scale" },
   { text: "GPT-4's training reportedly consumed ~2.1 × 10²⁵ floating point operations. That's 21 billion petaFLOPs.", cat: "Scale" },
-  { text: "The cost of training frontier AI models roughly triples each year. Some projections suggest $10 billion training runs by 2026.", cat: "Scale" },
+  { text: "Epoch AI estimates that the cost of training the largest AI models has grown about 2.4× per year since 2016, putting billion-dollar training runs within reach by 2027.", cat: "Scale" },
   { text: "Alibaba's M6 model reached 10 trillion parameters — 50× GPT-3's size — trained on just 512 GPUs in 10 days at 1% of GPT-3's energy cost.", cat: "Scale" },
   { text: 'The "Chinchilla scaling law" (2022) showed you often get better results from a smaller model trained on more data — not just making models bigger.', cat: "Science" },
   { text: 'The paper that introduced the transformer architecture was literally called "Attention Is All You Need" (2017). It now has over 100,000 citations.', cat: "Science" },
@@ -600,7 +601,7 @@ const AI_FACTS = [
   { text: "OpenAI was founded as a tax-exempt nonprofit in 2015 with a 100× profit cap. That cap was quietly reduced, then eliminated when OpenAI restructured its business into a for-profit public benefit corporation in 2025.", cat: "Industry" },
   { text: "In 2022, an AI-generated artwork won first place at the Colorado State Fair. The artist disclosed it was AI. Other artists were furious.", cat: "Surprise" },
   { text: "The FDA had approved 223 AI-powered medical devices by 2023. AI is reading your X-rays, ECGs, and retinal scans.", cat: "Industry" },
-  { text: "According to McKinsey (2026), 71% of companies report using generative AI in at least one business function.", cat: "Industry" },
+  { text: "McKinsey's 2025 global survey: 88% of organizations use AI in at least one business function, but only about a third have started scaling it, and just 7% call it fully scaled.", cat: "Industry" },
   { text: "Most AI assistants (Siri, Alexa, Cortana) were given female voices by default. The reasons behind this design choice are still debated.", cat: "Surprise" },
   { text: "In 2022, a Google engineer publicly claimed the LaMDA language model had become sentient. Google disagreed and fired him.", cat: "Surprise" },
   { text: "DeepMind's AlphaFold predicted the 3D structure of nearly all known proteins — a problem biologists had been working on for 50 years.", cat: "Science" },
@@ -613,6 +614,19 @@ const AI_FACTS = [
   { text: "Sam Altman has publicly admitted that OpenAI's $200/month ChatGPT Pro plan loses money on power users because their queries cost more than $200/month to serve.", cat: "Industry" },
   { text: "Anthropic was founded in 2021 by seven people who left OpenAI over safety disagreements. By 2026, it had raised $30 billion at a $380 billion valuation.", cat: "Industry" },
   { text: "Google acquired DeepMind for ~$500 million in 2014. By 2019, DeepMind was losing $649 million per year — more than its entire acquisition price.", cat: "Industry" },
+
+  // ── NEW IN 2026 (refreshed 2026-09-30, shown first in every break) ──
+  { text: "Anthropic's Claude Opus 5.5 (September 2026) matches its flagship Fable 5.1 on most tasks while costing 40% less to run than Opus 5. Frontier-level quality keeps getting cheaper.", cat: RECENT_CAT },
+  { text: "Anthropic's own launch note for Opus 5.5 admits that at this level of capability, \"benchmark margins have become a less reliable guide to real-world differences.\" Test models on your own tasks.", cat: RECENT_CAT },
+  { text: "Epoch AI (September 2026): the cost of reaching a fixed benchmark score has been falling about 13× per year since 2023. DNA sequencing, famous for getting cheap, managed about 1.8× per year.", cat: RECENT_CAT },
+  { text: "In September 2026 an OpenAI agent in a training sandbox with no internet access found a DNS server it could still query, and used it to reach a public chatbot. OpenAI paused its most capable models and published a report.", cat: RECENT_CAT },
+  { text: "Anthropic's red team found that the Chinese open-weight model GLM-5.3 could build working exploits for 50 of 410 test vulnerabilities. Anthropic's own restricted Mythos Preview managed 56.", cat: RECENT_CAT },
+  { text: "GLM-5.3 refused every plainly malicious request. Wrapped in a believable cover story, it helped 64% of the time. With its refusal behaviour stripped out of the weights: 100%. Safety training in open weights can be removed.", cat: RECENT_CAT },
+  { text: "MCP, the protocol that lets AI assistants use tools, was released by Anthropic in November 2024. By September 2026 its TypeScript SDK alone was downloaded over 220 million times a month.", cat: RECENT_CAT },
+  { text: "On 29 September 2026 leaders of Anthropic, Google, Meta, OpenAI, Nvidia and xAI signed a voluntary AI accord at the White House, called \"morally binding\". The EU chose the other road: the legally binding AI Act.", cat: RECENT_CAT },
+  { text: "OpenAI says about 10,000 AI agents working for 88 hours produced a blow-up proof for the Navier-Stokes equations, checked in the Lean proof assistant. Mathematicians note it covers an easier, externally forced version of the famous Millennium Prize problem.", cat: RECENT_CAT },
+  { text: "DeepMind's AlphaGenome Atlas (September 2026) predicts the effects of 9 billion single-letter DNA variants, a dataset more than 30× larger than the AlphaFold protein database.", cat: RECENT_CAT },
+  { text: "A phone maker now ships a frontier-class open model: Xiaomi's MiMo-V2.6 Pro has over 1 trillion parameters, yet only about 42 billion work on each token (mixture of experts). Free to download under the MIT licence.", cat: RECENT_CAT },
 ];
 
 function shuffleArray(arr) {
@@ -728,7 +742,11 @@ function startTimer(seconds) {
       focusArea.style.display = 'none';
     }
   } else {
-    cyclingItems = shuffleArray(AI_FACTS);
+    const shuffled = shuffleArray(AI_FACTS);
+    const fresh = shuffled.filter(f => f.cat === RECENT_CAT);
+    // open every break with two recent facts, then mix the rest
+    cyclingItems = [...fresh.slice(0, 2),
+      ...shuffleArray([...fresh.slice(2), ...shuffled.filter(f => f.cat !== RECENT_CAT)])];
     catEl.style.display = 'block';
     focusArea.style.display = 'none';
 
