@@ -522,9 +522,11 @@ function updateRecommendation() {
   const totalScore = Object.values(state.tests).reduce((a, b) => a + Math.max(0, b), 0);
   const pillarCount = state.pillars.size;
 
+  // Same bands as the validation score label: 10+ Strong, 7-9 Worth Exploring,
+  // below 7 Needs Validation / Reconsider (cheapest experiment first).
   let level;
   if (totalScore >= 10) level = 'high';
-  else if (totalScore >= 5) level = 'medium';
+  else if (totalScore >= 7) level = 'medium';
   else level = 'low';
 
   let name, timeline, desc;

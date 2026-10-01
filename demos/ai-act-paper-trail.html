@@ -898,7 +898,12 @@ function renderDebrief() {
     const a = answers[q];
     const ok = a === CORRECT[q];
     const state = a === undefined ? '&mdash;' : ok ? '&#10003;' : '&#10007;';
-    const lesson = FEEDBACK[q][CORRECT[q]][1].replace(/<[^>]*>/g, '').split('.').slice(0, 2).join('.') + '.';
+    // The lesson is the correct answer's feedback, which opens with praise ("Right.", "Correct — ...").
+    // After a wrong or skipped answer that praise would read as if the learner had been right, so drop it.
+    const PRAISE = /^(Right\.|Exactly\.|Complete\.|Textbook first move\.|Correct scoping\.|Right — and this surprises almost everyone\.|Correct — and one of the Act's least-known provisions\.|Exactly right, and it's the deal-saving answer\.|Correct order, and the order is the point:)\s*/;
+    const full = FEEDBACK[q][CORRECT[q]][1].replace(/<[^>]*>/g, '');
+    const body = ok ? full : full.replace(PRAISE, '').replace(/^./, (c) => c.toUpperCase());
+    const lesson = body.split('.').slice(0, 2).join('.') + '.';
     list += `<div class="debrief-item">${state} <span class="db-act">[${ACT_NAMES[ACT_OF[q]]}]</span> <strong>${Q_TITLES[q]}</strong> — ${a === undefined ? 'not attempted. ' : ''}${lesson}</div>`;
   });
   document.getElementById('debriefList').innerHTML = list;

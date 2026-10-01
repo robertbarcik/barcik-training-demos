@@ -463,6 +463,10 @@ function renderStep3() {
     insights.push({ type: 'positive', title: 'Your Team Can Handle Self-Hosting', text: 'With ML engineers on staff, the operational burden of self-hosting is manageable. Open-weight models like Llama 4, Qwen, and DeepSeek offer excellent quality for most use cases.' });
   }
 
+  if (selfTotal >= apiTotal) {
+    insights.push({ type: 'info', title: 'The Real Case for Your Own Hardware Is Data Privacy', text: 'On cost alone the vendor API wins here, as it does for almost every input. Buying hardware starts to make sense when the data must not leave your premises: confidential documents, regulated personal data, or sovereignty requirements. Then you are paying for control, and the price difference is what that control costs.' });
+  }
+
   if (insights.length < 2) {
     insights.push({ type: 'info', title: 'Consider a Hybrid Approach', text: 'Start with API for speed-to-market and production reliability. Use self-hosted for development, testing, and experimentation. Migrate workloads as you gain operational confidence.' });
   }
@@ -481,7 +485,7 @@ function renderStep3() {
   } else if (selfTotal < apiTotal && selections.talent === 'no') {
     rec = `<h4>Recommendation: Start with API, Then Evaluate</h4><p>Self-hosting is cheaper on paper (${fmtEur(savings)} savings), but you don't have ML engineers. Start with API for immediate value, hire/upskill your team, then re-evaluate self-hosting in 6 months when you have both volume data and operational capability.</p>`;
   } else {
-    rec = `<h4>Recommendation: Use Vendor API</h4><p>API is more cost-effective (saves ${fmtEur(savings)} over 12 months) and provides better reliability with zero ops burden. Self-hosting only makes sense if your volume grows 3x+ or data sovereignty requirements change.</p>`;
+    rec = `<h4>Recommendation: Use Vendor API</h4><p>API is more cost-effective (saves ${fmtEur(savings)} over 12 months) and provides better reliability with zero ops burden. Self-hosting makes sense when data privacy or sovereignty requires the data to stay on your own hardware, not as a way to save money.</p>`;
   }
   document.getElementById('summaryRec').innerHTML = rec;
 }
