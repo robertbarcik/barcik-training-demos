@@ -1,397 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Demos — robert@barcik.training</title>
-    <meta name="description" content="Interactive classroom demos for AI training sessions by Robert Barcik — embeddings, attention, RAG, fine-tuning, GenAI economics and more.">
-    <link rel="canonical" href="https://demos.barcik.training/">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Interactive Demos — barcik.training">
-    <meta property="og:description" content="Interactive classroom demos for AI training sessions — embeddings, attention, RAG, fine-tuning and more.">
-    <meta property="og:url" content="https://demos.barcik.training/">
-    <meta property="og:image" content="https://demos.barcik.training/assets/og-card.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0b1929; color: #1a202c; min-height: 100vh; }
-
-        /* ===== ANIMATED BACKGROUND ===== */
-        canvas#bg-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 0;
-        }
-
-        /* ===== HEADER / HERO ===== */
-        .hero {
-            position: relative; z-index: 1;
-            text-align: center;
-            padding: 3rem 2rem 2.5rem;
-            background: linear-gradient(180deg, rgba(11,25,41,0.95) 0%, rgba(11,25,41,0.7) 100%);
-        }
-        .hero-name {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #fff;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.2rem;
-        }
-        .hero-email {
-            font-size: 0.95rem;
-            color: #94a3b8;
-            letter-spacing: 0.03em;
-            margin-bottom: 1rem;
-        }
-        .hero-email a {
-            color: #94a3b8;
-            text-decoration: none;
-            border-bottom: 1px solid rgba(148,163,184,0.3);
-            transition: color 0.2s, border-color 0.2s;
-        }
-        .hero-email a:hover {
-            color: #e2e8f0;
-            border-color: #e2e8f0;
-        }
-        .hero-announce {
-            display: inline-block;
-            margin-top: 1.4rem;
-            padding: 0.55rem 1.1rem;
-            max-width: 620px;
-            border: 1px solid rgba(148,163,184,0.35);
-            border-radius: 14px;
-            background: rgba(37,99,235,0.12);
-            color: #cbd5e1;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            text-decoration: none;
-            transition: background 0.2s, border-color 0.2s;
-        }
-        .hero-announce:hover { background: rgba(37,99,235,0.22); border-color: rgba(148,163,184,0.6); }
-        .hero-announce strong { color: #fff; }
-        .hero-announce .announce-tag {
-            display: inline-block;
-            margin-right: 0.35rem;
-            padding: 0.05rem 0.5rem;
-            border-radius: 100px;
-            background: #2563eb;
-            color: #fff;
-            font-size: 0.66rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            vertical-align: 0.08em;
-        }
-        .hero-announce .announce-more { white-space: nowrap; border-bottom: 1px dashed rgba(203,213,225,0.5); }
-        .hero-divider {
-            width: 48px;
-            height: 3px;
-            background: #2563eb;
-            border-radius: 2px;
-            margin: 0 auto 1rem;
-        }
-        .hero-desc {
-            font-size: 1rem;
-            color: #cbd5e0;
-            max-width: 520px;
-            margin: 0 auto;
-            line-height: 1.7;
-        }
-
-        /* ===== MAIN ===== */
-        main {
-            position: relative; z-index: 1;
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 0 1.5rem 2rem;
-        }
-
-        /* ===== DEMO LIST ===== */
-        .demo-list { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
-        .demo-list a {
-            text-decoration: none; color: inherit; display: block;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(8px);
-            border-radius: 10px; padding: 1.25rem 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border-left: 4px solid #1e3a5f;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .demo-list a:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
-        .demo-title { font-size: 1.15rem; font-weight: 600; color: #1e3a5f; margin-bottom: 0.3rem; }
-        .demo-desc { font-size: 0.9rem; color: #4a5568; }
-
-        /* ===== DECK SECTIONS ===== */
-        .deck-section { margin-bottom: 2.5rem; }
-        .deck-header {
-            display: flex; align-items: center; gap: 0.75rem;
-            margin-bottom: 1rem; padding-bottom: 0.6rem;
-            border-bottom: 2px solid rgba(255,255,255,0.1);
-        }
-        .deck-label {
-            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
-            color: #cbd5e0; font-weight: 700;
-        }
-        .deck-badge {
-            font-size: 0.7rem; background: #2563eb; color: #fff;
-            padding: 0.15rem 0.5rem; border-radius: 10px; font-weight: 600;
-        }
-
-        /* ===== HUMAN-IN-THE-LOOP LAB ===== */
-        .lab-section {
-            margin-top: 1.5rem; padding-top: 1.5rem;
-            border-top: 2px solid rgba(37, 99, 235, 0.45);
-        }
-        .lab-header {
-            display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;
-        }
-        .lab-label {
-            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
-            color: #93c5fd; font-weight: 700;
-        }
-        .lab-blurb {
-            font-size: 0.82rem; color: #94a3b8; margin-bottom: 0.9rem; line-height: 1.5;
-        }
-        .lab-blurb a { color: #93c5fd; text-decoration: none; }
-        .lab-blurb a:hover { text-decoration: underline; }
-        .lab-section .demo-list a { border-left-color: #2563eb; }
-        .lab-flagship .demo-title::after {
-            content: 'FLAGSHIP'; font-size: 0.6rem; font-weight: 700;
-            background: #2563eb; color: #fff; border-radius: 8px;
-            padding: 0.1rem 0.45rem; margin-left: 0.5rem; vertical-align: middle;
-            letter-spacing: 0.06em;
-        }
-
-        /* ===== EU AI ACT LAB accent ===== */
-        .euact-lab { border-top-color: rgba(240, 190, 0, 0.55) !important; }
-        .euact-lab .lab-label { color: #f0be00; }
-        .euact-lab .demo-list a { border-left-color: #f0be00; }
-        .euact-lab .lab-blurb a { color: #f5cd33; }
-
-        /* ===== TOOLS SECTION ===== */
-        .tools-section {
-            margin-top: 1rem; padding-top: 1.5rem;
-            border-top: 1px solid rgba(255,255,255,0.08);
-        }
-        .tools-label {
-            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
-            color: #64748b; margin-bottom: 0.75rem;
-        }
-        .tools-section a { border-left-color: #64748b; }
-        .tools-section .demo-title { color: #4a5568; font-size: 1rem; }
-
-        /* ===== AI TRANSPARENCY NOTICE ===== */
-        .ai-notice {
-            position: relative; z-index: 1;
-            max-width: 672px; margin: 2.5rem auto 0; padding: 1.1rem 1.35rem;
-            display: flex; gap: 1rem; align-items: flex-start;
-            background: #f0f2f5; border-radius: 10px;
-            color: #4a5568; font-size: 0.86rem; line-height: 1.6;
-        }
-        .ai-notice .ait-icon { flex: 0 0 auto; width: 2.2rem; height: 2.2rem; color: #1e3a5f; }
-        .ai-notice-label { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; color: #1e3a5f; margin-bottom: 0.3rem; }
-        .ai-notice p { margin: 0; }
-        @media (max-width: 760px) { .ai-notice { margin: 2rem 1rem 0; } }
-
-        /* ===== FOOTER ===== */
-        footer {
-            position: relative; z-index: 1;
-            text-align: center; padding: 2rem; font-size: 0.8rem; color: #4a5568;
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 600px) {
-            .hero { padding: 2rem 1.25rem 1.5rem; }
-            .hero-name { font-size: 1.5rem; }
-            .hero-desc { font-size: 0.9rem; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Demos — barcik.training</title>
+<meta name="description" content="Interactive classroom demos for AI training sessions by Robert Barcik: embeddings, attention, RAG, fine-tuning, GenAI economics and more.">
+<link rel="canonical" href="https://demos.barcik.training/">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Interactive Demos — barcik.training">
+<meta property="og:description" content="Interactive classroom demos for AI training sessions by Robert Barcik: embeddings, attention, RAG, fine-tuning, GenAI economics and more.">
+<meta property="og:url" content="https://demos.barcik.training/">
+<meta property="og:image" content="https://demos.barcik.training/assets/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&amp;family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&amp;display=swap">
+<link rel="stylesheet" href="/assets/riso/riso.css">
 </head>
 <body>
-    <canvas id="bg-canvas"></canvas>
-
-    <div class="hero">
-        <h1 class="hero-name">Robert Barcik</h1>
-        <div class="hero-email">robert@barcik.training</div>
-        <div class="hero-divider"></div>
-        <div class="hero-desc">
-            Small interactive demos that accompany my lectures on Generative AI, machine learning, and data science for corporate teams.
-        </div>
-        <a class="hero-announce" href="https://publications.barcik.training/claudius-mailbox/"><span class="announce-tag">New</span> Questions about a demo or the ideas behind it? My AI assistant <strong>Claudius</strong> now has its own, openly labelled mailbox. I read every reply before it is sent. <span class="announce-more">How it works &rarr;</span></a>
-    </div>
-
-    <main>
-        <!-- Deck 1: Under the Hood -->
-        <div class="deck-section">
-            <div class="deck-header">
-                <span class="deck-label">Under the Hood of Generative AI (LLMs)</span>
-                <span class="deck-badge">7 demos</span>
-            </div>
-            <ul class="demo-list">
-                <li><a href="demos/embedding-space-explorer.html">
-                    <div class="demo-title">Embedding Space</div>
-                    <div class="demo-desc">Visualize word embeddings in 2D — explore clusters, nearest neighbors, and vector arithmetic like king − man + woman = queen.</div>
-                </a></li>
-                <li><a href="demos/neuron-playground.html">
-                    <div class="demo-title">Single Neuron</div>
-                    <div class="demo-desc">Interactive single-neuron visualization — adjust inputs, weights, and bias, then see how activation functions shape the output.</div>
-                </a></li>
-                <li><a href="demos/attention_cocktail_party.html">
-                    <div class="demo-title">Attention Mechanism</div>
-                    <div class="demo-desc">Explore how the attention mechanism works through an intuitive cocktail-party analogy.</div>
-                </a></li>
-                <li><a href="demos/base-vs-instruct-model.html">
-                    <div class="demo-title">Base Model vs Instruct Model</div>
-                    <div class="demo-desc">Compare how a raw base model and an instruction-tuned model respond differently to the same prompts.</div>
-                </a></li>
-                <li><a href="demos/illusion-of-chat.html">
-                    <div class="demo-title">Illusion of Chat</div>
-                    <div class="demo-desc">Toggle between a polished chat UI and the raw token stream underneath — see how special tokens create the "conversation."</div>
-                </a></li>
-                <li><a href="demos/context-window-xray.html">
-                    <div class="demo-title">The Context Window X-Ray</div>
-                    <div class="demo-desc">Split-screen X-ray of a chat app: the chat a user sees vs. the payload the model receives — memories, skills, documents, search results, and silent compaction.</div>
-                </a></li>
-                <li><a href="demos/interpreting-llms.html">
-                    <div class="demo-title">Interpreting LLMs</div>
-                    <div class="demo-desc">Explore how researchers peer inside language models — from polysemantic neurons to interpretable features and attribution graphs.</div>
-                </a></li>
-            </ul>
-        </div>
-
-        <!-- Deck 2: GenAI Development -->
-        <div class="deck-section">
-            <div class="deck-header">
-                <span class="deck-label">GenAI Development</span>
-                <span class="deck-badge">3 demos</span>
-            </div>
-            <ul class="demo-list">
-                <li><a href="demos/finetune.html">
-                    <div class="demo-title">Fine-Tuning &amp; LoRA</div>
-                    <div class="demo-desc">Visualize how fine-tuning and LoRA adapt a pre-trained model to new tasks.</div>
-                </a></li>
-                <li><a href="demos/function-calling-demo.html">
-                    <div class="demo-title">Function Calling</div>
-                    <div class="demo-desc">See how LLMs use function calling to interact with external tools and APIs.</div>
-                </a></li>
-                <li><a href="demos/rag-explorer.html">
-                    <div class="demo-title">RAG Explorer</div>
-                    <div class="demo-desc">Step through Retrieval-Augmented Generation: embedding, retrieval, and answer synthesis.</div>
-                </a></li>
-            </ul>
-        </div>
-
-        <!-- Deck 3: GenAI Business Value Creation -->
-        <div class="deck-section">
-            <div class="deck-header">
-                <span class="deck-label">GenAI Business Value Creation</span>
-                <span class="deck-badge">6 demos</span>
-            </div>
-            <ul class="demo-list">
-                <li><a href="demos/meeting-cost-calculator.html">
-                    <div class="demo-title">Meeting Cost Calculator</div>
-                    <div class="demo-desc">Quantify the true cost of your meeting culture with hidden cost multipliers, then triage meetings using the Decide / Learn / Bond / Do framework.</div>
-                </a></li>
-                <li><a href="demos/genai-pricing-lab.html">
-                    <div class="demo-title">GenAI Pricing Lab</div>
-                    <div class="demo-desc">Strategic pricing calculator — navigate the ChatGPT Tax, compare three delivery options (API, open-source, local), and generate data-driven pricing tiers.</div>
-                </a></li>
-                <li><a href="demos/build-vs-buy-tco.html">
-                    <div class="demo-title">Build vs. Buy TCO</div>
-                    <div class="demo-desc">12-month total cost comparison for self-hosted open-source vs. vendor API, with custom canvas charts and a pragmatic hybrid option.</div>
-                </a></li>
-                <li><a href="demos/what-should-you-build.html">
-                    <div class="demo-title">What Should You Build?</div>
-                    <div class="demo-desc">6-step wizard: validate a GenAI idea with the Three Pillars, Four Validation Tests, and get a concrete MVP prototype recommendation.</div>
-                </a></li>
-                <li><a href="demos/close-the-deal.html">
-                    <div class="demo-title">Close the Deal</div>
-                    <div class="demo-desc">Pitch a GenAI solution to a skeptical CTO through 4 branching dialogue scenes. Build trust, handle objections, and close the deal.</div>
-                </a></li>
-                <li><a href="demos/genai-capex-timeline.html">
-                    <div class="demo-title">Where Does the Money Go?</div>
-                    <div class="demo-desc">Interactive capex-to-model timeline: see how each year's Big 5 investment splits into inference, training, and research — each arriving 2–4+ years later.</div>
-                </a></li>
-            </ul>
-        </div>
-
-        <!-- The Human-in-the-Loop Lab -->
-        <div class="lab-section">
-            <div class="lab-header">
-                <span class="lab-label">The Human-in-the-Loop Lab</span>
-                <span class="deck-badge">7 items</span>
-            </div>
-            <p class="lab-blurb">"Don't worry, we'll just put a human in the loop." These simulations let you feel why that sentence hides so much work: automation bias, alert fatigue, anchoring, and the moral crumple zone, played out across the sectors the EU AI Act calls high-risk. Companion suite to the booklet <a href="https://publications.barcik.training/llm-human-interaction-patterns/">LLM-Human Interaction Design Patterns for Operations</a>.</p>
-            <ul class="demo-list">
-                <li class="lab-flagship"><a href="demos/operators-dilemma.html">
-                    <div class="demo-title">The Operator's Dilemma</div>
-                    <div class="demo-desc">Five acts of being the person on night duty for an online shop: a rubber-stamp shift with a shrinking timer and a phone that keeps buzzing, an anchoring trap, confidence theater, a 3 AM kill-switch scenario, and designing the seam yourself. No IT expertise needed; every wrong AI call can be caught from the screen. Lecture mode for projectors. Includes a personal debrief.</div>
-                </a></li>
-                <li><a href="demos/credit-desk.html">
-                    <div class="demo-title">The Credit Desk</div>
-                    <div class="demo-desc">Banking: six loan applications, an AI credit score, and an ordering experiment. Does seeing the model's number first change your judgment? Two of the scores are deliberately wrong.</div>
-                </a></li>
-                <li><a href="demos/triage-ward.html">
-                    <div class="demo-title">The Triage Ward</div>
-                    <div class="demo-desc">Medical: work a night-shift alarm queue where one alarm out of eighteen matters, then work the same night after an evidence-based alarm redesign.</div>
-                </a></li>
-                <li><a href="demos/watchlist.html">
-                    <div class="demo-title">The Watchlist</div>
-                    <div class="demo-desc">Law enforcement: verify facial-recognition watchlist matches against the record under a countdown. Some of the AI's matches are wrong, and one of its rejections is too.</div>
-                </a></li>
-                <li><a href="demos/shortlist.html">
-                    <div class="demo-title">The Shortlist</div>
-                    <div class="demo-desc">Hiring: an AI-ranked candidate shortlist with two seeded injustices. Measures your Weight-of-Advice score: how much of the final ranking was actually yours?</div>
-                </a></li>
-                <li><a href="demos/border-queue.html">
-                    <div class="demo-title">The Border Queue</div>
-                    <div class="demo-desc">Border control: the same risk assessments packaged three ways (raw decimals, calibrated categories, bare verdicts) and what each framing does to your referrals.</div>
-                </a></li>
-                <li><a href="demos/docket.html">
-                    <div class="demo-title">The Docket</div>
-                    <div class="demo-desc">Justice: a pre-trial docket with an "advisory only" AI risk score. One case goes wrong three months later, and the inquiry knows exactly whose signature is on the order.</div>
-                </a></li>
-            </ul>
-        </div>
-
-        <!-- The EU AI Act Lab -->
-        <div class="lab-section euact-lab">
-            <div class="lab-header">
-                <span class="lab-label">The EU AI Act Lab</span>
-                <span class="deck-badge">2 items</span>
-            </div>
-            <p class="lab-blurb">Tools for reasoning about the AI Act the way an engineer should: grounded in the actual text, honest about what is settled and what is still pending. Educational, not legal advice.</p>
-            <ul class="demo-list">
-                <li><a href="demos/ai-act-navigator.html">
-                    <div class="demo-title">The Navigator</div>
-                    <div class="demo-desc">Where does your AI system land under the EU AI Act? Walk the real classification method — the Article 3(1) test, both Article 6 routes, the derogation filter, the profiling override — and get your risk tier, obligations with article citations, and post-Omnibus dates.</div>
-                </a></li>
-                <li><a href="demos/ai-act-paper-trail.html">
-                    <div class="demo-title">The Paper Trail</div>
-                    <div class="demo-desc">You classified your system high-risk — now survive conformity. A five-act provider simulation: the runway decision, the Annex IV evidence pack, the assessment route, a white-label trap, and a post-market incident on a real reporting clock. Scored, with citations.</div>
-                </a></li>
-            </ul>
-        </div>
-
-        <!-- Classroom Tools -->
-        <div class="tools-section">
-            <div class="tools-label">Classroom Tools</div>
-            <ul class="demo-list">
-                <li><a href="demos/timer.html">
-                    <div class="demo-title">Training Timer</div>
-                    <div class="demo-desc">Break and exercise timer with AI fun facts and a neural network background.</div>
-                </a></li>
-                <li><a href="demos/melting-candle-timer.html">
-                    <div class="demo-title">Melting Candle Timer</div>
-                    <div class="demo-desc">An ambient timer that burns a glowing candle down — the wax level is the time you have left, ending in a curl of smoke. Six switchable backgrounds: midnight, starfield, aurora, rain, embers, void.</div>
-                </a></li>
-            </ul>
-        </div>
-    </main>
-
-    <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
+<!-- Generated by training-ops/web/riso/build.py from data/demos.json. Edit the data file, not this page. -->
+<nav class="sitebar" aria-label="barcik.training"><a class="mark" href="https://barcik.training/">barcik<b>.</b>training</a><a href="https://barcik.training/trainings.html">Trainings</a><a href="https://barcik.training/eu-ai-act.html">EU AI Act</a><a href="https://publications.barcik.training/">Publications</a><a href="/" aria-current="page">Demos</a></nav>
+<header class="wrap masthead">
+  <h1 class="offset">Demos</h1>
+  <p class="lede">Small interactive demos that accompany my lectures on generative AI, machine learning and data science. Open one, move something, see what happens.</p>
+  <p class="who">Questions about a demo or the idea behind it? <a href="https://publications.barcik.training/claudius-mailbox/">Write to Claudius</a>, my openly labelled AI assistant. I read every reply before it is sent.</p>
+</header>
+<div class="filterband" id="filters"><div class="wrap"><label class="search"><span class="sr">Search demos</span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M13 13l5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><input type="search" placeholder="Search demos" autocomplete="off" enterkeyhint="search"></label><div class="chips" role="group" aria-label="Show"><button class="chip" data-series="all" aria-pressed="true">All <i>27</i></button><button class="chip" data-series="hood" aria-pressed="false">Under the hood <i>7</i></button><button class="chip" data-series="dev" aria-pressed="false">Development <i>3</i></button><button class="chip" data-series="value" aria-pressed="false">Business value <i>6</i></button><button class="chip" data-series="hitl" aria-pressed="false">Human in the loop <i>7</i></button><button class="chip" data-series="euact" aria-pressed="false">EU AI Act lab <i>2</i></button><button class="chip" data-series="tools" aria-pressed="false">Classroom tool <i>2</i></button></div></div></div>
+<main class="wrap" id="shelves">
+<section class="group" id="hood" data-series="hood"><div class="group-head"><h2><span class="hl">Under the hood of generative AI</span></h2></div><div class="row">
+<a class="tile tile-demo" href="/demos/embedding-space-explorer.html" data-series="hood"><span class="book"><span class="inside" aria-hidden="true"><b>Visualize word embeddings in 2D — explore clusters, nearest neighbors, and vector arithmetic like king − man + woman = queen.</b><i>Open</i></span><span class="cover wide s-hood v0"><span class="cv-top">Under the hood</span><span class="cv-title">Embedding Space</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M32 34h56M32 34l28 54M88 34L60 88"/><circle class="ep" cx="32" cy="34" r="14"/><circle class="ep" cx="88" cy="34" r="14"/><circle class="eq" cx="60" cy="88" r="14"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Embedding Space</span><span class="cap-blurb">Visualize word embeddings in 2D — explore clusters, nearest neighbors, and vector arithmetic like king − man + woman = queen.</span></span></a><a class="tile tile-demo" href="/demos/neuron-playground.html" data-series="hood"><span class="book"><span class="inside" aria-hidden="true"><b>Interactive single-neuron visualization — adjust inputs, weights, and bias, then see how activation functions shape the output.</b><i>Open</i></span><span class="cover wide s-hood v1"><span class="cv-top">Under the hood</span><span class="cv-title">Single Neuron</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M12 30l38 26M12 60h38M12 90l38-26M78 60h30"/><circle class="ep" cx="62" cy="60" r="22"/><circle class="eq" cx="62" cy="60" r="9"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Single Neuron</span><span class="cap-blurb">Interactive single-neuron visualization — adjust inputs, weights, and bias, then see how activation functions shape the output.</span></span></a><a class="tile tile-demo" href="/demos/attention_cocktail_party.html" data-series="hood"><span class="book"><span class="inside" aria-hidden="true"><b>Explore how the attention mechanism works through an intuitive cocktail-party analogy.</b><i>Open</i></span><span class="cover wide s-hood v2"><span class="cv-top">Under the hood</span><span class="cv-title">Attention Mechanism</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M8 60c20-30 84-30 104 0-20 30-84 30-104 0z"/><circle class="ep" cx="60" cy="60" r="19"/><circle class="eq" cx="60" cy="60" r="8"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Attention Mechanism</span><span class="cap-blurb">Explore how the attention mechanism works through an intuitive cocktail-party analogy.</span></span></a><a class="tile tile-demo" href="/demos/base-vs-instruct-model.html" data-series="hood"><span class="book"><span class="inside" aria-hidden="true"><b>Compare how a raw base model and an instruction-tuned model respond differently to the same prompts.</b><i>Open</i></span><span class="cover wide s-hood v0"><span class="cv-top">Under the hood</span><span class="cv-title">Base Model vs Instruct Model</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle class="st sp" stroke-width="8" cx="44" cy="60" r="29"/><circle class="st sq" stroke-width="8" cx="76" cy="60" r="29"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Base Model vs Instruct Model</span><span class="cap-blurb">Compare how a raw base model and an instruction-tuned model respond differently to the same prompts.</span></span></a><a class="tile tile-demo" href="/demos/illusion-of-chat.html" data-series="hood"><span class="book"><span class="inside" aria-hidden="true"><b>Toggle between a polished chat UI and the raw token stream underneath — see how special tokens create the &quot;conversation.&quot;</b><i>Open</i></span><span class="cover wide s-hood v1"><span class="cv-top">Under the hood</span><span class="cv-title">Illusion of Chat</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect class="ep" x="12" y="30" width="96" height="64" rx="6"/><path class="st sg" stroke-width="6" d="M16 36l44 32 44-32"/><circle class="eq" cx="100" cy="30" r="12"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Illusion of Chat</span><span class="cap-blurb">Toggle between a polished chat UI and the raw token stream underneath — see how special tokens create the &quot;conversation.&quot;</span></span></a><a class="tile tile-demo" href="/demos/context-window-xray.html" data-series="hood"><span class="book"><span class="inside" aria-hidden="true"><b>Split-screen X-ray of a chat app: the chat a user sees vs. the payload the model receives — memories, skills, documents, search results, and silent compaction.</b><i>Open</i></span><span class="cover wide s-hood v2"><span class="cv-top">Under the hood</span><span class="cv-title">The Context Window X-Ray</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M8 60c20-30 84-30 104 0-20 30-84 30-104 0z"/><circle class="ep" cx="60" cy="60" r="19"/><circle class="eq" cx="60" cy="60" r="8"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">The Context Window X-Ray</span><span class="cap-blurb">Split-screen X-ray of a chat app: the chat a user sees vs. the payload the model receives — memories, skills, documents, search results, and silent compaction.</span></span></a><a class="tile tile-demo" href="/demos/interpreting-llms.html" data-series="hood"><span class="book"><span class="inside" aria-hidden="true"><b>Explore how researchers peer inside language models — from polysemantic neurons to interpretable features and attribution graphs.</b><i>Open</i></span><span class="cover wide s-hood v0"><span class="cv-top">Under the hood</span><span class="cv-title">Interpreting LLMs</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect class="ep" x="16" y="16" width="26" height="26" rx="5"/><rect class="ep" x="47" y="16" width="26" height="26" rx="5"/><rect class="eq" x="78" y="16" width="26" height="26" rx="5"/><rect class="ep" x="16" y="47" width="26" height="26" rx="5"/><rect class="eq" x="47" y="47" width="26" height="26" rx="5"/><rect class="eq" x="16" y="78" width="26" height="26" rx="5"/><rect class="st sp" stroke-width="4" x="49" y="80" width="22" height="22" rx="4"/><rect class="st sp" stroke-width="4" x="80" y="49" width="22" height="22" rx="4"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Interpreting LLMs</span><span class="cap-blurb">Explore how researchers peer inside language models — from polysemantic neurons to interpretable features and attribution graphs.</span></span></a>
+</div></section>
+<section class="group" id="dev" data-series="dev"><div class="group-head"><h2><span class="hl">GenAI development</span></h2></div><div class="row">
+<a class="tile tile-demo" href="/demos/finetune.html" data-series="dev"><span class="book"><span class="inside" aria-hidden="true"><b>Visualize how fine-tuning and LoRA adapt a pre-trained model to new tasks.</b><i>Open</i></span><span class="cover wide s-dev v0"><span class="cv-top">Development</span><span class="cv-title">Fine-Tuning &amp; LoRA</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="ep" d="M60 14l46 21-46 21-46-21z"/><path class="st sp" stroke-width="6" d="M14 59l46 21 46-21"/><path class="st sq" stroke-width="7" d="M14 82l46 21 46-21"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Fine-Tuning &amp; LoRA</span><span class="cap-blurb">Visualize how fine-tuning and LoRA adapt a pre-trained model to new tasks.</span></span></a><a class="tile tile-demo" href="/demos/function-calling-demo.html" data-series="dev"><span class="book"><span class="inside" aria-hidden="true"><b>See how LLMs use function calling to interact with external tools and APIs.</b><i>Open</i></span><span class="cover wide s-dev v1"><span class="cv-top">Development</span><span class="cv-title">Function Calling</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect class="ep" x="12" y="24" width="96" height="72" rx="7"/><path class="st sg" stroke-width="7" d="M30 46l15 14-15 14"/><path class="st sq" stroke-width="7" d="M56 76h28"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Function Calling</span><span class="cap-blurb">See how LLMs use function calling to interact with external tools and APIs.</span></span></a><a class="tile tile-demo" href="/demos/rag-explorer.html" data-series="dev"><span class="book"><span class="inside" aria-hidden="true"><b>Step through Retrieval-Augmented Generation: embedding, retrieval, and answer synthesis.</b><i>Open</i></span><span class="cover wide s-dev v2"><span class="cv-top">Development</span><span class="cv-title">RAG Explorer</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect class="ep" x="30" y="14" width="60" height="92" rx="5"/><path class="st sg" stroke-width="6" d="M43 36h34M43 50h34M43 64h20"/><path class="st sq" stroke-width="7" d="M52 86l9 9 18-22"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">RAG Explorer</span><span class="cap-blurb">Step through Retrieval-Augmented Generation: embedding, retrieval, and answer synthesis.</span></span></a>
+</div></section>
+<section class="group" id="value" data-series="value"><div class="group-head"><h2><span class="hl">GenAI business value</span></h2></div><div class="row">
+<a class="tile tile-demo" href="/demos/meeting-cost-calculator.html" data-series="value"><span class="book"><span class="inside" aria-hidden="true"><b>Quantify the true cost of your meeting culture with hidden cost multipliers, then triage meetings using the Decide / Learn / Bond / Do framework.</b><i>Open</i></span><span class="cover wide s-value v0"><span class="cv-top">Business value</span><span class="cv-title">Meeting Cost Calculator</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M12 62h96"/><rect class="ep" x="20" y="34" width="18" height="28"/><rect class="ep" x="46" y="16" width="18" height="46"/><rect class="eq" x="72" y="62" width="18" height="40"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Meeting Cost Calculator</span><span class="cap-blurb">Quantify the true cost of your meeting culture with hidden cost multipliers, then triage meetings using the Decide / Learn / Bond / Do framework.</span></span></a><a class="tile tile-demo" href="/demos/genai-pricing-lab.html" data-series="value"><span class="book"><span class="inside" aria-hidden="true"><b>Strategic pricing calculator — navigate the ChatGPT Tax, compare three delivery options (API, open-source, local), and generate data-driven pricing tiers.</b><i>Open</i></span><span class="cover wide s-value v1"><span class="cv-top">Business value</span><span class="cv-title">GenAI Pricing Lab</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect class="ep" x="16" y="16" width="26" height="26" rx="5"/><rect class="ep" x="47" y="16" width="26" height="26" rx="5"/><rect class="eq" x="78" y="16" width="26" height="26" rx="5"/><rect class="ep" x="16" y="47" width="26" height="26" rx="5"/><rect class="eq" x="47" y="47" width="26" height="26" rx="5"/><rect class="eq" x="16" y="78" width="26" height="26" rx="5"/><rect class="st sp" stroke-width="4" x="49" y="80" width="22" height="22" rx="4"/><rect class="st sp" stroke-width="4" x="80" y="49" width="22" height="22" rx="4"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">GenAI Pricing Lab</span><span class="cap-blurb">Strategic pricing calculator — navigate the ChatGPT Tax, compare three delivery options (API, open-source, local), and generate data-driven pricing tiers.</span></span></a><a class="tile tile-demo" href="/demos/build-vs-buy-tco.html" data-series="value"><span class="book"><span class="inside" aria-hidden="true"><b>12-month total cost comparison for self-hosted open-source vs. vendor API, with custom canvas charts and a pragmatic hybrid option.</b><i>Open</i></span><span class="cover wide s-value v2"><span class="cv-top">Business value</span><span class="cv-title">Build vs. Buy TCO</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle class="st sp" stroke-width="8" cx="44" cy="60" r="29"/><circle class="st sq" stroke-width="8" cx="76" cy="60" r="29"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Build vs. Buy TCO</span><span class="cap-blurb">12-month total cost comparison for self-hosted open-source vs. vendor API, with custom canvas charts and a pragmatic hybrid option.</span></span></a><a class="tile tile-demo" href="/demos/what-should-you-build.html" data-series="value"><span class="book"><span class="inside" aria-hidden="true"><b>6-step wizard: validate a GenAI idea with the Three Pillars, Four Validation Tests, and get a concrete MVP prototype recommendation.</b><i>Open</i></span><span class="cover wide s-value v0"><span class="cv-top">Business value</span><span class="cv-title">What Should You Build?</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M12 60h30"/><path class="st sp" stroke-width="6" d="M42 60c22 0 28-40 66-42M42 60c24 0 32-13 66-14M42 60c24 0 32 13 66 14"/><path class="st sq" stroke-width="7" d="M42 60c22 0 28 40 66 42"/><circle class="ep" cx="42" cy="60" r="8"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">What Should You Build?</span><span class="cap-blurb">6-step wizard: validate a GenAI idea with the Three Pillars, Four Validation Tests, and get a concrete MVP prototype recommendation.</span></span></a><a class="tile tile-demo" href="/demos/close-the-deal.html" data-series="value"><span class="book"><span class="inside" aria-hidden="true"><b>Pitch a GenAI solution to a skeptical CTO through 4 branching dialogue scenes. Build trust, handle objections, and close the deal.</b><i>Open</i></span><span class="cover wide s-value v1"><span class="cv-top">Business value</span><span class="cv-title">Close the Deal</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect class="ep" x="12" y="30" width="96" height="64" rx="6"/><path class="st sg" stroke-width="6" d="M16 36l44 32 44-32"/><circle class="eq" cx="100" cy="30" r="12"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Close the Deal</span><span class="cap-blurb">Pitch a GenAI solution to a skeptical CTO through 4 branching dialogue scenes. Build trust, handle objections, and close the deal.</span></span></a><a class="tile tile-demo" href="/demos/genai-capex-timeline.html" data-series="value"><span class="book"><span class="inside" aria-hidden="true"><b>Interactive capex-to-model timeline: see how each year&#x27;s Big 5 investment splits into inference, training, and research — each arriving 2–4+ years later.</b><i>Open</i></span><span class="cover wide s-value v2"><span class="cv-top">Business value</span><span class="cv-title">Where Does the Money Go?</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M12 100h96"/><path class="st sp" stroke-width="6" d="M12 96c32-2 46-10 58-32"/><path class="st sq" stroke-width="7" stroke-dasharray="1 12" d="M76 54c8-14 15-27 22-42"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Where Does the Money Go?</span><span class="cap-blurb">Interactive capex-to-model timeline: see how each year&#x27;s Big 5 investment splits into inference, training, and research — each arriving 2–4+ years later.</span></span></a>
+</div></section>
+<section class="group" id="hitl" data-series="hitl"><div class="group-head"><h2><span class="hl">The Human-in-the-Loop Lab</span></h2><p>"Don't worry, we'll just put a human in the loop." These simulations let you feel why that sentence hides so much work: automation bias, alert fatigue, anchoring, and the moral crumple zone, played out across the sectors the EU AI Act calls high-risk. Companion suite to the booklet LLM-Human Interaction Design Patterns for Operations.</p></div><div class="row">
+<a class="tile tile-demo" href="/demos/operators-dilemma.html" data-series="hitl"><span class="book"><span class="inside" aria-hidden="true"><b>Five acts of being the person on night duty for an online shop: a rubber-stamp shift with a shrinking timer and a phone that keeps buzzing, an anchoring trap, confidence theater, a 3 AM kill-switch scenario, and designing the seam yourself. No IT expertise needed; every wrong AI call can be caught from the screen. Lecture mode for projectors. Includes a personal debrief.</b><i>Open</i></span><span class="cover wide s-hitl v0"><span class="cv-top">Human in the loop</span><span class="cv-title">The Operator&#x27;s Dilemma</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="ep" d="M60 10l42 15v30c0 27-19 43-42 54C37 98 18 82 18 55V25z"/><circle class="eq" cx="60" cy="50" r="10"/><path class="eq" d="M55 54h10l4 24H51z"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="flag">Flagship</span><span class="cap"><span class="cap-title">The Operator&#x27;s Dilemma</span><span class="cap-blurb">Five acts of being the person on night duty for an online shop: a rubber-stamp shift with a shrinking timer and a phone that keeps buzzing, an anchoring trap, confidence theater, a 3 AM kill-switch scenario, and designing the seam yourself. No IT expertise needed; every wrong AI call can be caught from the screen. Lecture mode for projectors. Includes a personal debrief.</span></span></a><a class="tile tile-demo" href="/demos/credit-desk.html" data-series="hitl"><span class="book"><span class="inside" aria-hidden="true"><b>Banking: six loan applications, an AI credit score, and an ordering experiment. Does seeing the model&#x27;s number first change your judgment? Two of the scores are deliberately wrong.</b><i>Open</i></span><span class="cover wide s-hitl v1"><span class="cv-top">Human in the loop</span><span class="cv-title">The Credit Desk</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M12 62h96"/><rect class="ep" x="20" y="34" width="18" height="28"/><rect class="ep" x="46" y="16" width="18" height="46"/><rect class="eq" x="72" y="62" width="18" height="40"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">The Credit Desk</span><span class="cap-blurb">Banking: six loan applications, an AI credit score, and an ordering experiment. Does seeing the model&#x27;s number first change your judgment? Two of the scores are deliberately wrong.</span></span></a><a class="tile tile-demo" href="/demos/triage-ward.html" data-series="hitl"><span class="book"><span class="inside" aria-hidden="true"><b>Medical: work a night-shift alarm queue where one alarm out of eighteen matters, then work the same night after an evidence-based alarm redesign.</b><i>Open</i></span><span class="cover wide s-hitl v2"><span class="cv-top">Human in the loop</span><span class="cv-title">The Triage Ward</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M8 60c20-30 84-30 104 0-20 30-84 30-104 0z"/><circle class="ep" cx="60" cy="60" r="19"/><circle class="eq" cx="60" cy="60" r="8"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">The Triage Ward</span><span class="cap-blurb">Medical: work a night-shift alarm queue where one alarm out of eighteen matters, then work the same night after an evidence-based alarm redesign.</span></span></a><a class="tile tile-demo" href="/demos/watchlist.html" data-series="hitl"><span class="book"><span class="inside" aria-hidden="true"><b>Law enforcement: verify facial-recognition watchlist matches against the record under a countdown. Some of the AI&#x27;s matches are wrong, and one of its rejections is too.</b><i>Open</i></span><span class="cover wide s-hitl v0"><span class="cv-top">Human in the loop</span><span class="cv-title">The Watchlist</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M8 60c20-30 84-30 104 0-20 30-84 30-104 0z"/><circle class="ep" cx="60" cy="60" r="19"/><circle class="eq" cx="60" cy="60" r="8"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">The Watchlist</span><span class="cap-blurb">Law enforcement: verify facial-recognition watchlist matches against the record under a countdown. Some of the AI&#x27;s matches are wrong, and one of its rejections is too.</span></span></a><a class="tile tile-demo" href="/demos/shortlist.html" data-series="hitl"><span class="book"><span class="inside" aria-hidden="true"><b>Hiring: an AI-ranked candidate shortlist with two seeded injustices. Measures your Weight-of-Advice score: how much of the final ranking was actually yours?</b><i>Open</i></span><span class="cover wide s-hitl v1"><span class="cv-top">Human in the loop</span><span class="cv-title">The Shortlist</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect class="ep" x="30" y="14" width="60" height="92" rx="5"/><path class="st sg" stroke-width="6" d="M43 36h34M43 50h34M43 64h20"/><path class="st sq" stroke-width="7" d="M52 86l9 9 18-22"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">The Shortlist</span><span class="cap-blurb">Hiring: an AI-ranked candidate shortlist with two seeded injustices. Measures your Weight-of-Advice score: how much of the final ranking was actually yours?</span></span></a><a class="tile tile-demo" href="/demos/border-queue.html" data-series="hitl"><span class="book"><span class="inside" aria-hidden="true"><b>Border control: the same risk assessments packaged three ways (raw decimals, calibrated categories, bare verdicts) and what each framing does to your referrals.</b><i>Open</i></span><span class="cover wide s-hitl v2"><span class="cv-top">Human in the loop</span><span class="cv-title">The Border Queue</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle class="st sp" stroke-width="6" cx="58" cy="62" r="42"/><ellipse class="st sp" stroke-width="5" cx="58" cy="62" rx="18" ry="42"/><path class="st sp" stroke-width="5" d="M19 48h78M19 77h78"/><circle class="eq" cx="92" cy="26" r="12"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">The Border Queue</span><span class="cap-blurb">Border control: the same risk assessments packaged three ways (raw decimals, calibrated categories, bare verdicts) and what each framing does to your referrals.</span></span></a><a class="tile tile-demo" href="/demos/docket.html" data-series="hitl"><span class="book"><span class="inside" aria-hidden="true"><b>Justice: a pre-trial docket with an &quot;advisory only&quot; AI risk score. One case goes wrong three months later, and the inquiry knows exactly whose signature is on the order.</b><i>Open</i></span><span class="cover wide s-hitl v0"><span class="cv-top">Human in the loop</span><span class="cv-title">The Docket</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><polygon class="eq" points="60.0,9.0 61.7,13.6 66.7,13.8 62.8,16.9 64.1,21.7 60.0,18.9 55.9,21.7 57.2,16.9 53.3,13.8 58.3,13.6"/><polygon class="eq" points="82.0,14.9 83.7,19.5 88.7,19.7 84.8,22.8 86.1,27.6 82.0,24.8 77.9,27.6 79.2,22.8 75.3,19.7 80.3,19.5"/><polygon class="eq" points="98.1,31.0 99.8,35.6 104.8,35.8 100.9,38.9 102.2,43.7 98.1,40.9 94.0,43.7 95.3,38.9 91.4,35.8 96.4,35.6"/><polygon class="eq" points="104.0,53.0 105.7,57.6 110.7,57.8 106.8,60.9 108.1,65.7 104.0,62.9 99.9,65.7 101.2,60.9 97.3,57.8 102.3,57.6"/><polygon class="eq" points="98.1,75.0 99.8,79.6 104.8,79.8 100.9,82.9 102.2,87.7 98.1,84.9 94.0,87.7 95.3,82.9 91.4,79.8 96.4,79.6"/><polygon class="eq" points="82.0,91.1 83.7,95.7 88.7,95.9 84.8,99.0 86.1,103.8 82.0,101.0 77.9,103.8 79.2,99.0 75.3,95.9 80.3,95.7"/><polygon class="eq" points="60.0,97.0 61.7,101.6 66.7,101.8 62.8,104.9 64.1,109.7 60.0,106.9 55.9,109.7 57.2,104.9 53.3,101.8 58.3,101.6"/><polygon class="eq" points="38.0,91.1 39.7,95.7 44.7,95.9 40.8,99.0 42.1,103.8 38.0,101.0 33.9,103.8 35.2,99.0 31.3,95.9 36.3,95.7"/><polygon class="eq" points="21.9,75.0 23.6,79.6 28.6,79.8 24.7,82.9 26.0,87.7 21.9,84.9 17.8,87.7 19.1,82.9 15.2,79.8 20.2,79.6"/><polygon class="eq" points="16.0,53.0 17.7,57.6 22.7,57.8 18.8,60.9 20.1,65.7 16.0,62.9 11.9,65.7 13.2,60.9 9.3,57.8 14.3,57.6"/><polygon class="eq" points="21.9,31.0 23.6,35.6 28.6,35.8 24.7,38.9 26.0,43.7 21.9,40.9 17.8,43.7 19.1,38.9 15.2,35.8 20.2,35.6"/><polygon class="eq" points="38.0,14.9 39.7,19.5 44.7,19.7 40.8,22.8 42.1,27.6 38.0,24.8 33.9,27.6 35.2,22.8 31.3,19.7 36.3,19.5"/><text class="ep" x="60" y="78" text-anchor="middle" font-family="Georgia,serif" font-size="52" font-weight="700">§</text></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">The Docket</span><span class="cap-blurb">Justice: a pre-trial docket with an &quot;advisory only&quot; AI risk score. One case goes wrong three months later, and the inquiry knows exactly whose signature is on the order.</span></span></a>
+</div></section>
+<section class="group" id="euact" data-series="euact"><div class="group-head"><h2><span class="hl">The EU AI Act Lab</span></h2><p>Tools for reasoning about the AI Act the way an engineer should: grounded in the actual text, honest about what is settled and what is still pending. Educational, not legal advice.</p></div><div class="row">
+<a class="tile tile-demo" href="/demos/ai-act-navigator.html" data-series="euact"><span class="book"><span class="inside" aria-hidden="true"><b>Where does your AI system land under the EU AI Act? Walk the real classification method — the Article 3(1) test, both Article 6 routes, the derogation filter, the profiling override — and get your risk tier, obligations with article citations, and post-Omnibus dates.</b><i>Open</i></span><span class="cover wide s-euact v0"><span class="cv-top">EU AI Act lab</span><span class="cv-title">The Navigator</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path class="st sp" stroke-width="6" d="M12 60h30"/><path class="st sp" stroke-width="6" d="M42 60c22 0 28-40 66-42M42 60c24 0 32-13 66-14M42 60c24 0 32 13 66 14"/><path class="st sq" stroke-width="7" d="M42 60c22 0 28 40 66 42"/><circle class="ep" cx="42" cy="60" r="8"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">The Navigator</span><span class="cap-blurb">Where does your AI system land under the EU AI Act? Walk the real classification method — the Article 3(1) test, both Article 6 routes, the derogation filter, the profiling override — and get your risk tier, obligations with article citations, and post-Omnibus dates.</span></span></a><a class="tile tile-demo" href="/demos/ai-act-paper-trail.html" data-series="euact"><span class="book"><span class="inside" aria-hidden="true"><b>You classified your system high-risk — now survive conformity. A five-act provider simulation: the runway decision, the Annex IV evidence pack, the assessment route, a white-label trap, and a post-market incident on a real reporting clock. Scored, with citations.</b><i>Open</i></span><span class="cover wide s-euact v1"><span class="cv-top">EU AI Act lab</span><span class="cv-title">The Paper Trail</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect class="ep" x="30" y="14" width="60" height="92" rx="5"/><path class="st sg" stroke-width="6" d="M43 36h34M43 50h34M43 64h20"/><path class="st sq" stroke-width="7" d="M52 86l9 9 18-22"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">The Paper Trail</span><span class="cap-blurb">You classified your system high-risk — now survive conformity. A five-act provider simulation: the runway decision, the Annex IV evidence pack, the assessment route, a white-label trap, and a post-market incident on a real reporting clock. Scored, with citations.</span></span></a>
+</div></section>
+<section class="group" id="tools" data-series="tools"><div class="group-head"><h2><span class="hl">Classroom tools</span></h2></div><div class="row">
+<a class="tile tile-demo" href="/demos/timer.html" data-series="tools"><span class="book"><span class="inside" aria-hidden="true"><b>Break and exercise timer with AI fun facts and a neural network background.</b><i>Open</i></span><span class="cover wide s-tools v0"><span class="cv-top">Classroom tool</span><span class="cv-title">Training Timer</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle class="st sp" stroke-width="8" cx="60" cy="64" r="40"/><path class="st sq" stroke-width="8" d="M60 64V38"/><path class="st sp" stroke-width="7" d="M60 64l18 12M48 12h24"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Training Timer</span><span class="cap-blurb">Break and exercise timer with AI fun facts and a neural network background.</span></span></a><a class="tile tile-demo" href="/demos/melting-candle-timer.html" data-series="tools"><span class="book"><span class="inside" aria-hidden="true"><b>An ambient timer that burns a glowing candle down — the wax level is the time you have left, ending in a curl of smoke. Six switchable backgrounds: midnight, starfield, aurora, rain, embers, void.</b><i>Open</i></span><span class="cover wide s-tools v1"><span class="cv-top">Classroom tool</span><span class="cv-title">Melting Candle Timer</span><span class="cv-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect class="ep" x="40" y="52" width="40" height="56" rx="4"/><path class="eq" d="M60 10c12 14 14 22 14 28a14 14 0 0 1-28 0c0-6 2-14 14-28z"/><path class="st sg" stroke-width="5" d="M60 52v-8"/></svg></span><span class="cv-foot">Interactive demo</span></span></span><span class="cap"><span class="cap-title">Melting Candle Timer</span><span class="cap-blurb">An ambient timer that burns a glowing candle down — the wax level is the time you have left, ending in a curl of smoke. Six switchable backgrounds: midnight, starfield, aurora, rain, embers, void.</span></span></a>
+</div></section>
+</main>
+<!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
     <section class="ai-notice" id="ai-transparency" aria-label="AI transparency notice">
         <svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-idx"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-idx)"/></svg>
         <div>
@@ -399,93 +55,7 @@
             <p>Every demo here is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind any of them, even where a demo plays one. Their code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). This is a voluntary disclosure in the spirit of Article&nbsp;50 of the EU AI Act; each demo repeats it in the small &ldquo;AI transparency&rdquo; tab in its corner.</p>
         </div>
     </section>
-
-    <footer>&copy; 2026 robert@barcik.training &middot; <a href="#ai-transparency" style="color:inherit">AI transparency</a></footer>
-
-    <script>
-    /* ===== ANIMATED NEURAL NETWORK BACKGROUND ===== */
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let nodes = [];
-    let W, H;
-
-    function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-        initNodes();
-    }
-
-    function initNodes() {
-        const count = Math.floor((W * H) / 22000);
-        nodes = [];
-        for (let i = 0; i < count; i++) {
-            nodes.push({
-                x: Math.random() * W,
-                y: Math.random() * H,
-                vx: (Math.random() - 0.5) * 0.25,
-                vy: (Math.random() - 0.5) * 0.25,
-                r: Math.random() * 1.5 + 0.5,
-                pulse: Math.random() * Math.PI * 2,
-                pulseSpeed: 0.004 + Math.random() * 0.012
-            });
-        }
-    }
-
-    const connectionDist = 130;
-
-    function drawFrame(t) {
-        ctx.fillStyle = 'rgba(11, 25, 41, 0.15)';
-        ctx.fillRect(0, 0, W, H);
-
-        for (const n of nodes) {
-            n.x += n.vx; n.y += n.vy; n.pulse += n.pulseSpeed;
-            if (n.x < 0 || n.x > W) n.vx *= -1;
-            if (n.y < 0 || n.y > H) n.vy *= -1;
-        }
-
-        // Connections
-        for (let i = 0; i < nodes.length; i++) {
-            for (let j = i + 1; j < nodes.length; j++) {
-                const dx = nodes[i].x - nodes[j].x;
-                const dy = nodes[i].y - nodes[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < connectionDist) {
-                    const alpha = (1 - dist / connectionDist) * 0.1;
-                    ctx.strokeStyle = `rgba(37, 99, 235, ${alpha})`;
-                    ctx.lineWidth = 0.5;
-                    ctx.beginPath();
-                    ctx.moveTo(nodes[i].x, nodes[i].y);
-                    ctx.lineTo(nodes[j].x, nodes[j].y);
-                    ctx.stroke();
-
-                    if (Math.sin(t * 0.001 + i * 0.1) > 0.97) {
-                        const frac = (Math.sin(t * 0.003 + j) * 0.5 + 0.5);
-                        const px = nodes[i].x + dx * -frac;
-                        const py = nodes[i].y + dy * -frac;
-                        ctx.fillStyle = `rgba(37, 99, 235, ${alpha * 3})`;
-                        ctx.beginPath();
-                        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                }
-            }
-        }
-
-        // Nodes
-        for (const n of nodes) {
-            const glow = 0.25 + Math.sin(n.pulse) * 0.15;
-            ctx.fillStyle = `rgba(37, 99, 235, ${glow})`;
-            ctx.beginPath();
-            ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        requestAnimationFrame(drawFrame);
-    }
-
-    window.addEventListener('resize', resize);
-    resize();
-    requestAnimationFrame(drawFrame);
-    </script>
+<footer class="sitefoot"><p>Robert Barcik / <a href="https://barcik.training">barcik.training</a> / <a href="mailto:robert@barcik.training">robert@barcik.training</a> / <a href="#ai-transparency">AI transparency</a></p></footer>
+<script src="/assets/riso/shelf.js" defer></script>
 </body>
 </html>

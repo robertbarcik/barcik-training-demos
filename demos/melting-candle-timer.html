@@ -6,7 +6,7 @@
 <title>Melting Candle Timer — robert@barcik.training</title>
 <meta name="description" content="An ambient timer that burns a glowing candle down — the wax level is the time you have left.">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@200;300;400;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@200;300;400;600&display=swap');
 
   :root {
     --bg: #0b1929;
@@ -67,12 +67,13 @@
     transition: opacity 0.7s ease, transform 0.7s ease;
   }
   .intro h1 {
-    font-weight: 200;
+    font-family: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-weight: 300;
     font-size: clamp(1.7rem, 5vw, 2.7rem);
     letter-spacing: 0.01em;
     margin-bottom: 0.5rem;
   }
-  .intro h1 b { font-weight: 600; color: var(--accent); }
+  .intro h1 b { font-weight: 800; color: var(--accent); }
   .intro p {
     font-size: clamp(0.85rem, 2.4vw, 1rem);
     font-weight: 300;
@@ -140,8 +141,8 @@
     height: 46px;
     min-width: 64px;
     padding: 0 0.9rem;
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border: 2px solid rgba(243,239,228,0.22);
+    border-radius: 0;
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -152,15 +153,15 @@
     gap: 0.3rem;
   }
   .preset:hover {
-    border-color: var(--accent);
-    background: rgba(78,205,196,0.08);
-    box-shadow: 0 0 16px var(--accent-glow);
+    border-color: rgba(243,239,228,0.7);
+    background: rgba(243,239,228,0.08);
+    box-shadow: 3px 3px 0 rgba(243,239,228,0.5);
     transform: translateY(-2px);
   }
   .preset.active {
-    border-color: var(--accent);
-    background: rgba(78,205,196,0.14);
-    box-shadow: 0 0 18px var(--accent-glow);
+    border-color: #ffe14d;
+    background: rgba(255,225,77,0.14);
+    box-shadow: 3px 3px 0 #ffe14d;
     color: #fff;
   }
   .custom-wrap { cursor: text; padding: 0 0.7rem 0 0.9rem; }
@@ -176,8 +177,8 @@
   }
   .custom-wrap span { color: var(--text-dim); font-size: 0.78rem; }
   .custom-wrap.active {
-    border-color: var(--accent);
-    box-shadow: 0 0 18px var(--accent-glow);
+    border-color: #ffe14d;
+    box-shadow: 3px 3px 0 #ffe14d;
   }
   .preset .u { font-size: 0.7rem; color: var(--text-dim); margin-left: 0.05rem; }
 
@@ -185,8 +186,8 @@
   .unit-toggle {
     display: flex;
     height: 46px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border: 2px solid rgba(243,239,228,0.22);
+    border-radius: 0;
     background: var(--surface);
     overflow: hidden;
     padding: 4px;
@@ -199,42 +200,42 @@
     background: transparent;
     color: var(--text-dim);
     padding: 0 0.7rem;
-    border-radius: 8px;
+    border-radius: 0;
     cursor: pointer;
     transition: all 0.2s ease;
   }
   .unit-toggle button:hover:not(.active) { color: var(--text); }
   .unit-toggle button.active {
-    background: rgba(78,205,196,0.16);
-    color: #fff;
-    box-shadow: 0 0 12px var(--accent-glow);
+    background: #f3efe4;
+    color: #1d2a6b;
+    font-weight: 700;
   }
 
   .actions { display: flex; gap: 0.7rem; align-items: center; }
   .btn {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
     font-size: 1rem;
-    font-weight: 400;
+    font-weight: 600;
     height: 52px;
     padding: 0 1.7rem;
-    border: 1px solid var(--border);
-    border-radius: 14px;
+    border: 2px solid rgba(243,239,228,0.22);
+    border-radius: 0;
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
     transition: all 0.22s ease;
     letter-spacing: 0.01em;
   }
-  .btn:hover { background: var(--surface-hi); border-color: rgba(120,200,210,0.4); }
+  .btn:hover { background: var(--surface-hi); border-color: rgba(243,239,228,0.6); }
   .btn.primary {
-    background: var(--accent);
-    color: #06231f;
-    font-weight: 600;
-    border-color: transparent;
-    box-shadow: 0 0 26px var(--accent-glow);
+    background: #ffe14d;
+    color: #1d2a6b;
+    font-weight: 800;
+    border-color: #ffe14d;
+    box-shadow: 3px 3px 0 #ff5fa2;
     padding: 0 2.3rem;
   }
-  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.primary:hover { background: #ffe14d; border-color: #ffe14d; transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #ff5fa2; }
   .btn.icon {
     width: 52px;
     padding: 0;
@@ -252,7 +253,7 @@
     letter-spacing: 0.02em;
     text-align: center;
   }
-  .hint b { color: var(--accent); font-weight: 500; }
+  .hint b { color: #ffe14d; font-weight: 500; }
 
   /* ── Floating toggles (top-right) ── */
   .toggles {
@@ -265,8 +266,8 @@
   }
   .toggle {
     width: 42px; height: 42px;
-    border: 1px solid var(--border);
-    border-radius: 11px;
+    border: 2px solid rgba(243,239,228,0.22);
+    border-radius: 0;
     background: var(--surface);
     color: var(--text-dim);
     cursor: pointer;
@@ -274,8 +275,8 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 1.05rem;
   }
-  .toggle:hover { color: var(--text); border-color: rgba(120,200,210,0.4); }
-  .toggle.on { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 14px var(--accent-glow); }
+  .toggle:hover { color: var(--text); border-color: rgba(243,239,228,0.6); }
+  .toggle.on { color: #ffe14d; border-color: #ffe14d; box-shadow: 2px 2px 0 #ffe14d; }
 
   /* ── Scene name toast (flashes when the background changes) ── */
   .scene-toast {
@@ -289,8 +290,8 @@
     text-transform: uppercase;
     color: var(--accent);
     background: rgba(6,14,24,0.66);
-    border: 1px solid var(--border);
-    border-radius: 9px;
+    border: 2px solid var(--border);
+    border-radius: 0;
     padding: 0.34rem 0.62rem;
     opacity: 0;
     transform: translateY(-6px);
@@ -306,14 +307,18 @@
     .btn { height: 48px; }
     .preset, .custom-wrap { height: 42px; }
   }
+  /* Riso chrome: pink focus ring on every control */
+  button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, .custom-wrap:focus-within { outline: 3px solid #ff5fa2; outline-offset: 2px; }
+  .custom-wrap input:focus-visible { outline: none; }
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1d2a6b;color:#f3efe4;border:2px solid #f3efe4;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #ff5fa2;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+  .all-demos-link:hover{background:#ffe14d;color:#1d2a6b;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #ff5fa2}
+  .all-demos-link:focus-visible{outline:3px solid #ff5fa2;outline-offset:2px}
+  @media (max-width:640px){.all-demos-link{position:absolute;top:.6rem;left:.6rem;display:inline-flex;margin:0;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
   <canvas id="scene"></canvas>
@@ -1464,12 +1469,12 @@
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 .ai-transparency-pill{right:auto;left:.75rem}.ai-transparency-pill .ait-panel{right:auto;left:0}
 @media print{.ai-transparency-pill{display:none}}

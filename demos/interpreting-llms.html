@@ -4,58 +4,68 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Interpreting LLMs — Interactive Demo | robert@barcik.training</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 <style>
+/* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
 :root {
-  --bg: #f0f4f8;
-  --surface: #ffffff;
-  --surface2: #edf2f7;
-  --border: #e2e8f0;
-  --text: #1a202c;
-  --text-dim: #64748b;
-  --accent: #1e3a5f;
-  --accent2: #2d5a8e;
-  --accent-light: #2563eb;
-  --radius: 10px;
+  --paper: #f3efe4; --panel: #fbf8f0; --ink: #1d2a6b; --muted: #525b8c; --rule: #c9c3ae; --rule-soft: #e2dccb;
+  --blue: #2a4bd7; --pink: #ff5fa2; --yellow: #ffe14d; --pink-ink: #c81e63;
+  --danger: #d5312a; --danger-bg: #fbe1dc; --safe: #178a5e; --safe-bg: #dcf1e4; --warn: #b85f00; --warn-bg: #ffefc2; --neutral: #8a8fa8;
+  --cat-1: #2a4bd7; --cat-2: #e0368a; --cat-3: #178a5e; --cat-4: #e8710c; --cat-5: #7a4fd0; --cat-6: #0f8fa3;
+  --font: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* legacy names, still read by inline styles in the markup */
+  --bg: var(--paper); --surface: var(--panel); --surface2: var(--paper); --border: var(--rule);
+  --text: var(--ink); --text-dim: var(--muted); --accent: var(--ink); --accent2: var(--ink); --accent-light: var(--blue);
+  --radius: 0;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  font-family: var(--font);
+  background: var(--paper) var(--grain);
+  color: var(--ink);
   line-height: 1.6;
   min-height: 100vh;
 }
-
-/* ===== BRAND BAR ===== */
+button { font-family: inherit; }
+button:focus-visible, a:focus-visible, summary:focus-visible,
+.poly-neuron:focus-visible, .gallery-card:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
 
 /* ===== HEADER ===== */
 header {
-  background: var(--accent);
-  color: #fff;
-  padding: 1.8rem 2rem 1.4rem;
+  color: var(--ink);
+  padding: 1.6rem 2rem 1.3rem;
   text-align: center;
+  border-bottom: 2px solid var(--ink);
 }
-header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; }
-header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto; line-height: 1.55; }
+header h1 {
+  font-size: clamp(2.2rem, 6vw, 3.4rem); font-weight: 800; font-stretch: 78%; letter-spacing: -0.02em; line-height: .95;
+  color: var(--blue); text-shadow: .045em .04em 0 var(--pink);
+  margin-bottom: 0.55rem;
+}
+header p { font-size: 1rem; color: var(--ink); max-width: 640px; margin: 0 auto; line-height: 1.55; }
 
 /* ===== CONTAINER ===== */
-.container { max-width: 960px; margin: 0 auto; padding: 1.25rem 1rem; }
+.container { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem; }
 
 /* ===== INTRO CARD ===== */
 .intro-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  border-left: 8px solid var(--blue);
   padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
-  font-size: 0.9rem;
-  color: var(--text-dim);
+  font-size: 0.95rem;
+  color: var(--ink);
   line-height: 1.65;
 }
-.intro-card strong { color: var(--text); }
+.intro-card strong { color: var(--ink); font-weight: 800; }
 
 /* ===== TABS ===== */
 .tabs {
@@ -65,25 +75,26 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   margin-bottom: 1.25rem;
   position: sticky;
   top: 0;
-  background: var(--bg);
+  background: var(--paper) var(--grain);
   padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule);
   z-index: 100;
 }
 .tab-btn {
-  padding: 0.5rem 1.1rem;
-  border: 2px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--accent);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
+  min-height: 40px;
+  padding: 0.45rem 1.05rem;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s;
   white-space: nowrap;
 }
-.tab-btn:hover { background: var(--surface2); border-color: var(--accent-light); }
-.tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tab-btn:hover { background: var(--yellow); }
+.tab-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
 /* ===== TAB CONTENT ===== */
 .tab-content { display: none; }
@@ -91,24 +102,28 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
 
 /* ===== SECTION CARDS ===== */
 .section-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--blue);
   padding: 1.5rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 .section-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 0.75rem;
+  display: inline-block;
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-stretch: 78%;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 0.9rem;
+  padding: 0 4px;
+  margin-left: -4px;
+  background: linear-gradient(transparent 55%, var(--yellow) 55%);
 }
 .section-subtitle {
-  font-size: 0.82rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-dim);
-  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
@@ -123,8 +138,9 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
 }
 .comparison-col { text-align: center; }
 .comparison-col h3 {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-stretch: 85%;
   margin-bottom: 1rem;
 }
 .neuron-grid {
@@ -141,48 +157,51 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   align-items: center;
   justify-content: center;
   margin: 0 auto;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   text-align: center;
   line-height: 1.2;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.15s, box-shadow 0.15s;
   position: relative;
 }
+/* hoped-for = clean (safe green); reality = tangled (danger red) */
 .mono-neuron {
-  background: #d1fae5;
-  border: 2px solid #10b981;
-  color: #065f46;
+  background: var(--safe-bg);
+  border: 2px solid var(--safe);
+  color: #0f5e40;
   cursor: default;
 }
 .poly-neuron {
-  background: #fee2e2;
-  border: 2px solid #ef4444;
-  color: #991b1b;
+  background: var(--danger-bg);
+  border: 2px solid var(--danger);
+  color: #a3201a;
   cursor: pointer;
+  box-shadow: 3px 3px 0 var(--danger);
 }
 .poly-neuron:hover {
-  transform: scale(1.12);
-  box-shadow: 0 4px 16px rgba(239,68,68,0.25);
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--danger);
 }
 .neuron-tags {
-  margin-top: 0.4rem;
+  margin-top: 0.45rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.2rem;
+  gap: 0.25rem;
   justify-content: center;
 }
 .neuron-tags span {
-  font-size: 0.62rem;
-  padding: 0.12rem 0.4rem;
-  border-radius: 999px;
-  font-weight: 600;
+  font-size: 0.72rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 0;
+  font-weight: 700;
 }
-.tag-a { background: #dbeafe; color: #1e40af; }
-.tag-b { background: #fce7f3; color: #9d174d; }
-.tag-c { background: #fef3c7; color: #92400e; }
+/* the three concepts one neuron mixes: blue / pink / orange, same in tags and tooltip */
+.tag-a { background: #dfe5fb; color: #1d3aa8; }
+.tag-b { background: #fbdcea; color: #a8196a; }
+.tag-c { background: #fde6cf; color: #8f4300; }
 .comparison-label {
-  font-size: 0.78rem;
-  color: var(--text-dim);
+  font-size: 0.85rem;
+  color: var(--muted);
   font-style: italic;
   margin-top: 0.5rem;
 }
@@ -190,35 +209,35 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
 /* Tooltip for clicked poly neurons */
 .neuron-tooltip {
   display: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--paper);
+  border: 2px solid var(--ink);
   padding: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
   text-align: left;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   animation: fadeSlideIn 0.3s ease;
 }
 .neuron-tooltip.visible { display: block; }
 .neuron-tooltip h4 {
-  font-size: 0.88rem;
-  margin-bottom: 0.6rem;
-  color: var(--accent);
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-stretch: 85%;
+  margin-bottom: 0.5rem;
+  color: var(--ink);
 }
 .tooltip-example {
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-dim);
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
 }
 .tooltip-example:last-child { border-bottom: none; }
 .tooltip-example .trigger-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
   font-weight: 600;
   display: inline-block;
   padding: 0.1rem 0.4rem;
-  border-radius: 4px;
+  border-radius: 0;
   margin-bottom: 0.25rem;
 }
 
@@ -245,19 +264,17 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   transition: all 1.5s cubic-bezier(0.34,1.56,0.64,1);
 }
 .sae-arrow {
-  font-size: 1.4rem;
-  color: var(--accent);
-  font-weight: 700;
+  font-size: 1.6rem;
+  color: var(--ink);
+  font-weight: 800;
   text-align: center;
   flex-shrink: 0;
 }
 .sae-arrow .label {
   display: block;
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  color: var(--ink);
+  font-weight: 700;
 }
 .feature-cards-row {
   display: flex;
@@ -265,10 +282,10 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   flex-wrap: wrap;
 }
 .feature-card-small {
-  padding: 0.5rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  padding: 0.45rem 0.8rem;
+  border-radius: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
   border: 2px solid;
   opacity: 0.3;
   transform: scale(0.9);
@@ -280,27 +297,33 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
 }
 
 .decompose-btn, .activate-btn, .animate-btn, .reset-btn, .intervene-btn {
-  padding: 0.5rem 1.2rem;
-  border: none;
-  border-radius: 999px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 600;
+  min-height: 40px;
+  padding: 0.45rem 1.2rem;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+}
+.decompose-btn:hover, .activate-btn:hover, .animate-btn:hover, .reset-btn:hover, .intervene-btn:hover {
+  transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink);
+}
+.decompose-btn:active, .activate-btn:active, .animate-btn:active, .reset-btn:active, .intervene-btn:active {
+  transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink);
 }
 .decompose-btn {
-  background: var(--accent);
-  color: #fff;
+  background: var(--pink);
+  color: var(--ink);
   margin-top: 0.75rem;
 }
-.decompose-btn:hover { background: var(--accent2); }
+/* amber button = the amber "active feature" bars it lights up */
 .activate-btn {
-  background: #f59e0b;
-  color: #fff;
+  background: #e8890c;
+  color: var(--ink);
   margin-top: 0.75rem;
 }
-.activate-btn:hover { background: #d97706; }
 
 /* Sparsity bar chart */
 .sparsity-chart {
@@ -309,19 +332,20 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   align-items: flex-end;
   height: 60px;
   margin: 1rem 0 0.5rem;
+  border-bottom: 2px solid var(--ink);
 }
 .sparsity-bar {
   flex: 1;
-  background: #e2e8f0;
-  border-radius: 2px 2px 0 0;
+  background: var(--rule);
+  border-radius: 0;
   transition: background 0.4s, height 0.4s;
   min-width: 3px;
 }
-.sparsity-bar.lit { background: #f59e0b; }
+.sparsity-bar.lit { background: #e8890c; }
 .sparsity-counter {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.82rem;
-  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink);
   font-weight: 600;
 }
 
@@ -336,20 +360,20 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   .gallery-row { grid-template-columns: 1fr; }
 }
 .gallery-card {
-  border-radius: var(--radius);
+  border-radius: 0;
   padding: 1rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.15s, box-shadow 0.15s;
   border: 2px solid;
 }
-.gallery-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-.gallery-card h4 { font-size: 0.9rem; margin-bottom: 0.4rem; }
-.gallery-card .click-hint { font-size: 0.72rem; opacity: 0.7; }
+.gallery-card:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--ink); }
+.gallery-card h4 { font-size: 1.1rem; font-weight: 800; font-stretch: 85%; margin-bottom: 0.3rem; }
+.gallery-card .click-hint { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
 .gallery-expanded {
   display: none;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(0,0,0,0.1);
+  border-top: 1px solid rgba(29,42,107,0.25);
 }
 .gallery-expanded.visible { display: block; animation: fadeSlideIn 0.3s ease; }
 .activation-row {
@@ -357,27 +381,27 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 .activation-text { flex: 1; }
 .activation-bar-wrap {
   width: 80px;
-  height: 8px;
-  background: rgba(0,0,0,0.1);
-  border-radius: 4px;
+  height: 10px;
+  background: rgba(29,42,107,0.12);
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
 }
 .activation-bar {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 0;
   transition: width 0.6s ease;
 }
 .activation-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
   font-weight: 600;
-  width: 32px;
+  width: 34px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -390,56 +414,57 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   margin-bottom: 1rem;
 }
 .example-pill {
-  padding: 0.4rem 0.9rem;
-  border: 2px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--accent);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 600;
+  min-height: 38px;
+  padding: 0.35rem 0.9rem;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s;
 }
-.example-pill:hover { border-color: var(--accent-light); background: var(--surface2); }
-.example-pill.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+.example-pill:hover { background: var(--yellow); }
+.example-pill.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
 .graph-controls {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.6rem;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.9rem;
 }
-.animate-btn { background: var(--accent-light); color: #fff; }
-.animate-btn:hover { background: #1d4ed8; }
-.reset-btn { background: var(--surface2); color: var(--text); }
-.reset-btn:hover { background: var(--border); }
-.intervene-btn { background: #dc2626; color: #fff; display: none; }
-.intervene-btn:hover { background: #b91c1c; }
+.animate-btn { background: var(--pink); color: var(--ink); }
+.reset-btn { background: var(--panel); color: var(--ink); }
+.reset-btn:hover { background: var(--yellow); }
+/* removing a feature = destructive intervention, stays red */
+.intervene-btn { background: var(--danger); color: #fff; display: none; }
 .speed-controls {
   display: flex;
   gap: 0.25rem;
   margin-left: auto;
 }
 .speed-btn {
-  padding: 0.3rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
+  min-height: 32px;
+  padding: 0.25rem 0.6rem;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--panel);
+  font-family: var(--mono);
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  color: var(--text-dim);
-  transition: all 0.2s;
+  color: var(--ink);
+  transition: background 0.15s;
 }
-.speed-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.speed-btn:hover { background: var(--yellow); }
+.speed-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
 .graph-container {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 0;
   padding: 1rem;
   overflow-x: auto;
   position: relative;
@@ -451,40 +476,44 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
 }
 .graph-summary {
   display: none;
-  background: var(--accent);
-  color: #fff;
+  background: var(--panel);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-left: 8px solid var(--blue);
   padding: 0.8rem 1rem;
-  border-radius: var(--radius);
-  font-size: 0.85rem;
+  border-radius: 0;
+  font-size: 0.92rem;
   margin-top: 0.75rem;
   line-height: 1.55;
   animation: fadeSlideIn 0.3s ease;
 }
 .graph-summary.visible { display: block; }
+.graph-summary strong { font-weight: 800; }
 
 .node-detail {
   display: none;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 0;
   padding: 0.75rem 1rem;
   margin-top: 0.75rem;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   animation: fadeSlideIn 0.3s ease;
 }
 .node-detail.visible { display: block; }
-.node-detail strong { color: var(--accent); }
+.node-detail strong { color: var(--ink); font-weight: 800; }
 
 /* ===== TAB 4: INTERVENING ===== */
+/* Golden Gate orange: the bridge's own colour, kept as the card's identity */
 .gg-card {
-  background: linear-gradient(135deg, #ff8c42 0%, #e85d26 100%);
-  color: #fff;
-  border-radius: var(--radius);
+  background: #ff8c42;
+  color: var(--ink);
+  border-bottom: 2px solid var(--ink);
   padding: 1.5rem;
   margin-bottom: 1rem;
 }
-.gg-card h3 { font-size: 1.05rem; margin-bottom: 0.6rem; }
-.gg-card p { font-size: 0.88rem; line-height: 1.6; opacity: 0.95; }
+.gg-card h3 { font-size: 1.45rem; font-weight: 800; font-stretch: 78%; line-height: 1.1; margin-bottom: 0.6rem; }
+.gg-card p { font-size: 0.95rem; line-height: 1.6; }
 .gg-buttons {
   display: flex;
   gap: 0.5rem;
@@ -492,63 +521,68 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   margin-top: 1rem;
 }
 .gg-q-btn {
-  padding: 0.45rem 1rem;
-  border: 2px solid rgba(255,255,255,0.5);
-  border-radius: 999px;
-  background: rgba(255,255,255,0.15);
-  color: #fff;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 600;
+  min-height: 40px;
+  padding: 0.4rem 1rem;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: background 0.15s, transform 0.1s, box-shadow 0.1s;
 }
-.gg-q-btn:hover { background: rgba(255,255,255,0.3); border-color: #fff; }
+.gg-q-btn:hover { background: var(--yellow); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
 .gg-response {
-  background: #fff;
-  color: var(--text);
-  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 0;
   padding: 1rem;
   margin-top: 0.75rem;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   line-height: 1.65;
   display: none;
   animation: fadeSlideIn 0.3s ease;
-  border-left: 4px solid #ff8c42;
+  border: 1px solid var(--rule);
+  border-left: 8px solid #e8710c;
 }
 .gg-response.visible { display: block; }
 .gg-response .gg-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
   font-weight: 600;
-  color: #ff8c42;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  color: #8f4300;
   display: block;
   margin-bottom: 0.4rem;
 }
 
 .limitations-card {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  border-radius: 0;
   padding: 1.25rem;
 }
 .limitations-card h3 {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-dim);
-  margin-bottom: 0.75rem;
+  display: inline-block;
+  font-size: 1.2rem;
+  font-weight: 800;
+  font-stretch: 78%;
+  color: var(--ink);
+  margin-bottom: 0.6rem;
+  padding: 0 4px;
+  margin-left: -4px;
+  background: linear-gradient(transparent 55%, var(--yellow) 55%);
 }
 .limitations-card ul {
   list-style: none;
   padding: 0;
 }
 .limitations-card li {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  padding: 0.4rem 0;
-  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--ink);
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--rule-soft);
   padding-left: 1.25rem;
   position: relative;
 }
@@ -557,38 +591,39 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   content: '';
   position: absolute;
   left: 0;
-  top: 0.7rem;
+  top: 0.85rem;
   width: 8px;
   height: 8px;
-  border-radius: 50%;
-  background: #cbd5e1;
+  border-radius: 0;
+  background: var(--neutral);
 }
 
 /* ===== KEY INSIGHT ===== */
 .key-insight {
-  background: var(--accent);
-  color: #fff;
-  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--pink);
+  border-radius: 0;
   padding: 1.5rem;
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
   margin-bottom: 0.5rem;
 }
 .key-insight h3 {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 0.6rem;
-  opacity: 0.8;
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-stretch: 78%;
+  color: var(--yellow);
+  margin-bottom: 0.5rem;
 }
 .key-insight p {
-  font-size: 0.92rem;
+  font-size: 0.98rem;
   line-height: 1.65;
-  opacity: 0.95;
 }
 
 /* ===== SUMMARY POINTS ===== */
 .summary-points {
-  padding: 1.25rem 0 0;
+  padding: 1.25rem 0 2.5rem;
 }
 .summary-points ol {
   list-style: none;
@@ -597,30 +632,30 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
 }
 .summary-points li {
   counter-increment: sp;
-  font-size: 0.88rem;
-  padding: 0.6rem 0 0.6rem 2.5rem;
+  font-size: 0.95rem;
+  padding: 0.6rem 0 0.6rem 2.6rem;
   position: relative;
-  color: var(--text-dim);
-  border-bottom: 1px solid var(--border);
+  color: var(--ink);
+  border-bottom: 1px solid var(--rule);
 }
 .summary-points li:last-child { border-bottom: none; }
 .summary-points li::before {
   content: counter(sp);
   position: absolute;
   left: 0;
-  top: 0.5rem;
+  top: 0.55rem;
   width: 1.8rem;
   height: 1.8rem;
-  background: var(--accent);
-  color: #fff;
-  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 800;
 }
-.summary-points li strong { color: var(--text); }
+.summary-points li strong { color: var(--ink); font-weight: 800; }
 
 /* ===== ANIMATIONS ===== */
 @keyframes fadeSlideIn {
@@ -628,29 +663,33 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
-  50% { box-shadow: 0 0 12px 4px rgba(37,99,235,0.15); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(42,75,215,0.3); }
+  50% { box-shadow: 0 0 12px 4px rgba(42,75,215,0.15); }
 }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  header { padding: 1.2rem 1rem; }
-  header h1 { font-size: 1.3rem; }
-  .container { padding: 1rem 0.75rem; }
+  header { padding: 0.6rem 1rem 1.1rem; }
+  header p { font-size: 0.95rem; }
+  .container { padding: 1rem 1rem; }
   .tabs { gap: 0.35rem; }
-  .tab-btn { font-size: 0.78rem; padding: 0.4rem 0.8rem; }
+  .tab-btn { font-size: 0.82rem; padding: 0.35rem 0.7rem; }
+  .section-card { padding: 1.1rem; box-shadow: 4px 4px 0 var(--blue); }
   .sae-visual { flex-direction: column; }
   .gallery-row { grid-template-columns: 1fr; }
   .example-pills { gap: 0.35rem; }
+  .speed-controls { margin-left: 0; }
+  .graph-container { padding: 0.6rem; }
 }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
 
@@ -658,7 +697,7 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
 <header>
   <h1>Interpreting LLMs</h1>
   <p>We have a microscope, not an X-ray. Explore how researchers are beginning to understand what happens inside language models.</p>
-  <p style="font-size:0.75rem;color:#94a3b8;margin-top:0.5rem;">robert@barcik.training</p>
+  <p style="font-size:0.85rem;font-weight:700;color:#525b8c;margin-top:0.5rem;">robert@barcik.training</p>
 </header>
 
 <div class="container">
@@ -684,7 +723,7 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
 
         <!-- Left: monosemantic -->
         <div class="comparison-col">
-          <h3 style="color:#059669;">What We'd Hope For</h3>
+          <h3 style="color:#178a5e;">What We'd Hope For</h3>
           <div class="neuron-grid" id="mono-grid">
             <div><div class="neuron-circle mono-neuron">dog</div></div>
             <div><div class="neuron-circle mono-neuron">cat</div></div>
@@ -698,7 +737,7 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
 
         <!-- Right: polysemantic -->
         <div class="comparison-col">
-          <h3 style="color:#dc2626;">What Actually Happens</h3>
+          <h3 style="color:#d5312a;">What Actually Happens</h3>
           <div class="neuron-grid" id="poly-grid">
             <div>
               <div class="neuron-circle poly-neuron" data-neuron="0">N1</div>
@@ -754,11 +793,11 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
           <span class="label">Sparse Autoencoder</span>
         </div>
         <div class="feature-cards-row" id="feature-cards-row">
-          <div class="feature-card-small" style="border-color:#ff8c42;background:#fff7ed;color:#c2410c;">Golden Gate Bridge</div>
-          <div class="feature-card-small" style="border-color:#10b981;background:#ecfdf5;color:#065f46;">Code syntax</div>
-          <div class="feature-card-small" style="border-color:#3b82f6;background:#eff6ff;color:#1e40af;">French language</div>
-          <div class="feature-card-small" style="border-color:#8b5cf6;background:#f5f3ff;color:#5b21b6;">Sarcasm</div>
-          <div class="feature-card-small" style="border-color:#ec4899;background:#fdf2f8;color:#9d174d;">DNA sequences</div>
+          <div class="feature-card-small" style="border-color:#e8710c;background:#fde6cf;color:#8f4300;">Golden Gate Bridge</div>
+          <div class="feature-card-small" style="border-color:#178a5e;background:#dcf1e4;color:#0f5e40;">Code syntax</div>
+          <div class="feature-card-small" style="border-color:#2a4bd7;background:#dfe5fb;color:#1d3aa8;">French language</div>
+          <div class="feature-card-small" style="border-color:#7a4fd0;background:#ebe3fa;color:#5a35a8;">Sarcasm</div>
+          <div class="feature-card-small" style="border-color:#e0368a;background:#fbdcea;color:#a8196a;">DNA sequences</div>
         </div>
       </div>
       <div style="text-align:center;">
@@ -781,70 +820,70 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:0.75rem;">Click a feature card to see example texts and their activation strengths.</p>
       <div class="gallery-row">
         <!-- Golden Gate Bridge -->
-        <div class="gallery-card" style="border-color:#ff8c42;background:#fff7ed;" data-gallery="0">
-          <h4 style="color:#c2410c;">Golden Gate Bridge</h4>
+        <div class="gallery-card" style="border-color:#e8710c;background:#fde6cf;" data-gallery="0">
+          <h4 style="color:#8f4300;">Golden Gate Bridge</h4>
           <div class="click-hint">Click to explore</div>
           <div class="gallery-expanded" id="gallery-0">
             <div class="activation-row">
-              <div class="activation-text" style="color:#9a3412;">"The bridge spanning the Golden Gate strait..."</div>
-              <div class="activation-bar-wrap"><div class="activation-bar" style="width:95%;background:#ff8c42;"></div></div>
-              <div class="activation-val" style="color:#c2410c;">0.95</div>
+              <div class="activation-text" style="color:#8f4300;">"The bridge spanning the Golden Gate strait..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:95%;background:#e8710c;"></div></div>
+              <div class="activation-val" style="color:#8f4300;">0.95</div>
             </div>
             <div class="activation-row">
-              <div class="activation-text" style="color:#9a3412;">"San Francisco landmarks include..."</div>
-              <div class="activation-bar-wrap"><div class="activation-bar" style="width:82%;background:#ff8c42;"></div></div>
-              <div class="activation-val" style="color:#c2410c;">0.82</div>
+              <div class="activation-text" style="color:#8f4300;">"San Francisco landmarks include..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:82%;background:#e8710c;"></div></div>
+              <div class="activation-val" style="color:#8f4300;">0.82</div>
             </div>
             <div class="activation-row">
-              <div class="activation-text" style="color:#9a3412;">"Suspension bridge engineering..."</div>
-              <div class="activation-bar-wrap"><div class="activation-bar" style="width:41%;background:#ff8c42;"></div></div>
-              <div class="activation-val" style="color:#c2410c;">0.41</div>
+              <div class="activation-text" style="color:#8f4300;">"Suspension bridge engineering..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:41%;background:#e8710c;"></div></div>
+              <div class="activation-val" style="color:#8f4300;">0.41</div>
             </div>
           </div>
         </div>
 
         <!-- Python Code -->
-        <div class="gallery-card" style="border-color:#10b981;background:#ecfdf5;" data-gallery="1">
-          <h4 style="color:#065f46;">Python Code</h4>
+        <div class="gallery-card" style="border-color:#178a5e;background:#dcf1e4;" data-gallery="1">
+          <h4 style="color:#0f5e40;">Python Code</h4>
           <div class="click-hint">Click to explore</div>
           <div class="gallery-expanded" id="gallery-1">
             <div class="activation-row">
-              <div class="activation-text" style="color:#065f46;"><code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;">def fibonacci(n):</code></div>
-              <div class="activation-bar-wrap"><div class="activation-bar" style="width:91%;background:#10b981;"></div></div>
-              <div class="activation-val" style="color:#065f46;">0.91</div>
+              <div class="activation-text" style="color:#0f5e40;"><code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;">def fibonacci(n):</code></div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:91%;background:#178a5e;"></div></div>
+              <div class="activation-val" style="color:#0f5e40;">0.91</div>
             </div>
             <div class="activation-row">
-              <div class="activation-text" style="color:#065f46;"><code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;">import numpy as np</code></div>
-              <div class="activation-bar-wrap"><div class="activation-bar" style="width:78%;background:#10b981;"></div></div>
-              <div class="activation-val" style="color:#065f46;">0.78</div>
+              <div class="activation-text" style="color:#0f5e40;"><code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;">import numpy as np</code></div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:78%;background:#178a5e;"></div></div>
+              <div class="activation-val" style="color:#0f5e40;">0.78</div>
             </div>
             <div class="activation-row">
-              <div class="activation-text" style="color:#065f46;">"list comprehension syntax"</div>
-              <div class="activation-bar-wrap"><div class="activation-bar" style="width:53%;background:#10b981;"></div></div>
-              <div class="activation-val" style="color:#065f46;">0.53</div>
+              <div class="activation-text" style="color:#0f5e40;">"list comprehension syntax"</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:53%;background:#178a5e;"></div></div>
+              <div class="activation-val" style="color:#0f5e40;">0.53</div>
             </div>
           </div>
         </div>
 
         <!-- Deception -->
-        <div class="gallery-card" style="border-color:#ef4444;background:#fef2f2;" data-gallery="2">
-          <h4 style="color:#991b1b;">Deception</h4>
+        <div class="gallery-card" style="border-color:#d5312a;background:#fbe1dc;" data-gallery="2">
+          <h4 style="color:#a3201a;">Deception</h4>
           <div class="click-hint">Click to explore</div>
           <div class="gallery-expanded" id="gallery-2">
             <div class="activation-row">
-              <div class="activation-text" style="color:#991b1b;">"The spy concealed the documents..."</div>
-              <div class="activation-bar-wrap"><div class="activation-bar" style="width:88%;background:#ef4444;"></div></div>
-              <div class="activation-val" style="color:#991b1b;">0.88</div>
+              <div class="activation-text" style="color:#a3201a;">"The spy concealed the documents..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:88%;background:#d5312a;"></div></div>
+              <div class="activation-val" style="color:#a3201a;">0.88</div>
             </div>
             <div class="activation-row">
-              <div class="activation-text" style="color:#991b1b;">"She lied about her whereabouts..."</div>
-              <div class="activation-bar-wrap"><div class="activation-bar" style="width:79%;background:#ef4444;"></div></div>
-              <div class="activation-val" style="color:#991b1b;">0.79</div>
+              <div class="activation-text" style="color:#a3201a;">"She lied about her whereabouts..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:79%;background:#d5312a;"></div></div>
+              <div class="activation-val" style="color:#a3201a;">0.79</div>
             </div>
             <div class="activation-row">
-              <div class="activation-text" style="color:#991b1b;">"The misleading advertisement claimed..."</div>
-              <div class="activation-bar-wrap"><div class="activation-bar" style="width:62%;background:#ef4444;"></div></div>
-              <div class="activation-val" style="color:#991b1b;">0.62</div>
+              <div class="activation-text" style="color:#a3201a;">"The misleading advertisement claimed..."</div>
+              <div class="activation-bar-wrap"><div class="activation-bar" style="width:62%;background:#d5312a;"></div></div>
+              <div class="activation-val" style="color:#a3201a;">0.62</div>
             </div>
           </div>
         </div>
@@ -888,7 +927,7 @@ header p { font-size: 0.92rem; color: #cbd5e1; max-width: 640px; margin: 0 auto;
   <div class="tab-content" id="tab-intervening">
 
     <!-- Section A: Golden Gate Claude -->
-    <div class="section-card" style="padding:0;overflow:hidden;border:none;">
+    <div class="section-card" style="padding:0;overflow:hidden;border:2px solid #1d2a6b;">
       <div class="gg-card">
         <h3>Golden Gate Claude: When Features Go Wild</h3>
         <p>In May 2024, Anthropic researchers found a "Golden Gate Bridge" feature inside Claude. They amplified its activation &mdash; and the model became obsessed. Every response, no matter the topic, pivoted to the Golden Gate Bridge.</p>
@@ -1006,18 +1045,18 @@ const graphExamples = {
   dallas: {
     tokens: ['The', 'capital', 'of', 'the', 'state', 'containing', 'Dallas'],
     layer1: [
-      { label: 'US Geography', color: '#0d9488', active: true, activation: 0.55 },
-      { label: 'Texas', color: '#16a34a', active: true, activation: 0.92, key: true },
-      { label: 'Noun phrases', color: '#94a3b8', active: false, activation: 0.1 },
-      { label: 'Prepositions', color: '#94a3b8', active: false, activation: 0.08 },
-      { label: 'Articles', color: '#94a3b8', active: false, activation: 0.05 }
+      { label: 'US Geography', color: '#0f8fa3', active: true, activation: 0.55 },
+      { label: 'Texas', color: '#178a5e', active: true, activation: 0.92, key: true },
+      { label: 'Noun phrases', color: '#8a8fa8', active: false, activation: 0.1 },
+      { label: 'Prepositions', color: '#8a8fa8', active: false, activation: 0.08 },
+      { label: 'Articles', color: '#8a8fa8', active: false, activation: 0.05 }
     ],
     layer2: [
-      { label: 'State Capitals', color: '#f59e0b', active: true, activation: 0.88, key: true },
-      { label: 'Austin (city)', color: '#3b82f6', active: true, activation: 0.91, key: true },
-      { label: 'Geography quiz', color: '#94a3b8', active: false, activation: 0.12 },
-      { label: 'US Politics', color: '#94a3b8', active: false, activation: 0.07 },
-      { label: 'Place names', color: '#94a3b8', active: false, activation: 0.04 }
+      { label: 'State Capitals', color: '#e8710c', active: true, activation: 0.88, key: true },
+      { label: 'Austin (city)', color: '#2a4bd7', active: true, activation: 0.91, key: true },
+      { label: 'Geography quiz', color: '#8a8fa8', active: false, activation: 0.12 },
+      { label: 'US Politics', color: '#8a8fa8', active: false, activation: 0.07 },
+      { label: 'Place names', color: '#8a8fa8', active: false, activation: 0.04 }
     ],
     output: 'Austin',
     edges: [
@@ -1038,18 +1077,18 @@ const graphExamples = {
   pronoun: {
     tokens: ['Mary', 'went', 'to', 'Paris', '.', 'She', 'loves'],
     layer1: [
-      { label: 'Mary (entity)', color: '#ec4899', active: true, activation: 0.9 },
-      { label: 'Paris (city)', color: '#3b82f6', active: true, activation: 0.85 },
-      { label: 'Travel verbs', color: '#94a3b8', active: false, activation: 0.1 },
-      { label: 'Punctuation', color: '#94a3b8', active: false, activation: 0.05 },
-      { label: 'Sentence boundary', color: '#94a3b8', active: false, activation: 0.06 }
+      { label: 'Mary (entity)', color: '#e0368a', active: true, activation: 0.9 },
+      { label: 'Paris (city)', color: '#2a4bd7', active: true, activation: 0.85 },
+      { label: 'Travel verbs', color: '#8a8fa8', active: false, activation: 0.1 },
+      { label: 'Punctuation', color: '#8a8fa8', active: false, activation: 0.05 },
+      { label: 'Sentence boundary', color: '#8a8fa8', active: false, activation: 0.06 }
     ],
     layer2: [
-      { label: 'She \u2192 Mary', color: '#a855f7', active: true, activation: 0.93, key: true },
-      { label: 'Love/preference', color: '#ef4444', active: true, activation: 0.78 },
-      { label: 'Coreference', color: '#94a3b8', active: false, activation: 0.12 },
-      { label: 'Sentiment', color: '#94a3b8', active: false, activation: 0.09 },
-      { label: 'Grammar', color: '#94a3b8', active: false, activation: 0.04 }
+      { label: 'She \u2192 Mary', color: '#7a4fd0', active: true, activation: 0.93, key: true },
+      { label: 'Love/preference', color: '#e8710c', active: true, activation: 0.78 },
+      { label: 'Coreference', color: '#8a8fa8', active: false, activation: 0.12 },
+      { label: 'Sentiment', color: '#8a8fa8', active: false, activation: 0.09 },
+      { label: 'Grammar', color: '#8a8fa8', active: false, activation: 0.04 }
     ],
     output: 'Paris',
     edges: [
@@ -1071,18 +1110,18 @@ const graphExamples = {
        "grab it", fits the carrot context); suppressing it yields "habit". */
     tokens: ['He', 'saw', 'a', 'carrot', 'and', 'had', 'to', 'grab', 'it', ',', 'his', 'hunger', 'was', 'like', 'a', 'starving'],
     layer1: [
-      { label: 'Rhyming couplet', color: '#8b5cf6', active: true, activation: 0.88 },
-      { label: 'Rabbit concept', color: '#f59e0b', active: true, activation: 0.82, suppressible: true },
-      { label: 'Food/vegetable', color: '#94a3b8', active: false, activation: 0.12 },
-      { label: 'Punctuation', color: '#94a3b8', active: false, activation: 0.05 },
-      { label: 'Poetry meter', color: '#94a3b8', active: false, activation: 0.07 }
+      { label: 'Rhyming couplet', color: '#7a4fd0', active: true, activation: 0.88 },
+      { label: 'Rabbit concept', color: '#e8710c', active: true, activation: 0.82, suppressible: true },
+      { label: 'Food/vegetable', color: '#8a8fa8', active: false, activation: 0.12 },
+      { label: 'Punctuation', color: '#8a8fa8', active: false, activation: 0.05 },
+      { label: 'Poetry meter', color: '#8a8fa8', active: false, activation: 0.07 }
     ],
     layer2: [
-      { label: 'Rhymes w/ "grab it"', color: '#6366f1', active: true, activation: 0.91, key: true },
-      { label: 'Rabbit', color: '#f59e0b', active: true, activation: 0.85, suppressible: true },
-      { label: 'Verse structure', color: '#94a3b8', active: false, activation: 0.1 },
-      { label: 'Hunger/appetite', color: '#94a3b8', active: false, activation: 0.08 },
-      { label: 'Nursery rhyme', color: '#94a3b8', active: false, activation: 0.06 }
+      { label: 'Rhymes w/ "grab it"', color: '#2a4bd7', active: true, activation: 0.91, key: true },
+      { label: 'Rabbit', color: '#e8710c', active: true, activation: 0.85, suppressible: true },
+      { label: 'Verse structure', color: '#8a8fa8', active: false, activation: 0.1 },
+      { label: 'Hunger/appetite', color: '#8a8fa8', active: false, activation: 0.08 },
+      { label: 'Nursery rhyme', color: '#8a8fa8', active: false, activation: 0.06 }
     ],
     output: 'rabbit',
     outputAlt: 'habit',
@@ -1148,7 +1187,7 @@ document.querySelectorAll('.poly-neuron').forEach(el => {
 // ============================================================
 (function initTangledBlob() {
   const blob = document.getElementById('tangled-blob');
-  const colors = ['#ff8c42','#10b981','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#ef4444','#0d9488','#6366f1','#dc2626','#14b8a6','#a855f7'];
+  const colors = ['#e8710c','#178a5e','#2a4bd7','#7a4fd0','#e0368a','#e8890c','#d5312a','#0f8fa3','#2a4bd7','#d5312a','#0f8fa3','#7a4fd0'];
   for (let i = 0; i < 12; i++) {
     const dot = document.createElement('div');
     dot.className = 'tangled-dot';
@@ -1340,9 +1379,9 @@ function drawGraph() {
   const colLabels = ['Input Tokens', 'Layer 1 Features', 'Layer 2 Features', 'Output'];
   colLabels.forEach((lbl, i) => {
     const txt = createSVGEl('text', {
-      x: COL_X[i], y: 16, fill: '#94a3b8',
+      x: COL_X[i], y: 16, fill: '#525b8c',
       'font-size': '10', 'font-weight': '600', 'text-anchor': 'middle',
-      'font-family': 'DM Sans, sans-serif'
+      'font-family': 'Bricolage Grotesque, sans-serif'
     });
     txt.textContent = lbl;
     svg.appendChild(txt);
@@ -1375,10 +1414,10 @@ function drawGraph() {
       toPos = getNodePos(3, 0, 1);
     }
 
-    let color = '#cbd5e1';
-    if (fromCol === 0) color = '#94a3b8';
-    else if (fromCol === 1) color = l1[fromIdx] ? l1[fromIdx].color : '#94a3b8';
-    else if (fromCol === 2) color = l2[fromIdx] ? l2[fromIdx].color : '#94a3b8';
+    let color = '#c9c3ae';
+    if (fromCol === 0) color = '#8a8fa8';
+    else if (fromCol === 1) color = l1[fromIdx] ? l1[fromIdx].color : '#8a8fa8';
+    else if (fromCol === 2) color = l2[fromIdx] ? l2[fromIdx].color : '#8a8fa8';
 
     // Check if edge involves suppressed features in intervention mode
     let suppressed = false;
@@ -1391,7 +1430,7 @@ function drawGraph() {
     const path = createSVGEl('path', {
       d: bezierPath(fromPos.x, fromPos.y, toPos.x, toPos.y),
       fill: 'none',
-      stroke: suppressed ? '#e2e8f0' : color,
+      stroke: suppressed ? '#e2dccb' : color,
       'stroke-width': suppressed ? 0.5 : Math.max(1, edge.weight * 4),
       'stroke-opacity': 0.15,
       'data-edge': ei,
@@ -1411,11 +1450,11 @@ function drawGraph() {
     const rect = createSVGEl('rect', {
       x: pos.x - TOKEN_W/2, y: pos.y - TOKEN_H/2,
       width: TOKEN_W, height: TOKEN_H,
-      rx: 6, fill: '#fff', stroke: '#e2e8f0', 'stroke-width': 1.5
+      rx: 0, fill: '#fbf8f0', stroke: '#c9c3ae', 'stroke-width': 1.5
     });
     const text = createSVGEl('text', {
       x: pos.x, y: pos.y + 4,
-      fill: '#1a202c', 'font-size': '12', 'font-weight': '600',
+      fill: '#1d2a6b', 'font-size': '12', 'font-weight': '600',
       'text-anchor': 'middle', 'font-family': 'JetBrains Mono, monospace'
     });
     text.textContent = tok;
@@ -1437,9 +1476,9 @@ function drawGraph() {
     });
     const circle = createSVGEl('circle', {
       cx: pos.x, cy: pos.y, r: r,
-      fill: active && !suppressed ? feat.color : '#e2e8f0',
+      fill: active && !suppressed ? feat.color : '#e9e5d8',
       'fill-opacity': active && !suppressed ? 0.2 : 0.5,
-      stroke: active && !suppressed ? feat.color : '#cbd5e1',
+      stroke: active && !suppressed ? feat.color : '#c9c3ae',
       'stroke-width': active && !suppressed ? 2.5 : 1
     });
     g.appendChild(circle);
@@ -1447,7 +1486,7 @@ function drawGraph() {
       const lbl = createSVGEl('text', {
         x: pos.x, y: pos.y + r + 14,
         fill: feat.color, 'font-size': '9', 'font-weight': '600',
-        'text-anchor': 'middle', 'font-family': 'DM Sans, sans-serif'
+        'text-anchor': 'middle', 'font-family': 'Bricolage Grotesque, sans-serif'
       });
       lbl.textContent = feat.label;
       g.appendChild(lbl);
@@ -1455,11 +1494,11 @@ function drawGraph() {
     if (suppressed) {
       const line1 = createSVGEl('line', {
         x1: pos.x - 7, y1: pos.y - 7, x2: pos.x + 7, y2: pos.y + 7,
-        stroke: '#dc2626', 'stroke-width': 2
+        stroke: '#d5312a', 'stroke-width': 2
       });
       const line2 = createSVGEl('line', {
         x1: pos.x + 7, y1: pos.y - 7, x2: pos.x - 7, y2: pos.y + 7,
-        stroke: '#dc2626', 'stroke-width': 2
+        stroke: '#d5312a', 'stroke-width': 2
       });
       g.appendChild(line1);
       g.appendChild(line2);
@@ -1480,9 +1519,9 @@ function drawGraph() {
     });
     const circle = createSVGEl('circle', {
       cx: pos.x, cy: pos.y, r: r,
-      fill: active && !suppressed ? feat.color : '#e2e8f0',
+      fill: active && !suppressed ? feat.color : '#e9e5d8',
       'fill-opacity': active && !suppressed ? 0.2 : 0.5,
-      stroke: active && !suppressed ? feat.color : '#cbd5e1',
+      stroke: active && !suppressed ? feat.color : '#c9c3ae',
       'stroke-width': active && !suppressed ? 2.5 : 1
     });
     g.appendChild(circle);
@@ -1490,7 +1529,7 @@ function drawGraph() {
       const lbl = createSVGEl('text', {
         x: pos.x, y: pos.y + r + 14,
         fill: feat.color, 'font-size': '9', 'font-weight': '600',
-        'text-anchor': 'middle', 'font-family': 'DM Sans, sans-serif'
+        'text-anchor': 'middle', 'font-family': 'Bricolage Grotesque, sans-serif'
       });
       lbl.textContent = feat.label;
       g.appendChild(lbl);
@@ -1498,11 +1537,11 @@ function drawGraph() {
     if (suppressed) {
       const line1 = createSVGEl('line', {
         x1: pos.x - 7, y1: pos.y - 7, x2: pos.x + 7, y2: pos.y + 7,
-        stroke: '#dc2626', 'stroke-width': 2
+        stroke: '#d5312a', 'stroke-width': 2
       });
       const line2 = createSVGEl('line', {
         x1: pos.x + 7, y1: pos.y - 7, x2: pos.x - 7, y2: pos.y + 7,
-        stroke: '#dc2626', 'stroke-width': 2
+        stroke: '#d5312a', 'stroke-width': 2
       });
       g.appendChild(line1);
       g.appendChild(line2);
@@ -1520,11 +1559,11 @@ function drawGraph() {
   const outRect = createSVGEl('rect', {
     x: outPos.x - OUTPUT_W/2, y: outPos.y - OUTPUT_H/2,
     width: OUTPUT_W, height: OUTPUT_H,
-    rx: 8, fill: '#fff', stroke: '#e2e8f0', 'stroke-width': 2
+    rx: 0, fill: '#fbf8f0', stroke: '#c9c3ae', 'stroke-width': 2
   });
   const outText = createSVGEl('text', {
     x: outPos.x, y: outPos.y + 5,
-    fill: '#94a3b8', 'font-size': '14', 'font-weight': '700',
+    fill: '#8a8fa8', 'font-size': '14', 'font-weight': '700',
     'text-anchor': 'middle', 'font-family': 'JetBrains Mono, monospace'
   });
   outText.textContent = output;
@@ -1648,15 +1687,15 @@ document.getElementById('animate-btn').addEventListener('click', () => {
       node.style.transition = 'opacity 0.3s';
       const rect = node.querySelector('rect');
       if (rect) {
-        rect.setAttribute('stroke', '#2563eb');
+        rect.setAttribute('stroke', '#2a4bd7');
         rect.setAttribute('stroke-width', '2.5');
       }
       // Special emphasis for key tokens
       const tok = ex.tokens[i];
       if (tok === 'Dallas' || tok === 'Mary' || tok === 'carrot' || tok === 'She' || tok === 'grab') {
         if (rect) {
-          rect.setAttribute('fill', '#fef3c7');
-          rect.setAttribute('stroke', '#f59e0b');
+          rect.setAttribute('fill', '#ffefc2');
+          rect.setAttribute('stroke', '#e8890c');
         }
       }
     }, delay(t + i * 200)));
@@ -1697,8 +1736,8 @@ document.getElementById('animate-btn').addEventListener('click', () => {
           const pos = getNodePos(1, ex.callout.idx, ex.layer1.length);
           const callout = createSVGEl('text', {
             x: pos.x, y: pos.y - NODE_R - 8,
-            fill: '#dc2626', 'font-size': '10', 'font-weight': '700',
-            'text-anchor': 'middle', 'font-family': 'DM Sans, sans-serif',
+            fill: '#c81e63', 'font-size': '10', 'font-weight': '700',
+            'text-anchor': 'middle', 'font-family': 'Bricolage Grotesque, sans-serif',
             class: 'callout-text'
           });
           callout.textContent = ex.callout.text;
@@ -1739,8 +1778,8 @@ document.getElementById('animate-btn').addEventListener('click', () => {
       const pos = getNodePos(2, ex.callout.idx, ex.layer2.length);
       const callout = createSVGEl('text', {
         x: pos.x, y: pos.y - NODE_R - 8,
-        fill: '#dc2626', 'font-size': '10', 'font-weight': '700',
-        'text-anchor': 'middle', 'font-family': 'DM Sans, sans-serif',
+        fill: '#c81e63', 'font-size': '10', 'font-weight': '700',
+        'text-anchor': 'middle', 'font-family': 'Bricolage Grotesque, sans-serif',
         class: 'callout-text'
       });
       callout.textContent = ex.callout.text;
@@ -1764,13 +1803,13 @@ document.getElementById('animate-btn').addEventListener('click', () => {
     outNode.style.transition = 'opacity 0.4s';
     const outRect = outNode.querySelector('rect');
     if (outRect) {
-      outRect.setAttribute('fill', '#eff6ff');
-      outRect.setAttribute('stroke', '#2563eb');
+      outRect.setAttribute('fill', '#dfe5fb');
+      outRect.setAttribute('stroke', '#2a4bd7');
       outRect.setAttribute('stroke-width', '3');
     }
     const outText = outNode.querySelector('text');
     if (outText) {
-      outText.setAttribute('fill', '#1e40af');
+      outText.setAttribute('fill', '#1d2a6b');
     }
   }, delay(t)));
 
@@ -1824,12 +1863,12 @@ document.getElementById('intervene-btn').style.display = 'none';
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>

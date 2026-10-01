@@ -7,14 +7,14 @@
 <meta name="description" content="Interactive EU AI Act risk navigator: answer questions about your AI system and see its risk tier, your obligations with article citations, and the post-Omnibus dates that apply to you.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Public+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Spectral:wght@500;600;700&family=Public+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ═══ EU AI ACT LAB · design tokens (Official Journal direction) ═══ */
 :root {
-  --paper: #f5f2e9;
+  --paper: #f3efe4;
   --paper-deep: #ece7d8;
   --card: #fffdf6;
-  --ink: #22273a;
+  --ink: #1d2a6b;
   --ink-soft: #5c6274;
   --eu-blue: #003d8f;
   --eu-blue-deep: #00205b;
@@ -102,8 +102,8 @@ body::before {
 .ex-buttons { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
 .ex-btn {
   padding: 0.5rem 1rem; border: 1px solid var(--rule); background: var(--card); color: var(--eu-blue);
-  border-radius: 2px; font-family: 'Public Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
-  cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 0 var(--rule);
+  border-radius: 0; font-family: 'Public Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; box-shadow: 2px 2px 0 var(--rule);
 }
 .ex-btn:hover { border-color: var(--eu-blue); background: var(--eu-blue); color: #fff; }
 
@@ -128,9 +128,9 @@ body::before {
 .step { display: none; margin: 1.6rem auto; }
 .step.active { display: block; }
 .panel {
-  background: var(--card); border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 0;
   padding: 1.6rem 1.7rem; margin-bottom: 1.25rem;
-  box-shadow: 0 1px 0 var(--rule), 0 6px 18px rgba(0,32,91,0.05);
+  box-shadow: 4px 4px 0 var(--rule);
   position: relative;
 }
 .panel-title {
@@ -206,7 +206,7 @@ body::before {
 @keyframes seal-in { from { transform: rotate(-14deg) scale(1.5); opacity: 0; } 65% { transform: rotate(-8deg) scale(0.96); opacity: 1; } to { transform: rotate(-8deg) scale(1); } }
 
 .tier-card {
-  border-radius: 3px; padding: 1.4rem 1.5rem 1.4rem 1.6rem; color: #fff; margin-bottom: 1rem;
+  border-radius: 0; padding: 1.4rem 1.5rem 1.4rem 1.6rem; color: #fff; margin-bottom: 1rem;
   position: relative; border-left: 6px solid rgba(255,255,255,0.35);
 }
 .tier-card .tier-label {
@@ -260,9 +260,9 @@ body::before {
 /* ── Nav & export ── */
 .nav-bar { max-width: 900px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; position: relative; z-index: 1; }
 .nav-btn {
-  padding: 0.6rem 1.5rem; border: 1px solid var(--eu-blue); background: var(--card); color: var(--eu-blue);
-  border-radius: 2px; font-family: 'Public Sans', sans-serif; font-size: 0.86rem; font-weight: 700;
-  cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 0 var(--rule);
+  padding: 0.6rem 1.5rem; border: 2px solid var(--eu-blue); background: var(--card); color: var(--eu-blue);
+  border-radius: 0; font-family: 'Public Sans', sans-serif; font-size: 0.86rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; box-shadow: 3px 3px 0 var(--eu-blue-deep);
 }
 .nav-btn:hover { background: var(--eu-blue); color: #fff; }
 .nav-btn.primary { background: var(--eu-blue); color: #fff; }
@@ -270,7 +270,7 @@ body::before {
 .nav-btn:disabled { opacity: 0.4; cursor: default; }
 
 .export-bar { display: flex; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 900px; padding: 0 1.25rem; flex-wrap: wrap; position: relative; z-index: 1; }
-.export-btn { padding: 0.6rem 1.5rem; border: 1px solid var(--rule); border-radius: 2px; font-family: 'Public Sans', sans-serif; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
+.export-btn { padding: 0.6rem 1.5rem; border: 1px solid var(--rule); border-radius: 0; box-shadow: 3px 3px 0 var(--rule); font-family: 'Public Sans', sans-serif; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
 .export-btn.primary { background: var(--eu-blue-deep); color: #fff; border-color: var(--eu-blue-deep); }
 .export-btn.secondary { background: var(--card); color: var(--eu-blue); }
 .copy-toast {
@@ -281,7 +281,7 @@ body::before {
 .copy-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
 .cta-panel {
-  background: var(--eu-blue-deep); border-radius: 3px; padding: 1.4rem 1.6rem; color: #b8c4dd;
+  background: var(--eu-blue-deep); border-radius: 0; padding: 1.4rem 1.6rem; color: #b8c4dd;
   font-size: 0.87rem; line-height: 1.65; border-top: 4px solid var(--eu-gold);
 }
 .cta-panel strong { color: #fff; }
@@ -299,6 +299,7 @@ footer { text-align: center; padding: 2.2rem 1rem; font-size: 0.76rem; color: #8
   .panel { box-shadow: none; }
   .tier-card, .cta-panel { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+@media (min-width: 641px) and (max-width: 1219px) { .masthead { padding-top: 4.2rem; } }
 @media (max-width: 740px) {
   .area-grid { grid-template-columns: 1fr; }
   .progress-labels span { font-size: 0.46rem; letter-spacing: 0; }
@@ -316,9 +317,9 @@ footer { text-align: center; padding: 2.2rem 1rem; font-size: 0.76rem; color: #8
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:var(--eu-blue-deep);color:#fff;border:1px solid rgba(240,190,0,.45);text-decoration:none;font:600 0.95rem/1 'Public Sans',-apple-system,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,32,91,.3);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:var(--card);color:var(--eu-blue-deep);border:2px solid var(--eu-blue-deep);text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 var(--eu-gold);display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+  .all-demos-link:hover{background:var(--eu-gold);transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--eu-blue-deep)}
+  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem;box-shadow:3px 3px 0 var(--eu-blue-deep)}}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1093,12 +1094,12 @@ function resetAll() {
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>

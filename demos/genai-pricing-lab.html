@@ -4,170 +4,230 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GenAI Pricing Lab — robert@barcik.training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 <style>
+/* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
+:root {
+  --paper: #f3efe4; --panel: #fbf8f0; --ink: #1d2a6b; --muted: #525b8c; --rule: #c9c3ae; --rule-soft: #e2dccb;
+  --blue: #2a4bd7; --pink: #ff5fa2; --yellow: #ffe14d; --pink-ink: #c81e63;
+  --danger: #d5312a; --danger-bg: #fbe1dc; --safe: #178a5e; --safe-bg: #dcf1e4; --warn: #b85f00; --warn-bg: #ffefc2; --neutral: #8a8fa8;
+  --cat-1: #2a4bd7; --cat-2: #e0368a; --cat-3: #178a5e; --cat-4: #e8710c; --cat-5: #7a4fd0; --cat-6: #0f8fa3;
+  --font: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* the three delivery options, same colour everywhere they appear */
+  --opt-api: var(--cat-1); --opt-gpu: var(--cat-2); --opt-local: var(--cat-5);
+}
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f0f4f8; color: #1a202c; min-height: 100vh; line-height: 1.5;
+  font-family: var(--font);
+  background: var(--paper) var(--grain); color: var(--ink); min-height: 100vh; line-height: 1.5;
 }
-header { background: #1e3a5f; color: #fff; padding: 1.4rem 2rem; text-align: center; position: relative; }
-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
-header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
+button, input { font-family: inherit; }
+button:focus-visible, input:focus-visible, .scenario-card:focus-visible, .cost-card:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+header { color: var(--ink); padding: 1.6rem 2rem 1.2rem; text-align: center; position: relative; border-bottom: 2px solid var(--ink); }
+header h1 {
+  font-size: clamp(2.2rem, 6vw, 3.4rem); font-weight: 800; font-stretch: 78%; letter-spacing: -0.02em; line-height: .95;
+  color: var(--blue); text-shadow: .045em .04em 0 var(--pink); margin-bottom: 0.4rem;
+}
+header .brand { font-size: 0.9rem; font-weight: 700; color: var(--muted); }
 
 .intro { max-width: 920px; margin: 1.5rem auto 0; padding: 0 1.25rem; text-align: center; }
-.intro p { font-size: 0.95rem; color: #4a5568; max-width: 700px; margin: 0 auto; line-height: 1.65; }
+.intro p { font-size: 1rem; color: var(--ink); max-width: 700px; margin: 0 auto; line-height: 1.6; }
 
-/* Progress bar */
+/* Progress bar: navy = current step, green = done */
 .progress-bar { max-width: 920px; margin: 1.5rem auto 0; padding: 0 1.25rem; }
 .progress-track { display: flex; gap: 0.5rem; }
-.progress-step { flex: 1; height: 6px; border-radius: 3px; background: #e2e8f0; transition: background 0.3s; }
-.progress-step.active { background: #1e3a5f; }
-.progress-step.done { background: #27ae60; }
+.progress-step { flex: 1; height: 8px; border-radius: 0; background: var(--rule-soft); border: 1px solid var(--rule); transition: background 0.3s; }
+.progress-step.active { background: var(--ink); border-color: var(--ink); }
+.progress-step.done { background: #178a5e; border-color: #178a5e; }
 .progress-labels { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
-.progress-labels span { flex: 1; text-align: center; font-size: 0.7rem; color: #94a3b8; font-weight: 600; }
-.progress-labels span.active { color: #1e3a5f; }
+.progress-labels span { flex: 1; text-align: center; font-size: 0.8rem; color: var(--muted); font-weight: 600; line-height: 1.25; }
+.progress-labels span.active { color: var(--ink); font-weight: 800; }
 
 /* Steps */
 .step { display: none; max-width: 920px; margin: 1.5rem auto; padding: 0 1.25rem; }
 .step.active { display: block; }
-.panel { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 1.25rem; }
-.panel-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 1rem; font-weight: 600; }
+.panel { background: var(--panel); border: 2px solid var(--ink); border-radius: 0; padding: 1.5rem; box-shadow: 5px 5px 0 var(--blue); margin-bottom: 1.4rem; }
+.panel-title {
+  display: inline; font-size: 1.2rem; font-weight: 800; font-stretch: 78%; line-height: 1.35; color: var(--ink);
+  background: linear-gradient(transparent 55%, var(--yellow) 55%); padding: 0 4px;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+.panel-title + * { margin-top: 1rem; }
 
 /* Scenario cards */
-.scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 .scenario-card {
-  background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px; padding: 1rem;
-  cursor: pointer; transition: all 0.2s;
+  background: var(--paper); border: 2px solid var(--rule); border-radius: 0; padding: 1rem;
+  cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
-.scenario-card:hover { border-color: #1e3a5f; background: #fff; }
-.scenario-card.selected { border-color: #1e3a5f; background: #fff; box-shadow: 0 0 0 3px rgba(30,58,95,0.12); }
-.scenario-card .sc-industry { font-size: 0.68rem; font-weight: 700; color: #0d9488; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem; }
-.scenario-card h3 { font-size: 0.92rem; color: #1e3a5f; margin-bottom: 0.25rem; }
-.scenario-card .sc-details { font-size: 0.78rem; color: #64748b; line-height: 1.45; }
+.scenario-card:hover { border-color: var(--ink); background: var(--panel); }
+.scenario-card.selected { border-color: var(--ink); background: var(--panel); box-shadow: 4px 4px 0 var(--pink); }
+.scenario-card .sc-industry { font-size: 0.8rem; font-weight: 800; color: var(--pink-ink); margin-bottom: 0.15rem; }
+.scenario-card h3 { font-size: 1.08rem; font-weight: 800; font-stretch: 85%; color: var(--ink); margin-bottom: 0.25rem; }
+.scenario-card .sc-details { font-size: 0.86rem; color: var(--muted); line-height: 1.45; }
 
-/* Cost landscape cards */
-.cost-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+/* Cost landscape cards: each option keeps its own colour (top bar, selected shadow) */
+.cost-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.9rem; }
 .cost-card {
-  background: #f8fafc; border-radius: 10px; padding: 1rem; border: 2px solid #e2e8f0;
-  cursor: pointer; transition: all 0.25s;
+  --opt: var(--ink);
+  background: var(--paper); border-radius: 0; padding: 1rem; border: 2px solid var(--rule); border-top: 8px solid var(--opt);
+  cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, opacity 0.25s, background 0.2s;
 }
-.cost-card:hover { border-color: #1e3a5f; background: #fff; }
-.cost-card.selected { border-color: #0d9488; background: #fff; box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
+#cardApi { --opt: var(--opt-api); }
+#cardGpu { --opt: var(--opt-gpu); }
+#cardLocal { --opt: var(--opt-local); }
+.cost-card:hover { border-color: var(--ink); border-top-color: var(--opt); background: var(--panel); }
+.cost-card.selected { border-color: var(--ink); border-top-color: var(--opt); background: var(--panel); box-shadow: 5px 5px 0 var(--opt); }
 .cost-card.dimmed { opacity: 0.5; }
 .cost-card .cc-choose-label {
-  text-align: center; font-size: 0.72rem; font-weight: 700; color: #94a3b8;
-  text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; transition: color 0.2s;
+  text-align: center; font-size: 0.82rem; font-weight: 700; color: var(--muted);
+  margin-top: 0.5rem; transition: color 0.2s;
 }
-.cost-card.selected .cc-choose-label { color: #0d9488; }
-.cost-card h4 { font-size: 0.85rem; color: #1e3a5f; margin-bottom: 0.3rem; }
-.cost-card .cc-model { font-size: 0.72rem; color: #94a3b8; margin-bottom: 0.5rem; }
-.cost-card .cc-row { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 0.2rem; }
-.cost-card .cc-row .cc-label { color: #64748b; }
-.cost-card .cc-row .cc-val { font-weight: 700; color: #1e3a5f; }
+.cost-card.selected .cc-choose-label { color: var(--ink); font-weight: 800; }
+.cost-card h4 { font-size: 1.05rem; font-weight: 800; font-stretch: 85%; color: var(--ink); margin-bottom: 0.3rem; }
+.cost-card .cc-model { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; }
+.cost-card .cc-row { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.84rem; margin-bottom: 0.2rem; }
+.cost-card .cc-row .cc-label { color: var(--muted); }
+.cost-card .cc-row .cc-val { font-weight: 700; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
 .cost-card .cc-slider { margin: 0.5rem 0; }
-.cost-card .cc-slider input[type="range"] { width: 100%; accent-color: #1e3a5f; }
-.cost-card .cc-slider label { font-size: 0.72rem; color: #94a3b8; }
-.cc-slider-labels { display: flex; justify-content: space-between; font-size: 0.68rem; color: #94a3b8; }
-.cc-slider-current { font-size: 0.78rem; font-weight: 800; color: #1e3a5f; background: #e8edf4; padding: 0.1rem 0.5rem; border-radius: 4px; }
+.cost-card .cc-slider input[type="range"] {
+  width: 100%; height: 6px; margin: 0.6rem 0 0.4rem; -webkit-appearance: none; appearance: none;
+  background: var(--rule); border-radius: 0; cursor: pointer;
+}
+.cost-card .cc-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--yellow); border: 2px solid var(--ink); cursor: pointer;
+}
+.cost-card .cc-slider input[type="range"]::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%; background: var(--yellow); border: 2px solid var(--ink); cursor: pointer;
+}
+.cost-card .cc-slider input[type="range"]:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; }
+.cost-card .cc-slider label { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+.cc-slider-labels { display: flex; justify-content: space-between; align-items: center; font-size: 0.76rem; color: var(--muted); }
+.cc-slider-current { font-size: 0.86rem; font-weight: 800; color: var(--ink); background: var(--panel); border: 1px solid var(--ink); padding: 0.05rem 0.5rem; border-radius: 0; }
 .cost-card .cc-total {
-  margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid #e2e8f0;
+  margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid var(--ink);
   text-align: center;
 }
-.cost-card .cc-total-label { font-size: 0.68rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
-.cost-card .cc-total-val { font-size: 1.2rem; font-weight: 800; color: #1e3a5f; }
-.cost-explainer { margin-top: 0.75rem; font-size: 0.82rem; color: #4a5568; line-height: 1.6; background: #eff6ff; padding: 0.75rem 1rem; border-radius: 8px; border-left: 3px solid #3b82f6; }
+.cost-card .cc-total-label { font-size: 0.8rem; color: var(--muted); font-weight: 700; }
+.cost-card .cc-total-val { font-size: 1.6rem; font-weight: 800; font-stretch: 78%; line-height: 1.15; color: var(--ink); }
+.cost-explainer { margin-top: 1rem; font-size: 0.9rem; color: var(--ink); line-height: 1.6; background: var(--paper); padding: 0.75rem 1rem; border-radius: 0; border: 1px solid var(--rule); border-left: 4px solid var(--blue); }
 
-/* Delivery summary banner */
+/* Delivery summary banner (green confirmation tint kept) */
 .delivery-banner {
   display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
-  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; margin-bottom: 1.25rem;
+  background: var(--safe-bg); border: 2px solid var(--ink); border-radius: 0; margin-bottom: 1.4rem;
 }
 .delivery-banner .db-icon { font-size: 1.2rem; }
-.delivery-banner .db-text { font-size: 0.88rem; color: #1e3a5f; font-weight: 600; }
-.delivery-banner .db-cost { font-size: 0.82rem; color: #0d9488; font-weight: 700; }
+.delivery-banner .db-text { font-size: 0.98rem; color: var(--ink); font-weight: 800; }
+.delivery-banner .db-cost { font-size: 0.88rem; color: var(--safe); font-weight: 700; }
 
-/* Outcome cost callout */
+/* Outcome cost callout: the one big number of step 3 */
 .outcome-callout {
-  text-align: center; padding: 1.25rem; margin-bottom: 1.25rem;
-  background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  text-align: center; padding: 1.25rem; margin-bottom: 1.4rem;
+  background: var(--panel); border: 2px solid var(--ink); border-radius: 0; box-shadow: 5px 5px 0 var(--pink);
 }
-.outcome-callout .oc-label { font-size: 0.78rem; color: #64748b; margin-bottom: 0.25rem; }
-.outcome-callout .oc-price { font-size: 2rem; font-weight: 800; color: #1e3a5f; }
-.outcome-callout .oc-unit { font-size: 0.88rem; color: #94a3b8; font-weight: 600; }
+.outcome-callout .oc-label { font-size: 0.9rem; font-weight: 700; color: var(--muted); margin-bottom: 0.25rem; }
+.outcome-callout .oc-price {
+  font-size: 3rem; font-weight: 800; font-stretch: 78%; line-height: 1.05; color: var(--blue);
+  text-shadow: .05em .05em 0 var(--pink); font-variant-numeric: tabular-nums;
+}
+.outcome-callout .oc-unit { font-size: 0.95rem; color: var(--ink); font-weight: 700; margin-top: 0.2rem; }
 
 /* Pricing tiers */
-.tier-cards { display: flex; gap: 0.75rem; }
-.tier-card { flex: 1; background: #f8fafc; border-radius: 10px; padding: 1rem; text-align: center; border: 2px solid transparent; }
-.tier-card { border: 2px solid #e2e8f0; }
-.tier-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; }
-.tier-price { font-size: 1.3rem; font-weight: 800; color: #1e3a5f; margin: 0.3rem 0; }
-.tier-unit { font-size: 0.68rem; color: #94a3b8; margin-bottom: 0.25rem; }
-.tier-monthly { font-size: 0.78rem; color: #4a5568; font-weight: 600; margin-bottom: 0.3rem; }
-.tier-margin { font-size: 0.72rem; color: #27ae60; font-weight: 600; margin-bottom: 0.5rem; }
-.tier-features { text-align: left; padding: 0.5rem 0; border-top: 1px solid #e2e8f0; }
-.tier-features li { font-size: 0.75rem; color: #4a5568; margin-bottom: 0.2rem; list-style: none; padding-left: 0; }
-.tier-features li::before { content: "✓ "; color: #0d9488; font-weight: 700; }
+.tier-cards { display: flex; gap: 0.9rem; }
+.tier-card { flex: 1; background: var(--paper); border-radius: 0; padding: 1rem; text-align: center; border: 2px solid transparent; }
+.tier-card { border: 1px solid var(--rule); }
+.tier-name { font-size: 0.95rem; color: var(--ink); font-weight: 800; }
+.tier-price { font-size: 1.8rem; font-weight: 800; font-stretch: 78%; line-height: 1.15; color: var(--ink); margin: 0.3rem 0; }
+.tier-unit { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.25rem; }
+.tier-monthly { font-size: 0.86rem; color: var(--ink); font-weight: 700; margin-bottom: 0.3rem; }
+.tier-margin { font-size: 0.82rem; color: var(--safe); font-weight: 800; margin-bottom: 0.5rem; }
+.tier-features { text-align: left; padding: 0.5rem 0; border-top: 1px solid var(--rule); }
+.tier-features li { font-size: 0.84rem; color: var(--ink); margin-bottom: 0.2rem; list-style: none; padding-left: 0; }
+.tier-features li::before { content: "✓ "; color: var(--blue); font-weight: 800; }
 
-/* ChatGPT tax */
-.tax-bar-container { padding: 0.5rem 0; margin-top: 1.5rem; }
-.tax-bar { height: 32px; background: #e2e8f0; border-radius: 8px; position: relative; overflow: visible; }
-.tax-marker { position: absolute; top: -6px; bottom: -6px; width: 3px; border-radius: 2px; }
-.tax-marker-label { position: absolute; top: -26px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; transform: translateX(-50%); }
+/* ChatGPT tax: red = the $20 ChatGPT+ reference, blue = your price */
+.tax-bar-container { padding: 0.5rem 0 1rem; margin-top: 1.75rem; }
+.tax-bar { height: 32px; background: var(--paper); border: 2px solid var(--ink); border-radius: 0; position: relative; overflow: visible; }
+.tax-marker { position: absolute; top: -8px; bottom: -8px; width: 4px; border-radius: 0; }
+.tax-marker-label { position: absolute; top: -28px; font-size: 0.8rem; font-weight: 800; white-space: nowrap; transform: translateX(-50%); }
+/* your price sits under the bar, so the two labels never collide when the prices are close */
+#taxMarkerYouLabel { top: calc(100% + 2px); }
 
 /* Communication messages */
-.comm-cards { display: flex; flex-direction: column; gap: 0.5rem; }
-.comm-card { background: #f8fafc; border-radius: 8px; padding: 0.75rem 1rem; border-left: 3px solid #2563eb; }
-.comm-card p { font-size: 0.85rem; color: #1e3a5f; font-weight: 500; line-height: 1.5; }
-.comm-card .comm-tier { font-size: 0.68rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.15rem; }
+.comm-cards { display: flex; flex-direction: column; gap: 0.6rem; }
+.comm-card { background: var(--paper); border-radius: 0; padding: 0.75rem 1rem; border: 1px solid var(--rule); border-left: 4px solid var(--blue); }
+.comm-card p { font-size: 0.92rem; color: var(--ink); font-weight: 500; line-height: 1.5; }
+.comm-card .comm-tier { font-size: 0.8rem; color: var(--muted); font-weight: 800; margin-bottom: 0.15rem; }
 
-/* Pitch cards */
+/* Pitch cards (left rule colour per tier comes from the script) */
 .pitch-card {
-  background: #fff; border-radius: 10px; padding: 1rem; border: 1px solid #e2e8f0;
+  background: var(--paper); border-radius: 0; padding: 1rem; border: 1px solid var(--rule);
   margin-bottom: 0.75rem;
 }
-.pitch-card .pitch-tier { font-size: 0.68rem; font-weight: 700; color: #0d9488; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
-.pitch-card .pitch-quote { font-size: 0.92rem; color: #1e3a5f; font-weight: 600; font-style: italic; line-height: 1.5; margin-bottom: 0.5rem; }
-.pitch-card .pitch-detail { font-size: 0.82rem; color: #4a5568; line-height: 1.5; }
+.pitch-card .pitch-tier { font-size: 0.82rem; font-weight: 800; color: var(--pink-ink); margin-bottom: 0.25rem; }
+.pitch-card .pitch-quote { font-size: 1.02rem; color: var(--ink); font-weight: 700; font-style: italic; line-height: 1.45; margin-bottom: 0.5rem; }
+.pitch-card .pitch-detail { font-size: 0.88rem; color: var(--ink); line-height: 1.5; }
 
 /* Navigation */
-.nav-bar { max-width: 920px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; }
-.nav-btn { padding: 0.6rem 1.5rem; border: 2px solid #1e3a5f; background: #fff; color: #1e3a5f; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.nav-btn:hover { background: #1e3a5f; color: #fff; }
-.nav-btn.primary { background: #1e3a5f; color: #fff; }
-.nav-btn.primary:hover { background: #2a4a73; }
-.nav-btn:disabled { opacity: 0.4; cursor: default; }
-.nav-hint { font-size: 0.75rem; color: #e74c3c; font-weight: 600; align-self: center; }
+.nav-bar { max-width: 920px; margin: 0 auto 1.5rem; padding: 0 1.25rem; display: flex; justify-content: space-between; gap: 0.75rem; }
+.nav-btn {
+  padding: 0.6rem 1.4rem; min-height: 42px; border: 2px solid var(--ink); background: var(--panel); color: var(--ink); border-radius: 0;
+  font-size: 0.95rem; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 var(--ink); transition: transform 0.12s, box-shadow 0.12s, background 0.15s;
+}
+.nav-btn:hover { background: var(--yellow); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.nav-btn.primary { background: var(--pink); color: var(--ink); }
+.nav-btn.primary:hover { background: var(--pink); }
+.nav-btn:disabled, .nav-btn:disabled:hover { opacity: 0.4; cursor: default; transform: none; box-shadow: 3px 3px 0 var(--ink); }
+.nav-btn.primary:disabled { background: var(--rule-soft); }
+.nav-btn:not(.primary):disabled { background: var(--panel); }
+.nav-hint { font-size: 0.85rem; color: var(--danger); font-weight: 700; align-self: center; text-align: center; }
 
 /* Export */
 .export-bar { display: flex; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 920px; padding: 0 1.25rem; }
-.export-btn { padding: 0.6rem 1.5rem; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.export-btn.primary { background: #1e3a5f; color: #fff; }
-.export-btn.primary:hover { background: #2a4a73; }
-.export-btn.secondary { background: #e2e8f0; color: #1e3a5f; }
-.copy-toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e3a5f; color: #fff; padding: 0.6rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; opacity: 0; transition: all 0.3s; z-index: 100; }
+.export-btn {
+  padding: 0.6rem 1.4rem; min-height: 42px; border: 2px solid var(--ink); border-radius: 0; font-size: 0.92rem; font-weight: 800; cursor: pointer;
+  color: var(--ink); box-shadow: 3px 3px 0 var(--ink); transition: transform 0.12s, box-shadow 0.12s, background 0.15s;
+}
+.export-btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.export-btn.primary { background: var(--panel); color: var(--ink); }
+.export-btn.primary:hover { background: var(--yellow); }
+.export-btn.secondary { background: var(--panel); color: var(--ink); }
+.export-btn.secondary:hover { background: var(--yellow); }
+.copy-toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--ink); color: var(--paper); border: 2px solid var(--paper); box-shadow: 4px 4px 0 var(--pink); padding: 0.6rem 1.5rem; border-radius: 0; font-size: 0.9rem; font-weight: 700; opacity: 0; transition: all 0.3s; z-index: 100; }
 .copy-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
+footer { text-align: center; padding: 1.5rem 1.5rem 3.5rem; font-size: 0.82rem; color: var(--muted); }
 
 @media print {
   body { background: #fff; }
   header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .progress-bar, .nav-bar, .export-bar, footer { display: none; }
   .step { display: block !important; page-break-inside: avoid; }
-  .panel { box-shadow: none; border: 1px solid #e2e8f0; }
+  .panel { box-shadow: none; border: 1px solid var(--rule); }
 }
 @media (max-width: 740px) {
+  header { padding: 0.6rem 1rem 1rem; }
   .scenario-grid { grid-template-columns: 1fr; }
   .cost-cards { grid-template-columns: 1fr; }
   .tier-cards { flex-direction: column; }
+  .panel { padding: 1.1rem; box-shadow: 4px 4px 0 var(--blue); }
+  .progress-labels span { font-size: 0.75rem; }
+  .export-btn { flex: 1; }
 }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
 <header>
@@ -198,7 +258,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 <div class="step active" id="step1">
   <div class="panel">
     <div class="panel-title">Select a Product Scenario</div>
-    <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 1rem;">Choose a product scenario to explore pricing strategies. Each pre-fills realistic defaults for volume, complexity, and tokens per task.</p>
+    <p style="font-size: 0.85rem; color: #1d2a6b; margin-bottom: 1rem;">Choose a product scenario to explore pricing strategies. Each pre-fills realistic defaults for volume, complexity, and tokens per task.</p>
     <div class="scenario-grid">
       <div class="scenario-card selected" data-scenario="legal" onclick="selectScenario('legal', this)">
         <div class="sc-industry">Legal</div>
@@ -302,19 +362,19 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 
   <div class="panel">
     <div class="panel-title">ChatGPT Tax Visual</div>
-    <p style="font-size: 0.82rem; color: #4a5568; margin-bottom: 0.75rem;">How your Starter price compares to the $20/mo ChatGPT Plus subscription that everyone knows.</p>
-    <div id="taxExplainer" style="font-size: 0.82rem; color: #4a5568; line-height: 1.6; background: #eff6ff; padding: 0.75rem 1rem; border-radius: 8px; border-left: 3px solid #3b82f6; margin-bottom: 0.5rem;"></div>
+    <p style="font-size: 0.82rem; color: #1d2a6b; margin-bottom: 0.75rem;">How your Starter price compares to the $20/mo ChatGPT Plus subscription that everyone knows.</p>
+    <div id="taxExplainer" style="font-size: 0.82rem; color: #1d2a6b; line-height: 1.6; background: #f3efe4; padding: 0.75rem 1rem; border-radius: 0; border: 1px solid #c9c3ae; border-left: 4px solid #2a4bd7; margin-bottom: 0.5rem;"></div>
     <div class="tax-bar-container">
       <div class="tax-bar" id="taxBar">
-        <div class="tax-marker" id="taxMarkerChatGPT" style="background:#e74c3c;">
-          <div class="tax-marker-label" style="color:#e74c3c;">$20 ChatGPT+</div>
+        <div class="tax-marker" id="taxMarkerChatGPT" style="background:#d5312a;">
+          <div class="tax-marker-label" style="color:#d5312a;">$20 ChatGPT+</div>
         </div>
-        <div class="tax-marker" id="taxMarkerYou" style="background:#2563eb;">
-          <div class="tax-marker-label" id="taxMarkerYouLabel" style="color:#2563eb;">$0</div>
+        <div class="tax-marker" id="taxMarkerYou" style="background:#2a4bd7;">
+          <div class="tax-marker-label" id="taxMarkerYouLabel" style="color:#2a4bd7;">$0</div>
         </div>
       </div>
     </div>
-    <div id="taxVerdict" style="margin-top: 1.5rem; font-size: 0.82rem; color: #4a5568; text-align: center;"></div>
+    <div id="taxVerdict" style="margin-top: 1.5rem; font-size: 0.82rem; color: #1d2a6b; text-align: center;"></div>
   </div>
 </div>
 
@@ -322,13 +382,13 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
 <div class="step" id="step4">
   <div class="panel">
     <div class="panel-title">Pitch Per Tier</div>
-    <p style="font-size: 0.82rem; color: #4a5568; margin-bottom: 0.75rem;">Pre-built sales arguments tailored to your product scenario. Use these as starting points for client conversations.</p>
+    <p style="font-size: 0.82rem; color: #1d2a6b; margin-bottom: 0.75rem;">Pre-built sales arguments tailored to your product scenario. Use these as starting points for client conversations.</p>
     <div id="pitchCards"></div>
   </div>
 
   <div class="panel">
     <div class="panel-title">ROI Talking Points</div>
-    <p style="font-size: 0.82rem; color: #4a5568; margin-bottom: 0.75rem;">Ready-to-use value propositions backed by your scenario's numbers.</p>
+    <p style="font-size: 0.82rem; color: #1d2a6b; margin-bottom: 0.75rem;">Ready-to-use value propositions backed by your scenario's numbers.</p>
     <div class="comm-cards" id="commCards"></div>
   </div>
 </div>
@@ -636,9 +696,9 @@ function updateStep4() {
 
   // Pitch cards
   const tierData = [
-    { key: 'starter', name: 'Starter', color: '#2563eb' },
-    { key: 'professional', name: 'Professional', color: '#1e3a5f' },
-    { key: 'enterprise', name: 'Enterprise', color: '#0d9488' }
+    { key: 'starter', name: 'Starter', color: '#2a4bd7' },
+    { key: 'professional', name: 'Professional', color: '#1d2a6b' },
+    { key: 'enterprise', name: 'Enterprise', color: '#0f8fa3' }
   ];
 
   let pitchHtml = '';
@@ -646,7 +706,7 @@ function updateStep4() {
     const tier = tiers[t.key];
     const price = roundPrice(baseCost * tier.multiplier);
     pitchHtml += `
-      <div class="pitch-card" style="border-left: 3px solid ${t.color};">
+      <div class="pitch-card" style="border-left: 4px solid ${t.color};">
         <div class="pitch-tier">${t.name} — ${fmtUsd(price)} ${sc.outcomeLabel}</div>
         <div class="pitch-quote">"${tier.pitch}"</div>
         <div class="pitch-detail">${tier.detail}</div>
@@ -788,12 +848,12 @@ function copyResults() {
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>

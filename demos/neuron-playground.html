@@ -4,27 +4,43 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Neuron Playground — Interactive Single Neuron | robert@barcik.training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 <style>
+/* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
+:root {
+  --paper: #f3efe4; --panel: #fbf8f0; --ink: #1d2a6b; --muted: #525b8c; --rule: #c9c3ae; --rule-soft: #e2dccb;
+  --blue: #2a4bd7; --pink: #ff5fa2; --yellow: #ffe14d; --pink-ink: #c81e63;
+  --danger: #d5312a; --danger-bg: #fbe1dc; --safe: #178a5e; --safe-bg: #dcf1e4; --warn: #b85f00; --warn-bg: #ffefc2; --neutral: #8a8fa8;
+  --font: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f0f4f8;
-  color: #1a202c;
+  font-family: var(--font);
+  background: var(--paper) var(--grain);
+  color: var(--ink);
   min-height: 100vh;
   line-height: 1.5;
 }
 
 /* ===== HEADER ===== */
 header {
-  background: #1e3a5f;
-  color: #fff;
-  padding: 1.4rem 2rem;
+  color: var(--ink);
+  padding: 1.6rem 2rem 1.2rem;
   text-align: center;
   position: relative;
+  border-bottom: 2px solid var(--ink);
 }
-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
-header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
+header h1 {
+  font-size: clamp(2.2rem, 6vw, 3.4rem); font-weight: 800; font-stretch: 78%; letter-spacing: -0.02em; line-height: .95;
+  color: var(--blue); text-shadow: .045em .04em 0 var(--pink);
+}
+header .brand { font-size: 0.9rem; font-weight: 700; color: var(--muted); margin-bottom: 0.35rem; }
 
 /* ===== INTRO ===== */
 .intro {
@@ -34,48 +50,50 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
   text-align: center;
 }
 .intro p {
-  font-size: 0.95rem;
-  color: #4a5568;
+  font-size: 1rem;
+  color: var(--ink);
   max-width: 700px;
   margin: 0 auto;
-  line-height: 1.65;
+  line-height: 1.6;
 }
 
 /* ===== MAIN LAYOUT ===== */
 .playground {
   display: grid;
-  grid-template-columns: 280px 1fr 280px;
-  gap: 1.25rem;
-  max-width: 1100px;
-  margin: 1.5rem auto;
+  grid-template-columns: 290px 1fr 290px;
+  gap: 1.4rem;
+  max-width: 1140px;
+  margin: 1.75rem auto;
   padding: 0 1.25rem;
   align-items: start;
 }
 
 /* ===== PANELS ===== */
 .panel {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--panel);
+  border: 2px solid var(--ink);
   padding: 1.25rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  box-shadow: 5px 5px 0 var(--blue);
 }
 .panel-title {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #94a3b8;
+  display: inline-block;
+  font-size: 1.15rem;
+  font-stretch: 78%;
+  color: var(--ink);
   margin-bottom: 1rem;
-  font-weight: 600;
+  font-weight: 800;
+  background: linear-gradient(transparent 55%, var(--yellow) 55%);
+  padding: 0 4px;
 }
 
 /* ===== INPUT COLUMN ===== */
-.input-group { margin-bottom: 1rem; }
+.input-group { margin-bottom: 1.1rem; }
 .input-group:last-child { margin-bottom: 0; }
 .input-group-label {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #1e3a5f;
-  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 0.1rem;
 }
 
 .slider-row {
@@ -85,9 +103,9 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
   margin-bottom: 0.35rem;
 }
 .slider-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
   min-width: 22px;
   text-align: right;
 }
@@ -96,33 +114,32 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
   height: 6px;
   -webkit-appearance: none;
   appearance: none;
-  background: #e2e8f0;
-  border-radius: 3px;
+  background: var(--rule);
+  border-radius: 0;
   outline: none;
   cursor: pointer;
 }
+.slider-row input[type="range"]:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; }
 .slider-row input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px; height: 16px;
+  width: 18px; height: 18px;
   border-radius: 50%;
-  background: #1e3a5f;
+  background: var(--yellow);
   cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 2px solid var(--ink);
 }
 .slider-row input[type="range"]::-moz-range-thumb {
-  width: 16px; height: 16px;
+  width: 18px; height: 18px;
   border-radius: 50%;
-  background: #1e3a5f;
+  background: var(--yellow);
   cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 2px solid var(--ink);
 }
 .slider-val {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #1e3a5f;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
   min-width: 36px;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -132,25 +149,26 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.78rem;
-  color: #64748b;
+  font-size: 0.8rem;
+  color: var(--muted);
   padding: 0.15rem 0 0.3rem 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--rule-soft);
 }
 .product-row:last-child { border-bottom: none; }
-.product-formula { font-family: 'Courier New', monospace; }
+.product-formula { font-family: var(--mono); }
 .product-value {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   min-width: 50px;
   text-align: right;
 }
-.product-positive { color: #16a34a; }
-.product-negative { color: #dc2626; }
-.product-zero { color: #94a3b8; }
+.product-positive { color: var(--safe); }
+.product-negative { color: var(--danger); }
+.product-zero { color: var(--neutral); }
 
 /* ===== BIAS ===== */
-.bias-section { margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid #e2e8f0; }
+.bias-section { margin-top: 0.5rem; padding-top: 0.6rem; border-top: 2px solid var(--ink); }
+.bias-section .input-group-label { color: var(--ink); font-size: 0.95rem; margin-bottom: 0.4rem; }
 
 /* ===== SVG NEURON PANEL ===== */
 .neuron-panel {
@@ -159,34 +177,32 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
   justify-content: center;
   min-height: 360px;
 }
-.neuron-panel svg { width: 100%; height: auto; max-height: 400px; }
+.neuron-panel svg { width: 100%; height: auto; max-height: 400px; font-family: var(--font); }
 
 /* ===== OUTPUT COLUMN ===== */
 .output-section { margin-bottom: 1rem; }
 .output-section:last-child { margin-bottom: 0; }
 .output-section-title {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
   margin-bottom: 0.4rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .formula-block {
-  background: #f8fafc;
-  border-radius: 8px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
   padding: 0.6rem 0.75rem;
-  font-family: 'Courier New', monospace;
+  font-family: var(--mono);
   font-size: 0.75rem;
-  color: #334155;
+  color: var(--ink);
   line-height: 1.7;
 }
 .formula-term { white-space: nowrap; }
 .formula-result {
   font-weight: 700;
-  color: #1e3a5f;
-  font-size: 0.85rem;
+  color: var(--blue);
+  font-size: 0.9rem;
 }
 
 /* Activation selector */
@@ -198,48 +214,50 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 .act-btn {
   flex: 1;
   padding: 0.45rem 0.5rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  background: #fff;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #64748b;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--panel);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.15s;
   text-align: center;
 }
-.act-btn:hover { border-color: #94a3b8; color: #475569; }
+.act-btn:hover { background: var(--yellow); }
+.act-btn:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
 .act-btn.active {
-  border-color: #1e3a5f;
-  background: #1e3a5f;
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
 }
 
 /* Activation graph */
 .graph-container {
-  background: #f8fafc;
-  border-radius: 8px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
   padding: 0.5rem;
   text-align: center;
   margin-bottom: 0.5rem;
 }
 .graph-container canvas {
   width: 100%;
-  max-width: 220px;
+  max-width: 240px;
   height: auto;
   display: block;
   margin: 0 auto;
 }
 .formula-label {
   font-size: 0.72rem;
-  color: #94a3b8;
-  font-family: 'Courier New', monospace;
+  color: var(--muted);
+  font-family: var(--mono);
   margin-top: 0.35rem;
 }
-.act-desc { font-size: 0.78rem; color: #4a5568; margin-top: 0.5rem; line-height: 1.5; padding: 0.5rem; background: #f0f4f8; border-radius: 6px; }
-.scenario-label { font-size: 0.72rem; color: #64748b; font-style: italic; margin-bottom: 0.2rem; }
-.scenario-explain { font-size: 0.72rem; color: #4a5568; line-height: 1.45; margin-bottom: 0.4rem; padding: 0.35rem 0.5rem; background: #f0f4f8; border-radius: 4px; border-left: 2px solid #94a3b8; }
-.output-interpretation { font-size: 0.82rem; font-weight: 600; text-align: center; margin-top: 0.25rem; padding: 0.3rem 0.5rem; border-radius: 6px; }
+.act-desc { font-size: 0.8rem; color: var(--ink); margin-top: 0.5rem; line-height: 1.5; padding: 0.5rem; background: var(--panel); text-align: left; }
+/* the story the neuron is deciding: steam, a glowing burner, someone's reassurance */
+.scenario-label { display: inline; font-size: 1rem; font-weight: 800; font-stretch: 85%; color: var(--ink); background: linear-gradient(transparent 55%, var(--yellow) 55%); padding: 0 3px; margin-left: -3px; }
+.scenario-explain { font-size: 0.8rem; color: var(--muted); line-height: 1.45; margin: 0.35rem 0 0.5rem; padding: 0.1rem 0 0.1rem 0.6rem; border-left: 3px solid var(--pink); }
+.output-interpretation { font-size: 0.95rem; font-weight: 800; text-align: center; margin-top: 0.35rem; padding: 0.45rem 0.5rem; border: 2px solid currentColor; }
 
 /* Output display */
 .output-display {
@@ -247,16 +265,18 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
   padding: 0.75rem 0;
 }
 .output-value {
-  font-size: 2rem;
+  font-size: 2.4rem;
   font-weight: 800;
-  color: #1e3a5f;
+  font-stretch: 78%;
+  line-height: 1.1;
+  color: var(--blue);
+  text-shadow: .05em .05em 0 var(--pink);
   font-variant-numeric: tabular-nums;
 }
 .output-label {
-  font-size: 0.72rem;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 /* Signal strength bar */
@@ -264,85 +284,94 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
   margin-top: 0.5rem;
 }
 .signal-bar-track {
-  height: 12px;
-  background: #e2e8f0;
-  border-radius: 6px;
+  height: 14px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
   overflow: hidden;
   position: relative;
 }
 .signal-bar-fill {
   height: 100%;
-  border-radius: 6px;
   transition: width 0.15s, background 0.15s;
   min-width: 2px;
 }
 .signal-bar-label {
   display: flex;
   justify-content: space-between;
-  font-size: 0.68rem;
-  color: #94a3b8;
+  font-size: 0.72rem;
+  color: var(--muted);
   margin-top: 0.2rem;
 }
 
 /* ===== EDUCATIONAL CARDS ===== */
 .cards {
-  max-width: 1100px;
+  max-width: 1140px;
   margin: 0 auto 2rem;
   padding: 0 1.25rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  gap: 1.4rem;
 }
 .card {
-  border-radius: 12px;
   padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  background: var(--panel);
+  border: 2px solid var(--ink);
 }
-.card-analogy { background: #eff6ff; border-left: 4px solid #3b82f6; }
-.card-scale { background: #f8fafc; border-left: 4px solid #94a3b8; }
+.card-analogy { border-left: 8px solid var(--blue); }
+.card-scale { border-left: 8px solid var(--pink); }
 .card-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #1e3a5f;
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-stretch: 78%;
+  line-height: 1.15;
+  color: var(--ink);
   margin-bottom: 0.4rem;
 }
 .card p {
-  font-size: 0.85rem;
-  color: #475569;
-  line-height: 1.65;
+  font-size: 0.92rem;
+  color: var(--ink);
+  line-height: 1.6;
 }
 
 /* ===== FOOTER ===== */
 footer {
   text-align: center;
-  padding: 1.5rem;
-  font-size: 0.78rem;
-  color: #94a3b8;
+  padding: 1.5rem 1.5rem 3.5rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* ===== TABLET: the neuron on top, inputs and output side by side ===== */
+@media (max-width: 1000px) {
+  .playground { grid-template-columns: 1fr 1fr; }
+  .neuron-panel { grid-column: 1 / -1; order: -1; min-height: 300px; }
+  .neuron-panel svg { max-width: 520px; }
 }
 
 /* ===== MOBILE ===== */
 @media (max-width: 740px) {
   .playground {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.1rem;
   }
   .cards {
     grid-template-columns: 1fr;
   }
-  .neuron-panel { min-height: 280px; }
-  header { padding: 1.2rem 1rem; }
-  header h1 { font-size: 1.25rem; }
+  .neuron-panel { min-height: 260px; }
+  header { padding: 0.6rem 1rem 1rem; }
   .intro { margin-top: 1rem; }
-  .intro p { font-size: 0.88rem; }
+  .intro p { font-size: 0.95rem; }
+  .panel { box-shadow: 4px 4px 0 var(--blue); }
 }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
 <header>
@@ -447,45 +476,45 @@ footer {
           </feMerge>
         </filter>
         <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-          <polygon points="0 0, 8 3, 0 6" fill="#1e3a5f"/>
+          <polygon points="0 0, 8 3, 0 6" fill="#1d2a6b"/>
         </marker>
       </defs>
 
       <!-- Connection lines (drawn first, behind circles) -->
-      <line id="line0" x1="70" y1="70" x2="195" y2="170" stroke="#3b82f6" stroke-width="1.5"/>
-      <line id="line1" x1="70" y1="170" x2="195" y2="170" stroke="#3b82f6" stroke-width="4.5"/>
-      <line id="line2" x1="70" y1="270" x2="195" y2="170" stroke="#dc2626" stroke-width="2"/>
+      <line id="line0" x1="70" y1="70" x2="195" y2="170" stroke="#2a4bd7" stroke-width="1.5"/>
+      <line id="line1" x1="70" y1="170" x2="195" y2="170" stroke="#2a4bd7" stroke-width="4.5"/>
+      <line id="line2" x1="70" y1="270" x2="195" y2="170" stroke="#d5312a" stroke-width="2"/>
 
       <!-- Weight labels on lines -->
-      <text id="wlabel0" x="120" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">0.4</text>
-      <text id="wlabel1" x="130" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">1.5</text>
-      <text id="wlabel2" x="120" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">-0.6</text>
+      <text id="wlabel0" x="120" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#2a4bd7">0.4</text>
+      <text id="wlabel1" x="130" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#2a4bd7">1.5</text>
+      <text id="wlabel2" x="120" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#d5312a">-0.6</text>
 
       <!-- Input circles -->
-      <circle cx="70" cy="70" r="26" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
-      <text x="70" y="67" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a5f">x<tspan baseline-shift="sub" font-size="10">1</tspan></text>
-      <text id="xdisp0" x="70" y="82" text-anchor="middle" font-size="10" fill="#64748b">0.0</text>
+      <circle cx="70" cy="70" r="26" fill="#fbf8f0" stroke="#1d2a6b" stroke-width="2"/>
+      <text x="70" y="67" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2a6b">x<tspan baseline-shift="sub" font-size="10">1</tspan></text>
+      <text id="xdisp0" x="70" y="82" text-anchor="middle" font-size="10" fill="#525b8c">0.0</text>
 
-      <circle cx="70" cy="170" r="26" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
-      <text x="70" y="167" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a5f">x<tspan baseline-shift="sub" font-size="10">2</tspan></text>
-      <text id="xdisp1" x="70" y="182" text-anchor="middle" font-size="10" fill="#64748b">0.0</text>
+      <circle cx="70" cy="170" r="26" fill="#fbf8f0" stroke="#1d2a6b" stroke-width="2"/>
+      <text x="70" y="167" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2a6b">x<tspan baseline-shift="sub" font-size="10">2</tspan></text>
+      <text id="xdisp1" x="70" y="182" text-anchor="middle" font-size="10" fill="#525b8c">0.0</text>
 
-      <circle cx="70" cy="270" r="26" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
-      <text x="70" y="267" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a5f">x<tspan baseline-shift="sub" font-size="10">3</tspan></text>
-      <text id="xdisp2" x="70" y="282" text-anchor="middle" font-size="10" fill="#64748b">0.0</text>
+      <circle cx="70" cy="270" r="26" fill="#fbf8f0" stroke="#1d2a6b" stroke-width="2"/>
+      <text x="70" y="267" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2a6b">x<tspan baseline-shift="sub" font-size="10">3</tspan></text>
+      <text id="xdisp2" x="70" y="282" text-anchor="middle" font-size="10" fill="#525b8c">0.0</text>
 
       <!-- Central neuron -->
-      <circle id="neuron-glow" cx="220" cy="170" r="40" fill="rgba(30,58,95,0.08)" filter="url(#glow)"/>
-      <circle cx="220" cy="170" r="36" fill="#fff" stroke="#1e3a5f" stroke-width="3"/>
-      <text id="neuron-symbol" x="220" y="176" text-anchor="middle" font-size="20" font-weight="700" fill="#1e3a5f">&#963;</text>
+      <circle id="neuron-glow" cx="220" cy="170" r="40" fill="rgba(42,75,215,0.08)" filter="url(#glow)"/>
+      <circle cx="220" cy="170" r="36" fill="#fbf8f0" stroke="#1d2a6b" stroke-width="3"/>
+      <text id="neuron-symbol" x="220" y="176" text-anchor="middle" font-size="20" font-weight="700" fill="#1d2a6b">&#963;</text>
 
       <!-- Output arrow -->
-      <line x1="260" y1="170" x2="330" y2="170" stroke="#1e3a5f" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+      <line x1="260" y1="170" x2="330" y2="170" stroke="#1d2a6b" stroke-width="2.5" marker-end="url(#arrowhead)"/>
 
       <!-- Output circle -->
-      <circle cx="355" cy="170" r="26" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
-      <text x="355" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="#94a3b8">output</text>
-      <text id="out-disp" x="355" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a5f">0.00</text>
+      <circle cx="355" cy="170" r="26" fill="#fbf8f0" stroke="#1d2a6b" stroke-width="2"/>
+      <text x="355" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="#525b8c">output</text>
+      <text id="out-disp" x="355" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2a6b">0.00</text>
     </svg>
   </div>
 
@@ -526,7 +555,7 @@ footer {
       </div>
       <div class="signal-bar-container">
         <div class="signal-bar-track">
-          <div class="signal-bar-fill" id="signal-bar" style="width:0%; background:#94a3b8;"></div>
+          <div class="signal-bar-fill" id="signal-bar" style="width:0%; background:#8a8fa8;"></div>
         </div>
         <div class="signal-bar-label">
           <span>0</span>
@@ -643,8 +672,8 @@ footer {
 
   // === Color helpers ===
   function weightColor(w) {
-    if (Math.abs(w) < 0.05) return '#94a3b8';
-    return w > 0 ? '#3b82f6' : '#dc2626';
+    if (Math.abs(w) < 0.05) return '#8a8fa8';
+    return w > 0 ? '#2a4bd7' : '#d5312a';
   }
   function productColorClass(p) {
     if (Math.abs(p) < 0.005) return 'product-zero';
@@ -675,7 +704,7 @@ footer {
     function toCanvasY(yVal) { return pad + (1 - (yVal - yMin) / (yMax - yMin)) * gh; }
 
     // Grid
-    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeStyle = '#e2dccb';
     ctx.lineWidth = 1;
     ctx.beginPath();
     // Vertical gridlines
@@ -692,7 +721,7 @@ footer {
     ctx.stroke();
 
     // Axes
-    ctx.strokeStyle = '#94a3b8';
+    ctx.strokeStyle = '#8a8fa8';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     var zeroY = toCanvasY(0);
@@ -702,8 +731,8 @@ footer {
     ctx.stroke();
 
     // Axis labels
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '10px -apple-system, sans-serif';
+    ctx.fillStyle = '#525b8c';
+    ctx.font = "600 10px 'Bricolage Grotesque', -apple-system, sans-serif";
     ctx.textAlign = 'center';
     for (var lx = Math.ceil(xMin); lx <= Math.floor(xMax); lx++) {
       if (lx === 0) continue;
@@ -717,7 +746,7 @@ footer {
     }
 
     // Activation curve
-    ctx.strokeStyle = '#1e3a5f';
+    ctx.strokeStyle = '#2a4bd7';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     var fn = activations[activationFn];
@@ -740,7 +769,7 @@ footer {
 
     // Dashed lines to axes
     ctx.setLineDash([4, 3]);
-    ctx.strokeStyle = '#dc2626';
+    ctx.strokeStyle = '#c81e63';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(dotX, dotY); ctx.lineTo(dotX, zeroY);
@@ -749,11 +778,11 @@ footer {
     ctx.setLineDash([]);
 
     // Red dot
-    ctx.fillStyle = '#dc2626';
+    ctx.fillStyle = '#ff5fa2';
     ctx.beginPath();
     ctx.arc(dotX, dotY, 6, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = '#1d2a6b';
     ctx.lineWidth = 2;
     ctx.stroke();
   }
@@ -804,16 +833,16 @@ footer {
     // Output interpretation (hot pot scenario)
     if (output > 0.5) {
       outputInterpretation.textContent = '\u2192 DON\u2019T touch! (danger signal strong)';
-      outputInterpretation.style.color = '#dc2626';
-      outputInterpretation.style.background = '#fef2f2';
+      outputInterpretation.style.color = '#d5312a';
+      outputInterpretation.style.background = '#fbe1dc';
     } else if (output > 0) {
       outputInterpretation.textContent = '\u2192 Hmm, maybe safe... (weak signal)';
-      outputInterpretation.style.color = '#d97706';
-      outputInterpretation.style.background = '#fffbeb';
+      outputInterpretation.style.color = '#b85f00';
+      outputInterpretation.style.background = '#ffefc2';
     } else {
       outputInterpretation.textContent = '\u2192 Safe to touch (no danger detected)';
-      outputInterpretation.style.color = '#16a34a';
-      outputInterpretation.style.background = '#f0fdf4';
+      outputInterpretation.style.color = '#178a5e';
+      outputInterpretation.style.background = '#dcf1e4';
     }
 
     // Signal bar
@@ -823,9 +852,9 @@ footer {
     else maxBar = 5; // ReLU can go higher
     var barPct = Math.min(Math.abs(output) / maxBar * 100, 100);
     signalBar.style.width = barPct + '%';
-    if (Math.abs(output) < 0.005) signalBar.style.background = '#94a3b8';
-    else if (output > 0) signalBar.style.background = '#16a34a';
-    else signalBar.style.background = '#dc2626';
+    if (Math.abs(output) < 0.005) signalBar.style.background = '#8a8fa8';
+    else if (output > 0) signalBar.style.background = '#178a5e';
+    else signalBar.style.background = '#d5312a';
 
     // Update SVG
     for (var i = 0; i < 3; i++) {
@@ -845,7 +874,7 @@ footer {
 
     // Neuron glow
     var glowIntensity = Math.min(Math.abs(output) * 0.3, 0.4);
-    neuronGlow.setAttribute('fill', 'rgba(30,58,95,' + glowIntensity.toFixed(2) + ')');
+    neuronGlow.setAttribute('fill', 'rgba(42,75,215,' + glowIntensity.toFixed(2) + ')');
     var glowRadius = 40 + Math.min(Math.abs(output) * 8, 20);
     neuronGlow.setAttribute('r', glowRadius);
 
@@ -882,6 +911,7 @@ footer {
     setupCanvas();
     attachSliderListeners();
     update();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(update); // canvas labels use the web font
   }
 
   // Handle resize
@@ -907,12 +937,12 @@ footer {
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>

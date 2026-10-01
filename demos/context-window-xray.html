@@ -4,237 +4,257 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Context Window X-Ray — robert@barcik.training</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  /* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
   :root{
-    --bg:#f0f4f8;--surface:#ffffff;--surface2:#edf2f7;--border:#e2e8f0;
-    --text:#1a202c;--text-dim:#64748b;--accent:#1e3a5f;--accent2:#2d5a8e;
-    --accent-light:#2563eb;--radius:10px;
-    --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+    --paper:#f3efe4;--panel:#fbf8f0;--ink:#1d2a6b;--muted:#525b8c;--rule:#c9c3ae;--rule-soft:#e2dccb;
+    --blue:#2a4bd7;--pink:#ff5fa2;--yellow:#ffe14d;--pink-ink:#c81e63;
+    --danger:#d5312a;--danger-bg:#fbe1dc;--safe:#178a5e;--safe-bg:#dcf1e4;--warn:#b85f00;--warn-bg:#ffefc2;--neutral:#8a8fa8;
+    --cat-1:#2a4bd7;--cat-2:#e0368a;--cat-3:#178a5e;--cat-4:#e8710c;--cat-5:#7a4fd0;--cat-6:#0f8fa3;
+    --font:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    /* old names still used by inline styles in the HTML */
+    --text-dim:var(--muted);
   }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html{font-size:16px;-webkit-text-size-adjust:100%}
-  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+  body{font-family:var(--font);background:var(--paper) var(--grain);color:var(--ink);line-height:1.6;min-height:100vh}
+  button:focus-visible,.ctx-block:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
 
-
-  .page-header{max-width:1280px;margin:0 auto;padding:2rem 1.5rem 1rem;text-align:center}
-  .page-header h1{font-size:1.85rem;font-weight:700;color:var(--accent);margin-bottom:0.35rem}
-  .page-header .subtitle{font-size:1.05rem;color:var(--text-dim)}
+  .page-header{max-width:1280px;margin:0 auto 1.5rem;padding:2rem 1.5rem 1.2rem;text-align:center;border-bottom:2px solid var(--ink)}
+  .page-header h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;font-stretch:78%;line-height:.98;letter-spacing:-.02em;color:var(--blue);text-shadow:.045em .04em 0 var(--pink);margin-bottom:.5rem}
+  .page-header .subtitle{font-size:1.05rem;color:var(--ink)}
 
   .container{max-width:1280px;margin:0 auto;padding:0 1.5rem 2rem}
 
   .intro{
-    background:var(--surface);border-left:4px solid var(--accent-light);border-radius:var(--radius);
-    padding:1rem 1.25rem;margin-bottom:1.25rem;box-shadow:var(--shadow);
-    font-size:0.93rem;color:var(--text-dim);line-height:1.7;
+    background:var(--panel);border:2px solid var(--ink);border-left:8px solid var(--blue);
+    padding:1rem 1.25rem;margin-bottom:1.5rem;
+    font-size:.95rem;color:var(--ink);line-height:1.7;
   }
-  .intro strong{color:var(--text)}
+  .intro strong{color:var(--ink);font-weight:800}
 
   /* Controls */
-  .controls-row{display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:1.25rem;align-items:center}
-  .scrubber{display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap}
-  .scrubber-label,.budget-label{font-size:0.78rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.03em}
+  .controls-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;align-items:center}
+  .scrubber{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+  .scrubber-label,.budget-label{font-size:.85rem;font-weight:700;color:var(--ink);margin-right:.15rem}
   .turn-dot{
-    min-width:34px;height:30px;padding:0 0.5rem;border:1.5px solid var(--border);border-radius:6px;
-    background:var(--surface);color:var(--text-dim);font-size:0.78rem;font-weight:600;
-    cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;
+    min-width:38px;height:36px;padding:0 .55rem;border:2px solid var(--ink);border-radius:0;
+    background:var(--panel);color:var(--ink);font-size:.85rem;font-weight:700;
+    cursor:pointer;transition:background .15s;font-family:var(--font);
   }
-  .turn-dot:hover{border-color:var(--accent-light)}
-  .turn-dot.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .budget-group{display:flex;align-items:center;gap:0.35rem;margin-left:auto}
+  .turn-dot:hover{background:var(--yellow)}
+  .turn-dot.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .budget-group{display:flex;align-items:center;gap:.35rem;margin-left:auto;flex-wrap:wrap}
   .budget-btn{
-    padding:0.3rem 0.65rem;border:1.5px solid var(--border);border-radius:6px;
-    background:var(--surface);color:var(--text-dim);font-size:0.78rem;font-weight:600;
-    cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;
+    height:36px;padding:0 .7rem;border:2px solid var(--ink);border-radius:0;
+    background:var(--panel);color:var(--ink);font-size:.85rem;font-weight:700;
+    cursor:pointer;transition:background .15s;font-family:var(--font);
   }
-  .budget-btn:hover{border-color:var(--accent-light)}
-  .budget-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .budget-btn:hover{background:var(--yellow)}
+  .budget-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
   /* Main grid */
-  .main-grid{display:grid;grid-template-columns:0.9fr 1.1fr;gap:1.25rem;align-items:start;margin-bottom:1.5rem}
+  .main-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:1.5rem;align-items:start;margin-bottom:1.75rem}
   .main-grid>div{min-width:0}
   .pane-title{
-    font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
-    color:var(--text-dim);margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;
+    display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;
+    font-size:1.15rem;font-weight:800;font-stretch:78%;color:var(--ink);
   }
-  .pane-title .tag{font-size:0.66rem;font-weight:700;padding:0.1rem 0.5rem;border-radius:999px;letter-spacing:0.02em;text-transform:none}
-  .tag-illusion{background:#dbeafe;color:#1d4ed8}
-  .tag-reality{background:#fee2e2;color:#b91c1c}
+  .pane-title .tag{font-size:.75rem;font-weight:700;font-stretch:100%;padding:.1rem .5rem;border-radius:0;border:1.5px solid currentColor}
+  .tag-illusion{background:#e3e7fb;color:var(--blue)}
+  .tag-reality{background:var(--danger-bg);color:#b3241e}
 
-  /* ── Chat pane (the illusion) ── */
-  .chat-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+  /* ── Chat pane (the illusion): keeps the look of a chat product ── */
+  .chat-card{background:var(--panel);border:2px solid var(--ink);box-shadow:5px 5px 0 var(--blue);overflow:hidden;display:flex;flex-direction:column}
   .chat-header{
-    background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#fff;
-    padding:0.7rem 1rem;display:flex;align-items:center;gap:0.6rem;
+    background:var(--ink);color:var(--paper);
+    padding:.7rem 1rem;display:flex;align-items:center;gap:.6rem;
   }
-  .chat-avatar{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:0.9rem}
-  .chat-header-name{font-weight:700;font-size:0.9rem}
-  .chat-header-sub{font-size:0.7rem;opacity:0.75}
-  .chat-messages{padding:1rem;display:flex;flex-direction:column;gap:0.7rem;min-height:340px;max-height:440px;overflow-y:auto}
-  .msg{max-width:85%;padding:0.55rem 0.8rem;border-radius:14px;font-size:0.85rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;animation:msgIn 0.35s ease}
-  .msg.user{align-self:flex-end;background:var(--accent-light);color:#fff;border-bottom-right-radius:4px}
-  .msg.assistant{align-self:flex-start;background:var(--surface2);color:var(--text);border-bottom-left-radius:4px}
+  .chat-avatar{width:30px;height:30px;border-radius:50%;background:var(--yellow);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:.9rem}
+  .chat-header-name{font-weight:800;font-size:.95rem}
+  .chat-header-sub{font-size:.75rem;opacity:.85}
+  .chat-messages{padding:1rem;display:flex;flex-direction:column;gap:.7rem;min-height:340px;max-height:440px;overflow-y:auto;background:var(--panel)}
+  .msg{max-width:85%;padding:.55rem .8rem;border-radius:14px;font-size:.88rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;animation:msgIn .35s ease}
+  .msg.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:3px}
+  .msg.assistant{align-self:flex-start;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-bottom-left-radius:3px}
   .msg .att-chip{
-    display:inline-flex;align-items:center;gap:0.35rem;background:rgba(255,255,255,0.18);
-    border:1px solid rgba(255,255,255,0.35);border-radius:6px;padding:0.2rem 0.55rem;
-    font-size:0.75rem;font-weight:600;margin-bottom:0.35rem;
+    display:inline-flex;align-items:center;gap:.35rem;background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.45);border-radius:6px;padding:.2rem .55rem;
+    font-size:.78rem;font-weight:700;margin-bottom:.35rem;
   }
-  .msg .status-line{font-size:0.75rem;font-style:italic;opacity:0.7;display:block;margin-bottom:0.3rem}
+  .msg .status-line{font-size:.75rem;font-style:italic;opacity:.75;display:block;margin-bottom:.3rem}
   @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  .typing-dots{align-self:flex-start;background:var(--surface2);border-radius:14px;border-bottom-left-radius:4px;padding:0.6rem 0.9rem;display:none}
-  .typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--text-dim);margin:0 2px;animation:blink 1.2s infinite}
-  .typing-dots span:nth-child(2){animation-delay:0.2s}
-  .typing-dots span:nth-child(3){animation-delay:0.4s}
-  @keyframes blink{0%,80%,100%{opacity:0.25}40%{opacity:1}}
+  .typing-dots{align-self:flex-start;background:var(--paper);border:1px solid var(--rule);border-radius:14px;border-bottom-left-radius:3px;padding:.6rem .9rem;display:none}
+  .typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin:0 2px;animation:blink 1.2s infinite}
+  .typing-dots span:nth-child(2){animation-delay:.2s}
+  .typing-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
 
-  .chat-input-row{border-top:1px solid var(--border);padding:0.7rem;display:flex;gap:0.5rem;align-items:center;background:var(--surface)}
+  .chat-input-row{border-top:2px solid var(--ink);padding:.7rem;display:flex;gap:.5rem;align-items:center;background:var(--panel)}
   .chat-staged-att{
-    display:none;align-items:center;gap:0.4rem;margin:0 0.7rem;margin-top:0.6rem;
-    background:#ecfdf5;border:1px solid #6ee7b7;color:#047857;border-radius:6px;
-    padding:0.3rem 0.6rem;font-size:0.75rem;font-weight:600;align-self:flex-start;
+    display:none;align-items:center;gap:.4rem;margin:0 .7rem;margin-top:.6rem;
+    background:var(--safe-bg);border:1px solid var(--safe);color:#126e4b;border-radius:6px;
+    padding:.3rem .6rem;font-size:.78rem;font-weight:700;align-self:flex-start;
   }
   .chat-input{
-    flex:1;border:1.5px solid var(--border);border-radius:999px;padding:0.5rem 1rem;
-    font-size:0.83rem;color:var(--text);background:var(--surface2);font-family:'DM Sans',sans-serif;
-    line-height:1.4;min-height:38px;display:flex;align-items:center;
+    flex:1;min-width:0;border:1.5px solid var(--rule);border-radius:999px;padding:.5rem 1rem;
+    font-size:.86rem;color:var(--ink);background:var(--paper);font-family:var(--font);
+    line-height:1.4;min-height:40px;display:flex;align-items:center;
   }
-  .chat-input.done{color:var(--text-dim);font-style:italic}
+  .chat-input.done{color:var(--muted);font-style:italic}
   .send-btn{
-    border:none;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;
-    font-size:0.83rem;padding:0.5rem 1.1rem;cursor:pointer;font-family:'DM Sans',sans-serif;
-    transition:all 0.2s;white-space:nowrap;
+    border:2px solid var(--ink);border-radius:0;background:var(--pink);color:var(--ink);font-weight:800;
+    font-size:.9rem;padding:.5rem 1.1rem;min-height:40px;cursor:pointer;font-family:var(--font);
+    box-shadow:3px 3px 0 var(--ink);transition:transform .12s,box-shadow .12s;white-space:nowrap;
   }
-  .send-btn:hover:not(:disabled){background:var(--accent2)}
-  .send-btn:disabled{opacity:0.45;cursor:default}
+  .send-btn:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+  .send-btn:disabled{opacity:.45;cursor:default}
   .send-btn.pulse{animation:pulse-btn 1.6s ease-in-out infinite}
-  @keyframes pulse-btn{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,0.45)}50%{box-shadow:0 0 0 8px rgba(37,99,235,0)}}
+  @keyframes pulse-btn{0%,100%{outline:0 solid rgba(255,95,162,.5);outline-offset:2px}50%{outline:6px solid rgba(255,95,162,0);outline-offset:6px}}
 
   /* Narrator */
   .narrator-card{
-    background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:1rem 1.15rem;margin-top:1.25rem;
+    background:var(--panel);border:2px solid var(--ink);
+    padding:1rem 1.15rem;margin-top:1.5rem;
   }
   .narrator-title{
-    font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
-    color:var(--accent);margin-bottom:0.6rem;padding-bottom:0.45rem;border-bottom:2px solid var(--surface2);
+    display:inline-block;font-size:1.15rem;font-weight:800;font-stretch:78%;
+    color:var(--ink);margin-bottom:.6rem;padding:0 4px;
+    background:linear-gradient(transparent 55%,var(--yellow) 55%);
   }
-  .narrator-text{font-size:0.87rem;color:var(--text);line-height:1.7;transition:opacity 0.3s}
-  .narrator-text p{margin-bottom:0.6rem}
+  .narrator-text{font-size:.9rem;color:var(--ink);line-height:1.7;transition:opacity .3s}
+  .narrator-text p{margin-bottom:.6rem}
   .narrator-text p:last-child{margin-bottom:0}
-  .narrator-text .hl{font-weight:700;color:var(--accent)}
-  .narrator-text .warn{color:#dc2626;font-weight:700}
+  .narrator-text .hl{font-weight:800;color:var(--blue)}
+  .narrator-text .warn{color:var(--danger);font-weight:800}
 
   /* ── X-ray pane (the reality) ── */
   .gap-banner{
-    background:linear-gradient(135deg,#7f1d1d 0%,#b91c1c 100%);color:#fff;border-radius:var(--radius);
-    padding:0.75rem 1.1rem;margin-bottom:0.85rem;box-shadow:var(--shadow-md);
-    font-size:0.88rem;line-height:1.6;display:none;
+    background:var(--danger);color:#fff;border:2px solid var(--ink);
+    padding:.75rem 1.1rem;margin-bottom:1rem;
+    font-size:.9rem;line-height:1.6;display:none;
   }
-  .gap-banner .gap-big{font-weight:700;font-size:1.02rem}
+  .gap-banner .gap-big{font-weight:800;font-size:1.05rem}
   .gap-banner .gap-pct{
-    display:inline-block;background:rgba(255,255,255,0.18);border-radius:4px;
-    padding:0.05rem 0.5rem;font-weight:700;margin-left:0.25rem;
+    display:inline-block;background:var(--paper);color:var(--danger);border:1.5px solid var(--ink);
+    padding:.02rem .45rem;font-weight:800;margin-left:.25rem;
   }
 
-  .capacity-card{background:var(--surface);border-radius:var(--radius);padding:0.85rem 1.15rem;box-shadow:var(--shadow);margin-bottom:0.85rem}
-  .capacity-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.45rem}
-  .capacity-title{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
-  .capacity-count{font-size:0.8rem;font-weight:600;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
-  .capacity-track{height:18px;background:var(--surface2);border-radius:9px;overflow:hidden;position:relative}
+  .capacity-card{background:var(--panel);border:2px solid var(--ink);padding:.85rem 1.15rem;margin-bottom:1rem}
+  .capacity-header{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-bottom:.45rem}
+  .capacity-title{font-size:1.1rem;font-weight:800;font-stretch:78%;color:var(--ink)}
+  .capacity-count{font-size:.8rem;font-weight:600;color:var(--ink);font-family:var(--mono)}
+  .capacity-track{height:20px;background:var(--paper);border:2px solid var(--ink);overflow:hidden;position:relative}
   .capacity-fill{
-    height:100%;border-radius:9px;transition:width 0.6s cubic-bezier(0.22,1,0.36,1);
-    background:linear-gradient(90deg,var(--accent) 0%,var(--accent-light) 100%);width:0%;position:relative;
+    height:100%;transition:width .6s cubic-bezier(.22,1,.36,1);
+    background:var(--blue);width:0%;position:relative;
   }
-  .capacity-fill.warn{background:linear-gradient(90deg,#f59e0b 0%,#ef4444 100%)}
+  .capacity-fill.warn{background:linear-gradient(90deg,#e8890c 0%,var(--danger) 100%)}
   .capacity-pct{
     position:absolute;right:6px;top:50%;transform:translateY(-50%);
-    font-size:0.68rem;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;
+    font-size:.7rem;font-weight:700;color:#fff;font-family:var(--mono);
   }
 
   .xray-window{
-    background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+    background:var(--panel);border:2px solid var(--ink);box-shadow:5px 5px 0 var(--pink);
     padding:1rem;min-height:380px;
   }
-  .xray-label{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:0.65rem}
-  .blocks-container{display:flex;flex-direction:column;gap:0.5rem}
+  .xray-label{font-size:.85rem;font-weight:700;color:var(--muted);margin-bottom:.7rem}
+  .blocks-container{display:flex;flex-direction:column;gap:.5rem}
   .empty-state{
     display:flex;align-items:center;justify-content:center;min-height:300px;
-    color:var(--text-dim);font-size:0.92rem;font-style:italic;text-align:center;padding:2rem;
+    color:var(--muted);font-size:.95rem;font-style:italic;text-align:center;padding:2rem;
   }
 
   .ctx-block{
-    border-left:4px solid var(--border);border-radius:8px;background:var(--surface);
-    box-shadow:var(--shadow);overflow:hidden;cursor:pointer;
-    opacity:0;transform:translateX(-24px);transition:opacity 0.4s ease,transform 0.4s ease;
+    border:1px solid var(--rule);border-left:6px solid var(--rule);border-radius:0;background:var(--paper);
+    overflow:hidden;cursor:pointer;
+    opacity:0;transform:translateX(-24px);transition:opacity .4s ease,transform .4s ease;
   }
+  .ctx-block:hover{border-color:var(--ink)}
   .ctx-block.visible{opacity:1;transform:translateX(0)}
-  .ctx-block.dimmed{opacity:0.5}
-  .block-header{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.8rem;gap:0.5rem}
-  .block-label{font-size:0.8rem;font-weight:700;color:var(--text)}
-  .block-right{display:flex;align-items:center;gap:0.4rem;flex-shrink:0}
+  .ctx-block.dimmed{opacity:.55}
+  .block-header{display:flex;justify-content:space-between;align-items:center;padding:.5rem .8rem;gap:.5rem}
+  .block-label{font-size:.85rem;font-weight:800;color:var(--ink);min-width:0}
+  .block-right{display:flex;align-items:center;gap:.4rem;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
   .block-tokens{
-    font-size:0.7rem;font-weight:600;padding:0.12rem 0.5rem;border-radius:999px;
-    background:var(--surface2);color:var(--text-dim);white-space:nowrap;font-family:'JetBrains Mono',monospace;
+    font-size:.72rem;font-weight:600;padding:.1rem .45rem;border-radius:0;
+    background:var(--panel);border:1px solid var(--rule);color:var(--ink);white-space:nowrap;font-family:var(--mono);
   }
-  .block-badge{font-size:0.62rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:999px;white-space:nowrap;letter-spacing:0.02em}
-  .badge-new{background:#dcfce7;color:#15803d}
-  .badge-compacted{background:#e2e8f0;color:#475569}
-  .badge-truncated{background:#fef3c7;color:#b45309}
-  .badge-evicted{background:#fee2e2;color:#dc2626}
+  .block-badge{font-size:.66rem;font-weight:800;padding:.08rem .4rem;border-radius:0;white-space:nowrap;letter-spacing:.02em;border:1px solid currentColor}
+  .badge-new{background:var(--safe-bg);color:#126e4b}
+  .badge-compacted{background:#e9e5d8;color:#5b6078}
+  .badge-truncated{background:var(--warn-bg);color:var(--warn)}
+  .badge-evicted{background:var(--danger-bg);color:#b3241e}
   .block-preview{
-    padding:0 0.8rem 0.5rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;
-    line-height:1.5;color:var(--text-dim);opacity:0.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    padding:0 .8rem .5rem;font-family:var(--mono);font-size:.74rem;
+    line-height:1.5;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .block-body{max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.22,1,0.36,1)}
+  .block-body{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.22,1,.36,1)}
   .ctx-block.expanded .block-body{max-height:520px;overflow-y:auto}
   .ctx-block.expanded .block-preview{display:none}
   .block-content{
-    padding:0.5rem 0.8rem 0.7rem;font-family:'JetBrains Mono',monospace;font-size:0.74rem;
-    line-height:1.6;color:var(--text-dim);white-space:pre-wrap;word-break:break-word;border-top:1px solid var(--border);
+    padding:.5rem .8rem .7rem;font-family:var(--mono);font-size:.76rem;
+    line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word;border-top:1px solid var(--rule);background:var(--panel);
   }
 
-  .stats-row{display:flex;gap:0.85rem;margin-top:0.85rem;flex-wrap:wrap}
+  .stats-row{display:flex;gap:.85rem;margin-top:1rem;flex-wrap:wrap}
   .stat-box{
-    flex:1;min-width:140px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:0.65rem 0.9rem;
+    flex:1;min-width:140px;background:var(--panel);border:2px solid var(--ink);
+    padding:.65rem .9rem;
   }
-  .stat-label{font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim)}
-  .stat-value{font-size:1.15rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace}
-  .stat-note{font-size:0.68rem;color:var(--text-dim)}
+  .stat-label{font-size:.8rem;font-weight:700;color:var(--muted)}
+  .stat-value{font-size:1.2rem;font-weight:700;color:var(--ink);font-family:var(--mono)}
+  .stat-note{font-size:.75rem;color:var(--muted)}
 
   /* Takeaway */
   .insight{
-    background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#fff;
-    border-radius:var(--radius);padding:1.15rem 1.35rem;box-shadow:var(--shadow-md);
-    line-height:1.7;font-size:0.93rem;display:none;animation:msgIn 0.5s ease;
+    background:var(--panel);color:var(--ink);border:2px solid var(--ink);box-shadow:5px 5px 0 var(--pink);
+    padding:1.15rem 1.35rem;
+    line-height:1.7;font-size:.95rem;display:none;animation:msgIn .5s ease;
   }
+  .insight strong{font-weight:800}
   .insight-label{
-    display:inline-block;background:rgba(255,255,255,0.18);font-weight:700;font-size:0.75rem;
-    text-transform:uppercase;letter-spacing:0.06em;padding:0.15rem 0.65rem;border-radius:4px;margin-bottom:0.55rem;
+    display:inline-block;font-weight:800;font-size:1.15rem;font-stretch:78%;
+    padding:0 4px;margin-bottom:.4rem;margin-right:.35rem;
+    background:linear-gradient(transparent 55%,var(--yellow) 55%);
   }
-  .insight ul{margin:0.4rem 0 0 1.1rem}
-  .insight li{margin-bottom:0.35rem}
+  .insight ul{margin:.4rem 0 0 1.1rem}
+  .insight li{margin-bottom:.35rem}
   .insight .replay-hint{
-    margin-top:0.7rem;padding-top:0.6rem;border-top:1px solid rgba(255,255,255,0.25);
-    font-size:0.85rem;opacity:0.95;
+    margin-top:.7rem;padding-top:.6rem;border-top:2px solid var(--ink);
+    font-size:.88rem;
   }
 
   @media(max-width:860px){
     .main-grid{grid-template-columns:1fr}
     .budget-group{margin-left:0;width:100%}
-    .page-header h1{font-size:1.4rem}
     .chat-messages{min-height:240px;max-height:320px}
-    .narrator-card{margin-top:1rem}
+    .narrator-card{margin-top:1.25rem}
   }
+  @media(max-width:640px){
+    .page-header{padding:.8rem 1rem 1rem}
+    .container{padding:0 1rem 2rem}
+    .chat-card{box-shadow:4px 4px 0 var(--blue)}
+    .xray-window{box-shadow:4px 4px 0 var(--pink);padding:.75rem}
+    .insight{box-shadow:4px 4px 0 var(--pink)}
+    .block-header{flex-wrap:wrap}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
 
@@ -366,57 +386,57 @@
   /* ═════════════ SEGMENT DEFINITIONS ═════════════ */
   var SEG = {
     system: {
-      label:"System Prompt", color:"#1e3a5f", tokens:900,
+      label:"System Prompt", color:"#1d2a6b", tokens:900,
       preview:"You are Acme Assistant, an AI for Acme Commerce employees...",
       content:"You are Acme Assistant, an AI assistant for Acme Commerce employees.\n\nYou are helpful, professional, and concise. You have access to tools and\nskills listed below. Use them when they are relevant to the request.\n\nRules:\n- Never share customer personal data outside approved channels.\n- Financial or legal statements must include a disclaimer.\n- If you are not sure, say so. Never invent policy details.\n- Follow the company tone guide: warm, direct, no corporate jargon.\n- When drafting customer-facing text, keep it under 150 words unless asked.\n\nToday's date: 2026-07-06. The user is authenticated as an Acme employee.\nTheir role and preferences may be provided in a memories section below --\ntreat memories as background context that may be outdated."
     },
     custom: {
-      label:"Custom Instructions", color:"#0891b2", tokens:200,
+      label:"Custom Instructions", color:"#0f8fa3", tokens:200,
       preview:"From Maya's settings: I lead customer operations. Keep answers short...",
       content:"From Maya's settings ('How should the assistant respond?'):\n\nI lead customer operations at Acme. Keep answers short and practical.\nI prefer bullet points over long paragraphs. When I ask for a draft,\ngive me the draft first and the explanation after. Use European date\nformats. Our customers are mostly in the EU."
     },
     memories: {
-      label:"Memories (3 of 47 retrieved)", color:"#7c3aed", tokens:400,
+      label:"Memories (3 of 47 retrieved)", color:"#7a4fd0", tokens:400,
       preview:"<memories: may be stale, verify before relying> - Maya prefers...",
       content:"<memories>\nThe following was saved from past conversations. It may be incomplete\nor outdated -- verify before relying on it.\n\n- [2026-05-12] Maya prefers a warm but direct tone: short sentences,\n  no exclamation marks, sign-off \"-- Maya, Customer Ops\".\n- [2026-06-02] Maya rewrote a draft to remove the phrase \"we apologize\n  for any inconvenience\" -- she considers it corporate filler.\n- [2026-06-20] Maya's team handles ~400 refund tickets/month; escalations\n  go to finance-ops@acme.example.\n</memories>\n\n(44 other stored memories did not match this request and were NOT loaded.)"
     },
     skills: {
-      label:"Skill Catalog (compact)", color:"#d97706", tokens:500,
+      label:"Skill Catalog (compact)", color:"#e8710c", tokens:500,
       preview:"Available skills: draft-email, data-analysis, refund-lookup, translate...",
       content:"Available skills (one-line descriptions -- full instructions load on demand):\n\n- draft-email: Compose customer-facing emails in the Acme tone\n- data-analysis: Query company databases and analyze results in Python\n- refund-lookup: Look up refund status by order ID\n- translate: Translate customer messages (EU languages)\n- policy-check: Compare a draft against a company policy document\n- summarize-thread: Summarize long support threads\n- escalation: File an escalation to finance-ops\n- report-builder: Build weekly ops reports\n- crm-notes: Read/write CRM contact notes\n- meeting-prep: Prepare briefings from calendar context\n- kb-search: Search the internal knowledge base\n- churn-flags: Flag at-risk customers from ticket sentiment"
     },
     skillsFull: {
-      label:"Skill: data-analysis (expanded)", color:"#d97706", tokens:3500,
+      label:"Skill: data-analysis (expanded)", color:"#e8710c", tokens:3500,
       preview:"# Skill: data-analysis -- When to use: the user asks to query...",
       content:"# Skill: data-analysis\n\n## When to use\nThe user asks to query company data, compute statistics, or produce\ncharts from internal databases.\n\n## Data sources\n- Postgres (read replica): orders, refunds, tickets, customers\n- Snowflake: historical aggregates (>13 months)\n- Never query production primaries.\n\n## How to work\n1. Confirm which tables are needed; ask for schema if not provided.\n2. Write parameterized SQL -- never interpolate raw user input.\n3. Wrap analysis in a single Python script using psycopg + pandas.\n4. Read credentials from env vars (ACME_PG_DSN); never hardcode secrets.\n5. Aggregate before exporting: no row-level customer data in outputs.\n6. Include a plain-language summary of findings after the code.\n\n## Query conventions\n- Timezone: Europe/Prague for all date bucketing.\n- \"Last month\" = previous full calendar month.\n- Refund amounts are in EUR cents -- divide by 100 for reporting.\n- Exclude test accounts (customer.is_test = true).\n\n## Output format\n- Code block first, then a short interpretation.\n- Flag any result that looks anomalous vs. the 3-month average.\n\n[... plus ~2,800 tokens of worked examples, edge cases, and\nerror-handling guidance that ship with the full skill ...]\n\n-- The compact catalog entry for this skill was ~40 tokens.\n-- The full instructions are ~3,000 tokens. This text stays in the\n-- conversation from now on: lazy loading is a one-way door per session."
     },
     tools: {
-      label:"Tool Definitions", color:"#db2777", tokens:1400,
+      label:"Tool Definitions", color:"#e0368a", tokens:1400,
       preview:'{"name":"web_search","description":"Search the web and return snippets"...',
       content:'Tools the model may call (JSON schemas, sent on every request):\n\n{"name":"web_search",\n "description":"Search the web and return result snippets",\n "parameters":{"query":{"type":"string","required":true}}}\n\n{"name":"read_document",\n "description":"Read an uploaded document by file id",\n "parameters":{"file_id":{"type":"string","required":true}}}\n\n{"name":"refund_db_query",\n "description":"Run a read-only SQL query against the refunds replica",\n "parameters":{"sql":{"type":"string","required":true}}}\n\n{"name":"crm_lookup",\n "description":"Fetch a customer record from the CRM",\n "parameters":{"customer_id":{"type":"string","required":true}}}\n\n{"name":"send_for_review",\n "description":"Send a draft to a human reviewer before it goes out",\n "parameters":{"draft":{"type":"string","required":true},\n               "reviewer":{"type":"string"}}}\n\n{"name":"kb_search",\n "description":"Search the internal knowledge base",\n "parameters":{"query":{"type":"string","required":true}}}\n\nThe model does not "have" these tools -- it only sees these descriptions\nand can emit a structured call. The app executes the call and pastes the\nresult back into the window.'
     },
     doc: {
-      label:"Uploaded: refund-policy.pdf", color:"#059669", tokens:4200,
+      label:"Uploaded: refund-policy.pdf", color:"#178a5e", tokens:4200,
       preview:"ACME COMMERCE -- REFUND & RETURNS POLICY v3.2 (extracted text, 14 pages)...",
       content:"ACME COMMERCE -- REFUND & RETURNS POLICY v3.2\n(extracted text of all 14 pages -- the PDF is not \"attached\", its full\ntext is pasted into the window)\n\n1. SCOPE\nThis policy applies to all consumer purchases in the EU and UK...\n\n2. WITHDRAWAL PERIOD\nCustomers may withdraw from a purchase within 14 calendar days of\ndelivery without giving a reason (Directive 2011/83/EU). Acme extends\nthis voluntarily to 30 days for members of the loyalty program...\n\n3. REFUND TIMELINES\nRefunds are issued to the original payment method within 14 days of\nreceiving the returned goods. Where the customer provides proof of\nreturn shipment, the refund may not be withheld beyond 14 days...\n\n4. EXCLUSIONS\nPersonalized items, perishables, unsealed hygiene products...\n\n5. LATE REFUND REMEDIATION\nWhere a refund breaches the 14-day timeline, tier-1 agents may issue\na 10% goodwill credit without escalation. Larger remediation requires\nfinance-ops approval...\n\n[... sections 6-14: partial refunds, exchanges, fraud checks,\nchargebacks, cross-border shipping, warranty interplay, appendices ...]"
     },
     docTrunc: {
-      label:"Uploaded: refund-policy.pdf", color:"#059669", tokens:900,
+      label:"Uploaded: refund-policy.pdf", color:"#178a5e", tokens:900,
       preview:"[TRUNCATED to relevant sections] 2. WITHDRAWAL PERIOD... 3. REFUND TIMELINES...",
       content:"[Document truncated by the app to fit the window -- only the sections\nthat matched the current request were kept. 11 of 14 pages dropped.]\n\n2. WITHDRAWAL PERIOD\nCustomers may withdraw within 14 days of delivery (Directive 2011/83/EU);\nextended to 30 days for loyalty members...\n\n3. REFUND TIMELINES\nRefunds issued within 14 days of receiving returned goods...\n\n5. LATE REFUND REMEDIATION\nTier-1 agents may issue a 10% goodwill credit for breached timelines...\n\n(The model can no longer see sections 1, 4, or 6-14. If Maya asks about\nexclusions now, the answer will be a guess unless the app re-loads them.)"
     },
     summary: {
-      label:"Summary of earlier turns", color:"#64748b", tokens:350,
+      label:"Summary of earlier turns", color:"#8a8fa8", tokens:350,
       preview:"[Auto-generated] Maya drafted an apology for a late refund; tone was...",
       content:"[Auto-generated summary -- the original turns were removed to save space]\n\nMaya is handling a late-refund complaint. The assistant drafted an\napology email; Maya asked for it in her own voice (short sentences,\nno \"we apologize for any inconvenience\", sign-off \"-- Maya\"). The draft\nwas checked against refund-policy.pdf: compliant, and a 10% goodwill\ncredit is allowed for breached timelines. A web search confirmed that\ncompetitor NordShop announced a 60-day return window on 2026-07-05.\n\n(Nuances, exact wording, and the full reasoning from those turns are\ngone. The model only knows what this summary chose to keep.)"
     },
     toolCall: {
-      label:"Tool Call (by the model)", color:"#be185d", tokens:80,
+      label:"Tool Call (by the model)", color:"#c81e63", tokens:80,
       preview:'{"tool":"web_search","query":"NordShop return window announcement"}',
       content:'The model\'s own output from a moment ago, now part of its input:\n\n{"tool":"web_search",\n "query":"NordShop return window policy change announcement July 2026"}\n\nThe model cannot browse. It emitted this structured request, the app\nexecuted the actual search, and the results were pasted in below.'
     },
     toolResult: {
-      label:"Tool Result: web search", color:"#4f46e5", tokens:1100,
+      label:"Tool Result: web search", color:"#4b3fc4", tokens:1100,
       preview:"[1] NordShop press release (2026-07-05): 'NordShop extends returns to 60 days'...",
       content:"Results returned by the app's search backend (the model never left\nthe window -- this text was fetched and pasted in):\n\n[1] NordShop press release -- 2026-07-05\n\"NordShop extends returns to 60 days across the EU\"\nNordShop announced that starting 1 August 2026, all EU purchases can\nbe returned within 60 days, doubling the statutory minimum...\n\n[2] RetailWatch EU -- 2026-07-05\n\"NordShop bets on generous returns as acquisition play\"\nAnalysts note return-window extensions raise reverse-logistics costs\n12-18% but lift conversion...\n\n[3] Reddit r/ecommerce -- thread, 214 comments\nMixed reactions from sellers; several note NordShop's policy excludes\nmarketplace third-party items...\n\n[... 7 more snippets, ranked by the search backend, not by the model ...]"
     }
@@ -673,7 +693,7 @@
       list.push({def:SEG.memories, opts: turn.addMemories ? isNew(true) : {}});
     } else if(turnIdx >= 2){
       list.push({def:{
-        label:"Memories", color:"#7c3aed",
+        label:"Memories", color:"#7a4fd0",
         preview:"(no longer in the window — evicted to make room in an earlier call)",
         content:"Maya's memories were dropped from the window in an earlier call to make\nroom. The model now knows nothing about her tone preferences or role.\nIf she asks for \"my usual style\" again, the answer will be generic --\nunless the app decides to re-retrieve them."
       }, opts:{tokens:0, badge:"evicted", dimmed:true}});
@@ -688,7 +708,7 @@
     if(r.doc === "trunc") list.push({def:SEG.docTrunc, opts:{badge:"truncated"}});
     if(r.doc === "evicted"){
       list.push({def:{
-        label:"Uploaded: refund-policy.pdf", color:"#059669",
+        label:"Uploaded: refund-policy.pdf", color:"#178a5e",
         preview:"(no longer in the window — evicted to make room in an earlier call)",
         content:"The uploaded policy document was removed from the window in an earlier\ncall to make room. The model can no longer quote or check it. If Maya\nasks a policy question now, the model will answer from general knowledge\n-- and may confidently get Acme's specifics wrong."
       }, opts:{tokens:0, badge:"evicted", dimmed:true}});
@@ -702,7 +722,7 @@
       } else {
         var tn = h.turnNo;
         list.push({def:{
-          label:"History: turn "+tn+" (verbatim)", color:"#2563eb",
+          label:"History: turn "+tn+" (verbatim)", color:"#2a4bd7",
           preview: "User: " + TURNS[tn-1].user.text,
           content: "Re-sent word for word — the model has no memory of it:\n\nUser: " + TURNS[tn-1].user.text + "\n\nAssistant: " + TURNS[tn-1].assistant.text
         }, opts:{tokens:h.tokens}});
@@ -711,7 +731,7 @@
 
     /* current user message */
     list.push({def:{
-      label:"Maya's message (this turn)", color:"#dc2626",
+      label:"Maya's message (this turn)", color:"#d5312a",
       preview: turn.user.text,
       content: (turn.user.attachment ? "[attachment handled separately above]\n\n" : "") + turn.user.text
     }, opts:{tokens:turn.user.tokens, badge:"new", badgeText:"WHAT MAYA TYPED"}});
@@ -726,7 +746,7 @@
     r.events.forEach(function(ev){
       if(ev.action === "overflow"){
         list.push({def:{
-          label:"⚠ Window overflow", color:"#dc2626",
+          label:"⚠ Window overflow", color:"#d5312a",
           preview: ev.label,
           content: ev.label + "\n\nThe app made its cuts silently. Maya was not asked and was not told."
         }, opts:{tokens:0, badge:"evicted", badgeText:"OVERFLOW", dimmed:true}});
@@ -942,12 +962,12 @@
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>

@@ -42,14 +42,26 @@ a professional GenAI/ML/Data Science training platform.
    - `git push origin main`
 6. **Confirm** to the user that deployment, cache invalidation, and git push all succeeded
 
+## Index page (generated since the Riso redesign)
+- `index.html` is written by `training-ops/web/riso/build.py` from `training-ops/web/riso/data/demos.json`
+  (groups, titles, descriptions, cover emblem per demo). Adding or removing a demo: edit that JSON,
+  run `/usr/bin/python3 ../training-ops/web/riso/build.py`, review, deploy. Do not hand-edit `index.html`.
+- `assets/riso/` (riso.css, shelf.js) is copied in by the same script; the source lives in training-ops.
+
 ## Demo Standards
 - Each demo is a SINGLE self-contained HTML file
-- Modern, clean UI — professional training look
-- Mobile-responsive (students may use phones/tablets)
+- Mobile-responsive (students use phones and tablets): check 390, 820 and 1280 wide
 - Include a header with "barcik.training" branding
 - Include a brief explanation of the concept being demonstrated
 - Use vanilla HTML/CSS/JS (no build step needed)
-- Color scheme: use a professional blue/white palette
+- **Look: Riso** (since October 2026). Paper background, navy ink, Bricolage Grotesque, square
+  bordered panels with hard offset shadows, blue/pink/yellow as decoration. Paste the token block,
+  the "All demos" link style and the pill style from `training-ops/web/riso/demo-kit.css`; the rules
+  and the colour mapping are in `training-ops/web/riso/DEMO_RESKIN.md`; `neuron-playground.html` is
+  the reference. Colours that carry meaning in a lesson keep it: red = danger/wrong, green =
+  safe/correct, amber = caution; never use blue/pink/yellow for those. Exceptions by design: the two
+  classroom timers stay dark (projected in a dark room) and the EU AI Act Lab keeps its
+  legal-document look (Spectral, EU blue and gold).
 - **AI transparency pill (mandatory since 2026-08-16):** every demo ends with a small fixed
   `<details class="ai-transparency-pill" id="ai-transparency">` before `</body>` (corner tab that
   expands into the notice: scripted simulation, nothing sent to an AI model, built with generative AI,

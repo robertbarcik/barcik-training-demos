@@ -4,70 +4,78 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fine-Tuning & LoRA | robert@barcik.training</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 <style>
+/* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
 :root {
-  --bg: #f5f8fc;
-  --surface: #ffffff;
-  --surface2: #edf2f7;
-  --border: #e2e8f0;
-  --text: #1a202c;
-  --text-dim: #64748b;
-  --accent: #1e3a5f;
-  --accent2: #2d5a8e;
-  --green: #059669;
-  --orange: #d97706;
-  --pink: #db2777;
-  --cyan: #0891b2;
-  --red: #dc2626;
-  --yellow: #d97706;
+  --paper: #f3efe4; --panel: #fbf8f0; --ink: #1d2a6b; --muted: #525b8c; --rule: #c9c3ae; --rule-soft: #e2dccb;
+  --blue: #2a4bd7; --pink: #ff5fa2; --yellow: #ffe14d; --pink-ink: #c81e63;
+  /* colours that carry meaning in a lesson keep their meaning */
+  --danger: #d5312a; --danger-bg: #fbe1dc; --safe: #178a5e; --safe-bg: #dcf1e4; --warn: #b85f00; --warn-bg: #ffefc2; --neutral: #8a8fa8;
+  /* categories that must stay apart (in this order): blue, pink, green, orange, violet, teal */
+  --cat-1: #2a4bd7; --cat-2: #e0368a; --cat-3: #178a5e; --cat-4: #e8710c; --cat-5: #7a4fd0; --cat-6: #0f8fa3;
+  --font: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* the demo's own token names (used from inline styles and JS), mapped onto Riso.
+     Meanings kept: cyan = frozen / original W, orange = trainable / costly,
+     pink = LoRA B + DPO, green = LoRA A + good / small + vision, red = huge cost / rejected,
+     amber (was --yellow, now --warn in the markup) = RFT + expert grade. */
+  --bg: var(--paper);
+  --surface: var(--panel);
+  --surface2: var(--paper);
+  --border: var(--rule);
+  --text: var(--ink);
+  --text-dim: var(--muted);
+  --accent: var(--ink);
+  --accent2: var(--blue);
+  --green: var(--safe);
+  --orange: #b85f00;
+  --cyan: #0d7f91;
+  --red: var(--danger);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
+  background: var(--paper) var(--grain);
+  color: var(--ink);
+  font-family: var(--font);
   overflow-x: hidden;
   line-height: 1.7;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 0; }
 
 .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
 /* Hero */
 .hero {
-  padding: 80px 0 60px;
+  padding: 72px 0 40px;
   text-align: center;
   position: relative;
 }
-.hero::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-}
+.hero::after { content: none; }
 .hero h1 {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(2.2rem, 5vw, 3.6rem);
-  font-weight: 900;
-  background: linear-gradient(135deg, var(--accent2), var(--cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 16px;
-  letter-spacing: -1px;
+  font-family: var(--font);
+  font-size: clamp(2.4rem, 6vw, 3.8rem);
+  font-weight: 800;
+  font-stretch: 78%;
+  line-height: .95;
+  color: var(--blue);
+  text-shadow: .045em .04em 0 var(--pink);
+  margin-bottom: 18px;
+  letter-spacing: -0.02em;
 }
 .hero p {
-  color: var(--text-dim);
+  color: var(--ink);
   font-size: 1.1rem;
   max-width: 600px;
   margin: 0 auto;
@@ -76,42 +84,42 @@ body {
 /* Navigation tabs */
 .nav-tabs {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
-  padding: 32px 0;
+  padding: 20px 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  background: var(--paper) var(--grain);
+  border-bottom: 2px solid var(--ink);
 }
 .nav-tab {
-  padding: 10px 20px;
-  border-radius: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  font-size: 0.85rem;
-  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: 0;
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s;
-  font-family: 'DM Sans', sans-serif;
+  transition: background 0.15s;
+  font-family: var(--font);
 }
-.nav-tab:hover { border-color: var(--accent); color: var(--text); }
+.nav-tab:hover { background: var(--yellow); }
 .nav-tab.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
 }
 
 .nav-tab:focus-visible, .method-card:focus-visible, .adapter-btn:focus-visible, [role="switch"]:focus-visible {
-  outline: 2px solid #1e3a5f;
+  outline: 3px solid var(--pink);
   outline-offset: 2px;
 }
 
 /* Sections */
-.section { display: none; padding: 48px 0 80px; animation: fadeUp 0.4s ease; }
+.section { display: none; padding: 44px 0 80px; animation: fadeUp 0.4s ease; }
 .section.active { display: block; }
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
@@ -119,42 +127,43 @@ body {
 }
 
 .section-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 8px;
+  display: inline-block;
+  font-family: var(--font);
+  font-size: 2.1rem;
+  font-weight: 800;
+  font-stretch: 78%;
+  line-height: 1.1;
+  color: var(--ink);
+  background: linear-gradient(transparent 55%, var(--yellow) 55%);
+  padding: 0 6px;
+  margin-left: -6px;
+  margin-bottom: 10px;
 }
 .section-sub {
-  color: var(--text-dim);
-  margin-bottom: 40px;
-  font-size: 1rem;
+  color: var(--muted);
+  margin-bottom: 36px;
+  font-size: 1.02rem;
 }
 
 /* Cards */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 24px;
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  box-shadow: 5px 5px 0 var(--blue);
+  padding: 30px;
+  margin-bottom: 26px;
   position: relative;
-  overflow: hidden;
 }
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 3px;
-  background: linear-gradient(90deg, var(--accent), var(--cyan));
-}
+.card::before { content: none; }
+.card h3 { font-weight: 800; font-stretch: 85%; line-height: 1.25; }
 
 .card-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--accent2);
-  margin-bottom: 12px;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 10px;
 }
 
 /* Interactive neural viz */
@@ -163,46 +172,46 @@ body {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 40px 20px;
+  padding: 36px 20px;
   flex-wrap: wrap;
 }
 
 .matrix-box {
-  border-radius: 12px;
+  border-radius: 0;
   padding: 16px;
   text-align: center;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--mono);
   font-size: 0.75rem;
   position: relative;
   transition: all 0.5s;
 }
 .matrix-box .label {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  font-family: var(--font);
+  font-size: 0.85rem;
   margin-bottom: 8px;
-  font-weight: 600;
+  font-weight: 800;
 }
 .matrix-grid {
   display: grid;
   gap: 3px;
 }
 .matrix-cell {
-  width: 28px;
+  width: 30px;
   height: 28px;
-  border-radius: 4px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6rem;
+  font-size: 0.68rem;
   font-weight: 600;
+  color: var(--ink);
   transition: all 0.3s;
 }
 
 .op-symbol {
   font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--text-dim);
+  font-weight: 800;
+  color: var(--ink);
   flex-shrink: 0;
 }
 
@@ -211,14 +220,16 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 0.65rem;
-  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 0;
+  border: 1.5px solid currentColor;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
   margin-top: 8px;
 }
-.frozen-badge.frozen { background: rgba(34,211,238,0.15); color: var(--cyan); }
-.frozen-badge.trainable { background: rgba(251,146,60,0.15); color: var(--orange); }
+.frozen-badge.frozen { background: rgba(15,143,163,0.12); color: var(--cyan); }
+.frozen-badge.trainable { background: var(--warn-bg); color: var(--orange); }
 
 /* Toggle switch */
 .toggle-row {
@@ -228,27 +239,30 @@ body {
   margin: 24px 0;
   justify-content: center;
 }
-.toggle-label { font-size: 0.9rem; color: var(--text-dim); }
-.toggle-label.active-label { color: var(--text); font-weight: 600; }
+.toggle-label { font-size: 0.95rem; color: var(--muted); }
+.toggle-label.active-label { color: var(--ink); font-weight: 800; }
 .toggle {
   width: 56px;
   height: 28px;
-  background: var(--border);
-  border-radius: 14px;
+  background: var(--rule-soft);
+  border: 2px solid var(--ink);
+  border-radius: 0;
   cursor: pointer;
   position: relative;
-  transition: background 0.3s;
+  transition: background 0.2s;
+  flex-shrink: 0;
 }
-.toggle.on { background: var(--accent); }
+.toggle.on { background: var(--ink); }
 .toggle .thumb {
-  width: 22px;
-  height: 22px;
-  background: white;
+  width: 18px;
+  height: 18px;
+  background: var(--yellow);
+  border: 2px solid var(--ink);
   border-radius: 50%;
   position: absolute;
   top: 3px;
   left: 3px;
-  transition: transform 0.3s;
+  transition: transform 0.2s;
 }
 .toggle.on .thumb { transform: translateX(28px); }
 
@@ -261,81 +275,101 @@ body {
   justify-content: center;
 }
 .slider-row label {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: var(--mono);
   min-width: 70px;
 }
 .slider-row input[type="range"] {
   -webkit-appearance: none;
-  width: 200px;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
+  appearance: none;
+  width: 220px;
+  max-width: 50vw;
+  height: 6px;
+  background: var(--rule);
+  border-radius: 0;
   outline: none;
+  cursor: pointer;
 }
+.slider-row input[type="range"]:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; }
 .slider-row input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  background: var(--accent);
+  width: 20px;
+  height: 20px;
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.slider-row input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--yellow);
+  border: 2px solid var(--ink);
   border-radius: 50%;
   cursor: pointer;
 }
 .slider-row .value {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-  color: var(--accent2);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--blue);
   min-width: 20px;
 }
 
 /* Training data examples */
 .training-example {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 0;
   padding: 20px;
   margin-bottom: 16px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--mono);
   font-size: 0.78rem;
   line-height: 1.8;
+  color: var(--ink);
 }
 .training-example .tag {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.65rem;
+  padding: 1px 7px;
+  border-radius: 0;
+  border: 1px solid currentColor;
+  font-size: 0.72rem;
   font-weight: 600;
   margin-right: 6px;
 }
-.tag-system { background: rgba(99,102,241,0.2); color: var(--accent); }
-.tag-user { background: rgba(34,211,238,0.2); color: var(--cyan); }
-.tag-assistant { background: rgba(52,211,153,0.2); color: var(--green); }
-.tag-chosen { background: rgba(52,211,153,0.2); color: var(--green); }
-.tag-rejected { background: rgba(248,113,113,0.2); color: var(--red); }
-.tag-grade { background: rgba(251,191,36,0.2); color: var(--yellow); }
+.tag-system { background: rgba(29,42,107,0.10); color: var(--ink); }
+.tag-user { background: rgba(15,143,163,0.12); color: var(--cyan); }
+.tag-assistant { background: var(--safe-bg); color: var(--green); }
+.tag-chosen { background: var(--safe-bg); color: var(--green); }
+.tag-rejected { background: var(--danger-bg); color: var(--red); }
+.tag-grade { background: var(--warn-bg); color: var(--warn); }
 
 /* Analogy boxes */
 .analogy {
-  background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(34,211,238,0.08));
-  border: 1px solid rgba(99,102,241,0.2);
-  border-radius: 12px;
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  border-left: 8px solid var(--pink);
+  border-radius: 0;
   padding: 24px;
-  margin: 24px 0;
+  margin: 26px 0;
   position: relative;
 }
 .analogy::before {
   content: '💡';
   position: absolute;
-  top: -12px;
-  left: 20px;
-  font-size: 1.2rem;
-  background: var(--surface);
-  padding: 0 8px;
+  top: -14px;
+  left: 18px;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  padding: 0 6px;
 }
 .analogy p {
-  font-size: 0.95rem;
-  color: var(--text);
+  font-size: 0.97rem;
+  color: var(--ink);
 }
 
 /* Flow diagram */
@@ -348,29 +382,29 @@ body {
   flex-wrap: wrap;
 }
 .flow-step {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 0;
   padding: 12px 18px;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 700;
   text-align: center;
   min-width: 100px;
 }
-.flow-arrow { color: var(--accent); font-size: 1.3rem; }
+.flow-arrow { color: var(--ink); font-size: 1.3rem; font-weight: 800; }
 
 /* Data grid */
 .data-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 20px;
   margin: 24px 0;
 }
 
 /* Neuron interactive */
 .neuron-playground {
-  background: var(--surface2);
-  border-radius: 16px;
+  background: var(--paper);
+  border-radius: 0;
   padding: 32px;
   margin: 24px 0;
 }
@@ -383,25 +417,23 @@ canvas { display: block; margin: 0 auto; }
   border-collapse: separate;
   border-spacing: 0;
   margin: 24px 0;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
 }
 .compare-table th {
-  background: var(--surface2);
-  padding: 14px 16px;
+  background: var(--paper);
+  padding: 12px 16px;
   text-align: left;
-  font-weight: 600;
-  border-bottom: 2px solid var(--accent);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  font-weight: 800;
+  border-bottom: 2px solid var(--ink);
+  font-family: var(--font);
+  font-size: 0.88rem;
 }
 .compare-table td {
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--rule-soft);
   vertical-align: top;
 }
-.compare-table tr:hover td { background: rgba(99,102,241,0.05); }
+.compare-table tr:hover td { background: rgba(255,225,77,0.22); }
 
 /* Animated signal flow */
 @keyframes signalFlow {
@@ -413,7 +445,7 @@ canvas { display: block; margin: 0 auto; }
   display: inline-block;
   width: 6px;
   height: 6px;
-  background: var(--accent);
+  background: var(--ink);
   border-radius: 50%;
   animation: signalFlow 1.5s ease infinite;
 }
@@ -425,40 +457,48 @@ canvas { display: block; margin: 0 auto; }
 }
 .lora-active { animation: loraSlideIn 0.5s ease forwards; }
 
-/* Highlight colors for matrices */
-.frozen-cell { background: rgba(34,211,238,0.12); color: var(--cyan); border: 1px solid rgba(34,211,238,0.2); }
-.delta-cell { background: rgba(251,146,60,0.15); color: var(--orange); border: 1px solid rgba(251,146,60,0.2); }
-.lora-a-cell { background: rgba(244,114,182,0.15); color: var(--pink); border: 1px solid rgba(244,114,182,0.25); }
-.lora-b-cell { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
-.result-cell { background: rgba(167,139,250,0.15); color: var(--accent2); border: 1px solid rgba(167,139,250,0.25); }
+/* Highlight colors for matrices (category = tint + rule; numbers stay navy for legibility) */
+.frozen-cell { background: rgba(15,143,163,0.13); border: 1.5px solid var(--cat-6); }
+.delta-cell { background: rgba(232,113,12,0.16); border: 1.5px solid var(--cat-4); }
+.lora-a-cell { background: rgba(224,54,138,0.13); border: 1.5px solid var(--cat-2); }
+.lora-b-cell { background: rgba(23,138,94,0.13); border: 1.5px solid var(--cat-3); }
+.result-cell { background: rgba(42,75,215,0.12); border: 1.5px solid var(--blue); }
 
 .param-count {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-family: var(--font);
+  font-size: 2.1rem;
+  font-weight: 800;
+  font-stretch: 78%;
+  line-height: 1.15;
   margin: 8px 0;
 }
 
 .small-note {
-  font-size: 0.8rem;
-  color: var(--text-dim);
+  font-size: 0.85rem;
+  color: var(--muted);
   margin-top: 8px;
 }
 
 /* Responsive */
 @media (max-width: 700px) {
-  .neuron-viz { flex-direction: column; }
-  .matrix-cell { width: 22px; height: 22px; font-size: 0.5rem; }
-  .nav-tab { padding: 8px 12px; font-size: 0.75rem; }
+  .container { padding: 0 16px; }
+  .hero { padding: 24px 0 28px; }
+  .nav-tabs { padding: 12px 0; gap: 6px; }
+  .neuron-viz { flex-direction: column; padding: 24px 0; }
+  .matrix-cell { width: 26px; height: 24px; font-size: 0.62rem; }
+  .nav-tab { padding: 8px 11px; font-size: 0.8rem; }
+  .card { padding: 20px 18px; box-shadow: 4px 4px 0 var(--blue); }
+  .section-title { font-size: 1.8rem; }
 }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
 
@@ -466,7 +506,7 @@ canvas { display: block; margin: 0 auto; }
   <div class="hero">
     <h1>Fine-Tuning & LoRA</h1>
     <p>An interactive, intuitive guide to how we adapt large language models to specific tasks — without retraining them from scratch.</p>
-    <p style="font-size:0.78rem;color:var(--text-dim);opacity:0.7;margin-top:14px;">robert@barcik.training</p>
+    <p style="font-size:0.82rem;font-weight:700;color:var(--text-dim);opacity:1;margin-top:14px;">robert@barcik.training</p>
   </div>
 
   <div class="nav-tabs" role="tablist">
@@ -592,7 +632,7 @@ canvas { display: block; margin: 0 auto; }
           <div class="op-symbol">+</div>
           <div style="display:flex; align-items:center; gap:6px;">
             <div class="matrix-box">
-              <div class="label" style="color:var(--pink);">B</div>
+              <div class="label" style="color:var(--cat-2);">B</div>
               <div class="matrix-grid" style="grid-template-columns: repeat(2,1fr);" id="matrix-b">
               </div>
               <div class="frozen-badge trainable">🔥 trained</div>
@@ -628,7 +668,7 @@ canvas { display: block; margin: 0 auto; }
       <p style="color:var(--text-dim); font-size:0.9rem;">Instead of computing a full 4096×4096 change matrix (16.7M params), LoRA decomposes it into two smaller matrices — say 4096×8 and 8×4096 — for only 65K params. The "rank" (r) controls how expressive this update is. Higher r = more capacity but more parameters.</p>
     </div>
 
-    <div style="background: #e0f2fe; border-left: 4px solid var(--cyan); border-radius: 10px; padding: 1.25rem 1.5rem; margin-top: 1rem;">
+    <div style="background: var(--panel); border: 2px solid var(--ink); border-left: 8px solid var(--cyan); border-radius: 0; padding: 1.25rem 1.5rem; margin-top: 1rem;">
       <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--text);">Why two matrices instead of one?</h3>
       <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.7;">
         If we used a single ΔW matrix, it would need the same dimensions as W — for example, 4096 × 4096 = <strong>16.7 million parameters</strong>. That's no savings at all.
@@ -662,17 +702,17 @@ canvas { display: block; margin: 0 auto; }
       <div style="text-align:center; margin-top:16px;">
         <div style="display:inline-flex; gap:32px; flex-wrap:wrap; justify-content:center;">
           <div>
-            <div style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Original W</div>
+            <div style="font-size:0.7rem; color:var(--text-dim); font-weight:700;">Original W</div>
             <div id="stat-original" class="param-count" style="color:var(--cyan);">—</div>
             <div style="font-size:0.7rem; color:var(--text-dim);">parameters</div>
           </div>
           <div>
-            <div style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">LoRA (B + A)</div>
+            <div style="font-size:0.7rem; color:var(--text-dim); font-weight:700;">LoRA (B + A)</div>
             <div id="stat-lora" class="param-count" style="color:var(--orange);">—</div>
             <div style="font-size:0.7rem; color:var(--text-dim);">parameters</div>
           </div>
           <div>
-            <div style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Savings</div>
+            <div style="font-size:0.7rem; color:var(--text-dim); font-weight:700;">Savings</div>
             <div id="stat-savings" class="param-count" style="color:var(--green);">—</div>
             <div style="font-size:0.7rem; color:var(--text-dim);">reduction</div>
           </div>
@@ -687,7 +727,7 @@ canvas { display: block; margin: 0 auto; }
 
       <div id="adapter-demo" style="position:relative;">
         <div style="display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap;">
-          <div style="text-align:center; padding:24px; background:var(--surface2); border-radius:12px; border:2px solid var(--cyan); min-width:140px;">
+          <div style="text-align:center; padding:24px; background:var(--surface2); border-radius:0; border:2px solid var(--cyan); min-width:140px;">
             <div style="font-size:2rem;">🧠</div>
             <div style="font-size:0.85rem; font-weight:600; margin-top:8px;">Base Model</div>
             <div style="font-size:0.7rem; color:var(--text-dim);">~7B params, frozen</div>
@@ -696,26 +736,26 @@ canvas { display: block; margin: 0 auto; }
           <div style="font-size:1.5rem; color:var(--text-dim);">+</div>
 
           <div style="display:flex; flex-direction:column; gap:8px;">
-            <div class="adapter-btn" onclick="selectAdapter(this, 'medical')" style="padding:10px 20px; background:var(--surface2); border:2px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.3s; text-align:center;">
+            <div class="adapter-btn" onclick="selectAdapter(this, 'medical')" style="padding:10px 20px; background:var(--surface2); border:2px solid var(--border); border-radius:0; cursor:pointer; transition:all 0.3s; text-align:center;">
               <span style="font-size:1.1rem;">🏥</span>
               <span style="font-size:0.8rem; font-weight:600;"> Medical QA</span>
-              <span style="font-size:0.65rem; color:var(--text-dim); display:block;">14MB adapter</span>
+              <span style="font-size:0.72rem; color:var(--text-dim); display:block;">14MB adapter</span>
             </div>
-            <div class="adapter-btn" onclick="selectAdapter(this, 'legal')" style="padding:10px 20px; background:var(--surface2); border:2px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.3s; text-align:center;">
+            <div class="adapter-btn" onclick="selectAdapter(this, 'legal')" style="padding:10px 20px; background:var(--surface2); border:2px solid var(--border); border-radius:0; cursor:pointer; transition:all 0.3s; text-align:center;">
               <span style="font-size:1.1rem;">⚖️</span>
               <span style="font-size:0.8rem; font-weight:600;"> Legal Brief</span>
-              <span style="font-size:0.65rem; color:var(--text-dim); display:block;">11MB adapter</span>
+              <span style="font-size:0.72rem; color:var(--text-dim); display:block;">11MB adapter</span>
             </div>
-            <div class="adapter-btn" onclick="selectAdapter(this, 'code')" style="padding:10px 20px; background:var(--surface2); border:2px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.3s; text-align:center;">
+            <div class="adapter-btn" onclick="selectAdapter(this, 'code')" style="padding:10px 20px; background:var(--surface2); border:2px solid var(--border); border-radius:0; cursor:pointer; transition:all 0.3s; text-align:center;">
               <span style="font-size:1.1rem;">💻</span>
               <span style="font-size:0.8rem; font-weight:600;"> Code Review</span>
-              <span style="font-size:0.65rem; color:var(--text-dim); display:block;">9MB adapter</span>
+              <span style="font-size:0.72rem; color:var(--text-dim); display:block;">9MB adapter</span>
             </div>
           </div>
 
           <div style="font-size:1.5rem; color:var(--text-dim);">=</div>
 
-          <div id="result-model" style="text-align:center; padding:24px; background:var(--surface2); border-radius:12px; border:2px dashed var(--border); min-width:160px; transition:all 0.4s;">
+          <div id="result-model" style="text-align:center; padding:24px; background:var(--surface2); border-radius:0; border:2px dashed var(--border); min-width:160px; transition:all 0.4s;">
             <div style="font-size:2rem;" id="result-emoji">❓</div>
             <div style="font-size:0.85rem; font-weight:600; margin-top:8px;" id="result-label">Pick an adapter →</div>
             <div style="font-size:0.7rem; color:var(--text-dim);" id="result-desc">Click one to see it in action</div>
@@ -946,18 +986,18 @@ function updateRank() {
 
   viz.innerHTML = `
     <div style="text-align:center;">
-      <div style="width:60px; height:${maxH}px; background:linear-gradient(to top, var(--cyan), var(--accent)); border-radius:8px; margin:0 auto;"></div>
+      <div style="width:60px; height:${maxH}px; background:linear-gradient(to top, var(--cyan), var(--accent)); border-radius:0; margin:0 auto;"></div>
       <div style="font-size:0.75rem; margin-top:8px; color:var(--cyan); font-family:'JetBrains Mono',monospace;">W</div>
-      <div style="font-size:0.65rem; color:var(--text-dim);">${D}×${D}</div>
+      <div style="font-size:0.72rem; color:var(--text-dim);">${D}×${D}</div>
     </div>
     <div style="font-size:1.2rem; color:var(--text-dim); align-self:center;">vs</div>
     <div style="text-align:center;">
       <div style="display:flex; gap:4px; align-items:flex-end; justify-content:center; height:${maxH}px;">
-        <div style="width:28px; height:${adapterH}px; background:linear-gradient(to top, var(--pink), var(--pink)); border-radius:6px; transition: height 0.3s;"></div>
-        <div style="width:28px; height:${adapterH}px; background:linear-gradient(to top, var(--green), var(--green)); border-radius:6px; transition: height 0.3s;"></div>
+        <div style="width:28px; height:${adapterH}px; background:linear-gradient(to top, var(--cat-2), var(--cat-2)); border-radius:0; transition: height 0.3s;"></div>
+        <div style="width:28px; height:${adapterH}px; background:linear-gradient(to top, var(--green), var(--green)); border-radius:0; transition: height 0.3s;"></div>
       </div>
-      <div style="font-size:0.75rem; margin-top:8px; font-family:'JetBrains Mono',monospace;"><span style="color:var(--pink);">B</span> + <span style="color:var(--green);">A</span></div>
-      <div style="font-size:0.65rem; color:var(--text-dim);">${D}×${r} + ${r}×${D}</div>
+      <div style="font-size:0.75rem; margin-top:8px; font-family:'JetBrains Mono',monospace;"><span style="color:var(--cat-2);">B</span> + <span style="color:var(--green);">A</span></div>
+      <div style="font-size:0.72rem; color:var(--text-dim);">${D}×${r} + ${r}×${D}</div>
     </div>
   `;
 }
@@ -970,7 +1010,7 @@ function selectAdapter(el, type) {
     b.style.background = 'var(--surface2)';
   });
   el.style.borderColor = 'var(--accent)';
-  el.style.background = 'rgba(99,102,241,0.1)';
+  el.style.background = 'rgba(255,225,77,0.45)';
 
   const resultBox = document.getElementById('result-model');
   resultBox.style.borderColor = 'var(--green)';
@@ -1003,7 +1043,7 @@ const methodDetails = {
   },
   dpo: {
     title: '⚖️ Direct Preference Optimization (DPO)',
-    color: 'var(--pink)',
+    color: 'var(--cat-2)',
     how: 'For each prompt, you provide TWO responses — one <strong>chosen</strong> (good) and one <strong>rejected</strong> (bad). The model learns to prefer the chosen style.',
     analogy: 'Like a wine tasting. "Between these two, this one is better." Over many comparisons, the model develops good taste.',
     when: 'The "right" answer is subjective — tone, style, focus, level of detail. You care about quality dimensions that are hard to specify but easy to compare.',
@@ -1011,7 +1051,7 @@ const methodDetails = {
   },
   rft: {
     title: '🏆 Reinforcement Fine-Tuning (RFT)',
-    color: 'var(--yellow)',
+    color: 'var(--warn)',
     how: 'The model generates its OWN response. An <strong>expert grader</strong> (human or automated) scores the quality. High-scoring reasoning chains get reinforced. Only for reasoning models (o4-mini).',
     analogy: 'Like a med school resident seeing real patients. They reason through cases, and an attending physician grades their work. Over time, their clinical reasoning improves.',
     when: 'Complex domain-specific reasoning. Medical diagnosis, legal analysis, scientific research. You need the model\'s chain-of-thought to improve, not just its final answer.',
@@ -1035,14 +1075,14 @@ function showMethod(key) {
     <div class="card" style="border-top: 3px solid ${m.color};">
       <h3 style="font-size:1.3rem; margin-bottom:16px;">${m.title}</h3>
       <div style="margin-bottom:16px;">
-        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); margin-bottom:4px;">How it works</div>
+        <div style="font-size:0.75rem; font-weight:700; color:var(--text-dim); margin-bottom:4px;">How it works</div>
         <p style="font-size:0.9rem;">${m.how}</p>
       </div>
       <div class="analogy">
         <p>${m.analogy}</p>
       </div>
       <div style="margin-bottom:16px;">
-        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); margin-bottom:4px;">When to use</div>
+        <div style="font-size:0.75rem; font-weight:700; color:var(--text-dim); margin-bottom:4px;">When to use</div>
         <p style="font-size:0.9rem; color:var(--text-dim);">${m.when}</p>
       </div>
       <div class="flow">
@@ -1060,7 +1100,7 @@ function showMethod(key) {
   const dataCard = document.getElementById('data-' + key);
   if (dataCard) {
     dataCard.style.borderLeftColor = m.color;
-    dataCard.style.background = 'rgba(30,58,95,0.03)';
+    dataCard.style.background = 'rgba(255,225,77,0.14)';
     dataCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
@@ -1079,12 +1119,12 @@ document.querySelectorAll('[role="tab"], [role="switch"]').forEach(el => {
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>

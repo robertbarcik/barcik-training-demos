@@ -4,36 +4,57 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Function Calling — Step by Step | robert@barcik.training</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 <style>
+  /* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
+  :root {
+    --paper: #f3efe4; --panel: #fbf8f0; --ink: #1d2a6b; --muted: #525b8c; --rule: #c9c3ae; --rule-soft: #e2dccb;
+    --blue: #2a4bd7; --pink: #ff5fa2; --yellow: #ffe14d; --pink-ink: #c81e63;
+    /* colours that carry meaning in a lesson keep their meaning */
+    --danger: #d5312a; --danger-bg: #fbe1dc; --safe: #178a5e; --safe-bg: #dcf1e4; --warn: #b85f00; --warn-bg: #ffefc2; --neutral: #8a8fa8;
+    /* categories that must stay apart (in this order): blue, pink, green, orange, violet, teal */
+    --cat-1: #2a4bd7; --cat-2: #e0368a; --cat-3: #178a5e; --cat-4: #e8710c; --cat-5: #7a4fd0; --cat-6: #0f8fa3;
+    --font: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* Conversation roles (the lesson; same colours in getSteps() in the script, the arch strip and the hint lines):
+     user = blue (cat-1), model reasoning = violet (cat-5), clarification = dark amber, function call = orange (cat-4),
+     your code runs = green (cat-3), result -> model = pink (cat-2), final response = teal (cat-6). */
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     min-height: 100vh;
-    background: linear-gradient(160deg, #F8FAFC 0%, #F1F5F9 50%, #E8EDF4 100%);
-    font-family: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+    background: var(--paper) var(--grain);
+    color: var(--ink);
+    font-family: var(--font);
     padding: 24px 16px;
   }
 
   .container { max-width: 720px; margin: 0 auto; }
 
   h1 {
-    font-size: 28px; font-weight: 700; color: #0F172A;
-    margin: 0 0 6px 0; letter-spacing: -0.02em; text-align: center;
+    font-size: clamp(2.1rem, 6vw, 3rem); font-weight: 800; font-stretch: 78%; line-height: .98;
+    color: var(--blue); text-shadow: .045em .04em 0 var(--pink);
+    margin: 28px 0 12px 0; letter-spacing: -0.02em; text-align: center;
   }
   .subtitle {
-    color: #64748B; font-size: 15px; text-align: center; line-height: 1.5; margin-bottom: 4px;
+    color: var(--ink); font-size: 16px; text-align: center; line-height: 1.5; margin-bottom: 4px;
   }
 
   /* Architecture diagram */
-  .arch { display: flex; align-items: center; justify-content: center; gap: 0; padding: 16px 0; flex-wrap: wrap; }
+  .arch { display: flex; align-items: center; justify-content: center; gap: 0; padding: 18px 0 10px; flex-wrap: wrap; }
   .arch-item { display: flex; align-items: center; }
   .arch-box {
-    border-radius: 10px; padding: 8px 12px; text-align: center;
-    font-size: 12px; font-weight: 600; color: #334155; min-width: 80px;
+    border-radius: 0; border: 2px solid var(--ink); padding: 8px 12px; text-align: center;
+    font-size: 13px; font-weight: 700; color: var(--ink); min-width: 80px;
   }
   .arch-icon { font-size: 18px; }
-  .arch-arrow { font-size: 20px; color: #94A3B8; padding: 0 2px; }
+  .arch-arrow { font-size: 20px; font-weight: 800; color: var(--ink); padding: 0 4px; }
   @media (max-width: 480px) {
     .arch { flex-direction: column; gap: 4px; }
     .arch-item { flex-direction: row; }
@@ -43,155 +64,170 @@
   /* Scenario buttons */
   .scenarios { display: flex; gap: 8px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
   .scenario-btn {
-    padding: 8px 20px; border-radius: 20px; border: 2px solid #E2E8F0;
-    background: #fff; color: #475569; font-weight: 600; font-size: 14px;
-    cursor: pointer; transition: all 0.2s; font-family: inherit;
+    padding: 9px 18px; min-height: 40px; border-radius: 0; border: 2px solid var(--ink);
+    background: var(--panel); color: var(--ink); font-weight: 700; font-size: 15px;
+    cursor: pointer; transition: background 0.15s; font-family: inherit;
   }
-  .scenario-btn:hover { background: #f1f5f9; }
-  .scenario-btn:focus-visible, .btn-primary:focus-visible, .btn-secondary:focus-visible { outline: 2px solid #1e3a5f; outline-offset: 2px; }
-  .scenario-btn.active { border-color: #1e3a5f; background: #EFF6FF; color: #152d4a; }
+  .scenario-btn:hover { background: var(--yellow); }
+  .scenario-btn:focus-visible, .btn-primary:focus-visible, .btn-secondary:focus-visible, .schema-toggle button:focus-visible, .step-card:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+  .scenario-btn.active { border-color: var(--ink); background: var(--ink); color: var(--paper); }
 
   /* Schema toggle */
   .schema-toggle {
     text-align: center; margin-bottom: 16px;
   }
   .schema-toggle button {
-    background: none; border: none; color: #2d5a8e; cursor: pointer;
-    font-size: 13px; font-weight: 500; font-family: inherit;
-    text-decoration: underline; text-underline-offset: 3px;
+    background: none; border: none; color: var(--blue); cursor: pointer;
+    font-size: 14px; font-weight: 700; font-family: inherit; padding: 6px 4px;
+    text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px;
   }
+  .schema-toggle button:hover { color: var(--pink-ink); }
 
-  /* Code block */
-  .code-block { border-radius: 10px; overflow: hidden; border: 1px solid #E2E8F0; margin-bottom: 8px; }
+  /* Code block: stays a dark, monospace "what the wire carries" panel, in navy ink */
+  .code-block { border-radius: 0; overflow: hidden; border: 2px solid var(--ink); margin-bottom: 8px; }
   .code-label {
-    background: #1E293B; color: #94A3B8; font-size: 11px;
-    font-family: 'IBM Plex Mono', monospace; padding: 6px 14px;
-    letter-spacing: 0.05em; text-transform: uppercase;
+    background: #121c52; color: #c3c8e6; font-size: 12px;
+    font-family: var(--mono); padding: 6px 14px;
   }
   .code-block pre {
-    background: #0F172A; color: #E2E8F0; padding: 14px 16px; margin: 0;
-    font-size: 13px; font-family: 'IBM Plex Mono', monospace;
+    background: var(--ink); color: #f3efe4; padding: 14px 16px; margin: 0;
+    font-size: 13px; font-family: var(--mono);
     overflow-x: auto; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
   }
 
   /* Progress bar */
   .progress { display: flex; gap: 4px; margin-bottom: 20px; }
-  .progress-seg { flex: 1; height: 4px; border-radius: 2px; background: #E2E8F0; transition: background 0.5s; }
+  .progress-seg { flex: 1; height: 8px; border-radius: 0; background: var(--rule-soft); transition: background 0.5s; }
 
   /* Step cards */
   .steps { display: flex; flex-direction: column; gap: 14px; }
   .step-card {
-    background: #fff; border-radius: 14px; border: 2px solid #E2E8F0;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04); padding: 16px 20px;
-    cursor: pointer; transition: all 0.3s;
+    background: var(--panel); border-radius: 0; border: 2px solid var(--rule);
+    box-shadow: none; padding: 16px 20px;
+    cursor: pointer; transition: border-color 0.3s, box-shadow 0.3s;
     animation: slideIn 0.35s ease-out both;
   }
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .step-header { display: flex; align-items: center; gap: 10px; }
+  .step-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .step-icon { font-size: 20px; }
   .step-label {
-    font-weight: 700; font-size: 14px; letter-spacing: 0.02em; text-transform: uppercase;
+    font-weight: 800; font-size: 17px; font-stretch: 85%;
   }
-  .step-done { margin-left: auto; font-size: 11px; color: #94A3B8; font-weight: 500; }
+  .step-done { margin-left: auto; font-size: 12px; color: var(--muted); font-weight: 600; }
   .step-content { padding-left: 30px; margin-top: 12px; }
 
-  /* Thinking bubbles */
+  /* Thinking bubbles (model reasoning = violet) */
   .thought {
-    padding: 8px 14px; background: rgba(139, 92, 246, 0.08); border-radius: 10px;
-    border-left: 3px solid #8B5CF6; font-size: 14px;
-    font-family: 'IBM Plex Mono', monospace; color: #5B21B6;
+    padding: 8px 14px; background: rgba(122, 79, 208, 0.09); border-radius: 0;
+    border-left: 4px solid #7a4fd0; font-size: 14px;
+    font-family: var(--mono); color: #4e2f97;
     margin-bottom: 8px; opacity: 0; transform: translateX(-12px);
     transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .thought.visible { opacity: 1; transform: translateX(0); }
 
-  /* Execution steps */
+  /* Execution steps (your code = green) */
   .exec-step {
-    font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #065F46;
+    font-family: var(--mono); font-size: 13px; color: #0f6b48;
     display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
     opacity: 0; transition: opacity 0.5s;
   }
   .exec-step.visible { opacity: 1; }
   .exec-dot {
-    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-    background: #D1D5DB; transition: background 0.3s; flex-shrink: 0;
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--rule); transition: background 0.3s; flex-shrink: 0;
   }
-  .exec-step.visible .exec-dot { background: #10B981; }
+  .exec-step.visible .exec-dot { background: var(--safe); }
 
   /* Insight box */
   .insight {
-    font-size: 12px; color: #78716C; background: #FAFAF9;
-    padding: 10px 14px; border-radius: 8px; border: 1px dashed #D6D3D1;
+    font-size: 13px; color: var(--muted); background: var(--paper);
+    padding: 10px 14px; border-radius: 0; border: 1px dashed var(--rule);
     line-height: 1.6; margin-top: 8px;
   }
+  .insight strong { color: var(--ink); }
 
   /* Typewriter cursor */
   .cursor { opacity: 1; transition: opacity 0.3s; }
   .cursor.done { opacity: 0; }
 
   /* Controls */
-  .controls { display: flex; justify-content: center; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  .controls { display: flex; justify-content: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
   .btn-primary {
-    padding: 12px 32px; border-radius: 12px; border: none;
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
-    color: #fff; font-weight: 700; font-size: 15px; cursor: pointer;
-    font-family: inherit; box-shadow: 0 4px 14px rgba(30,58,95,0.3);
-    transition: transform 0.15s;
+    padding: 12px 30px; border-radius: 0; border: 2px solid var(--ink);
+    background: var(--pink);
+    color: var(--ink); font-weight: 800; font-size: 16px; cursor: pointer;
+    font-family: inherit; box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.12s, box-shadow 0.12s;
   }
-  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+  .btn-primary:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
   .btn-secondary {
-    padding: 12px 24px; border-radius: 12px; border: 2px solid #E2E8F0;
-    background: #fff; color: #64748B; font-weight: 600; font-size: 14px;
-    cursor: pointer; font-family: inherit; transition: all 0.2s;
+    padding: 12px 22px; border-radius: 0; border: 2px solid var(--ink);
+    background: var(--panel); color: var(--ink); font-weight: 700; font-size: 15px;
+    cursor: pointer; font-family: inherit; transition: background 0.15s;
   }
+  .btn-secondary:hover { background: var(--yellow); }
 
   /* Takeaways */
   .takeaways {
     margin-top: 28px;
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
-    border-radius: 16px; padding: 24px 28px; color: #E2E8F0;
+    background: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: 0; padding: 24px 28px; color: #f3efe4;
+    box-shadow: 6px 6px 0 var(--pink);
     animation: slideIn 0.5s ease-out both;
   }
   .takeaways h3 {
-    margin: 0 0 14px 0; font-size: 16px; font-weight: 700;
-    color: #F8FAFC; letter-spacing: 0.02em; text-align: left;
+    display: inline-block;
+    margin: 0 0 14px 0; font-size: 22px; font-weight: 800; font-stretch: 78%;
+    color: var(--yellow); text-align: left;
   }
-  .takeaway { display: flex; gap: 10px; margin-bottom: 10px; font-size: 14px; line-height: 1.7; }
+  .takeaway { display: flex; gap: 10px; margin-bottom: 10px; font-size: 15px; line-height: 1.65; }
   .takeaway-icon { font-size: 18px; flex-shrink: 0; }
 
-  .user-text { font-size: 17px; line-height: 1.6; color: #1E3A5F; }
-  .final-text { font-size: 16px; line-height: 1.7; color: #164E63; padding: 4px 0; }
-  .toolcall-hint { font-size: 13px; color: #92400E; font-style: italic; margin-bottom: 8px; }
-  .result-hint { font-size: 13px; color: #9D174D; font-style: italic; margin-bottom: 8px; }
-  .exec-title { font-size: 13px; color: #065F46; font-weight: 600; margin-bottom: 8px; }
+  .user-text { font-size: 18px; line-height: 1.6; color: #2a4bd7; font-weight: 600; }
+  .final-text { font-size: 17px; line-height: 1.7; color: #0a5f6c; padding: 4px 0; }
+  .toolcall-hint { font-size: 14px; color: #a24f00; font-style: italic; margin-bottom: 8px; }
+  .result-hint { font-size: 14px; color: #b0216a; font-style: italic; margin-bottom: 8px; }
+  .exec-title { font-size: 14px; color: #0f6b48; font-weight: 700; margin-bottom: 8px; }
 
   #schema-container { margin-bottom: 16px; display: none; }
+
+  @media (max-width: 640px) {
+    body { padding: 8px 12px 24px; }
+    h1 { margin-top: 8px; }
+    .step-card { padding: 14px 14px; }
+    .step-content { padding-left: 0; }
+    .takeaways { padding: 20px 18px; box-shadow: 4px 4px 0 var(--pink); }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
 
 <div class="container">
   <h1>Function Calling — Step by Step</h1>
   <p class="subtitle">Watch how a model decides to call your functions, and how your code executes them</p>
-  <p style="text-align:center;font-size:12px;color:#94A3B8;margin-bottom:4px;">robert@barcik.training</p>
+  <p style="text-align:center;font-size:13px;font-weight:700;color:#525b8c;margin-bottom:4px;">robert@barcik.training</p>
 
   <!-- Architecture Diagram -->
   <div class="arch">
-    <div class="arch-item"><div class="arch-box" style="background:#DBEAFE"><div class="arch-icon">🖥️</div>Your App</div><span class="arch-arrow">→</span></div>
-    <div class="arch-item"><div class="arch-box" style="background:#EDE9FE"><div class="arch-icon">🤖</div>LLM API</div><span class="arch-arrow">→</span></div>
-    <div class="arch-item"><div class="arch-box" style="background:#FEF3C7"><div class="arch-icon">🧠</div>Model Decides</div><span class="arch-arrow">→</span></div>
-    <div class="arch-item"><div class="arch-box" style="background:#D1FAE5"><div class="arch-icon">⚙️</div>Your App Executes</div><span class="arch-arrow">→</span></div>
-    <div class="arch-item"><div class="arch-box" style="background:#CFFAFE"><div class="arch-icon">✨</div>Model Responds</div></div>
+    <div class="arch-item"><div class="arch-box" style="background:#dfe5fa"><div class="arch-icon">🖥️</div>Your App</div><span class="arch-arrow">→</span></div>
+    <div class="arch-item"><div class="arch-box" style="background:#e9e1f8"><div class="arch-icon">🤖</div>LLM API</div><span class="arch-arrow">→</span></div>
+    <div class="arch-item"><div class="arch-box" style="background:#ffefc2"><div class="arch-icon">🧠</div>Model Decides</div><span class="arch-arrow">→</span></div>
+    <div class="arch-item"><div class="arch-box" style="background:#dcf1e4"><div class="arch-icon">⚙️</div>Your App Executes</div><span class="arch-arrow">→</span></div>
+    <div class="arch-item"><div class="arch-box" style="background:#d5eef1"><div class="arch-icon">✨</div>Model Responds</div></div>
   </div>
 
   <!-- Scenario Selector -->
@@ -315,23 +351,23 @@ const SCENARIOS = [
 
 function getSteps() {
   const base = [
-    { id: "user", label: "User Request", icon: "👤", color: "#1e3a5f", borderColor: "#BFDBFE" },
-    { id: "thinking", label: "Model Reasoning", icon: "🧠", color: "#8B5CF6", borderColor: "#DDD6FE" },
+    { id: "user", label: "User Request", icon: "👤", color: "#2a4bd7", borderColor: "#b9c6f3" },
+    { id: "thinking", label: "Model Reasoning", icon: "🧠", color: "#7a4fd0", borderColor: "#d6c9f1" },
   ];
 
   if (scenario().needsClarification) {
     base.push(
-      { id: "clarify", label: "Clarification", icon: "❓", color: "#D97706", borderColor: "#FDE68A" },
-      { id: "user2", label: "User Response", icon: "👤", color: "#1e3a5f", borderColor: "#BFDBFE" },
-      { id: "thinking2", label: "Model Reasoning", icon: "🧠", color: "#8B5CF6", borderColor: "#DDD6FE" }
+      { id: "clarify", label: "Clarification", icon: "❓", color: "#b85f00", borderColor: "#ecd0a6" },
+      { id: "user2", label: "User Response", icon: "👤", color: "#2a4bd7", borderColor: "#b9c6f3" },
+      { id: "thinking2", label: "Model Reasoning", icon: "🧠", color: "#7a4fd0", borderColor: "#d6c9f1" }
     );
   }
 
   base.push(
-    { id: "toolcall", label: "Function Call", icon: "📡", color: "#F59E0B", borderColor: "#FDE68A" },
-    { id: "execution", label: "Your Code Runs", icon: "⚙️", color: "#10B981", borderColor: "#A7F3D0" },
-    { id: "result", label: "Result → Model", icon: "📦", color: "#EC4899", borderColor: "#FBCFE8" },
-    { id: "response", label: "Final Response", icon: "✨", color: "#06B6D4", borderColor: "#A5F3FC" }
+    { id: "toolcall", label: "Function Call", icon: "📡", color: "#e8710c", borderColor: "#f6cfa0" },
+    { id: "execution", label: "Your Code Runs", icon: "⚙️", color: "#178a5e", borderColor: "#a9d9c3" },
+    { id: "result", label: "Result → Model", icon: "📦", color: "#e0368a", borderColor: "#f4b8d4" },
+    { id: "response", label: "Final Response", icon: "✨", color: "#0f8fa3", borderColor: "#a6dbe3" }
   );
 
   return base;
@@ -386,7 +422,7 @@ function renderProgress() {
   if (currentStep < 0) { el.style.display = 'none'; return; }
   el.style.display = 'flex';
   el.innerHTML = getSteps().map((s, i) =>
-    `<div class="progress-seg" style="background:${i <= currentStep ? s.color : '#E2E8F0'}"></div>`
+    `<div class="progress-seg" style="background:${i <= currentStep ? s.color : '#e2dccb'}"></div>`
   ).join('');
 }
 
@@ -441,7 +477,7 @@ function renderSteps() {
 
     const isActive = i === currentStep;
     card.style.borderColor = isActive ? step.color : step.borderColor;
-    card.style.boxShadow = isActive ? `0 4px 24px ${step.color}18` : '0 1px 4px rgba(0,0,0,0.04)';
+    card.style.boxShadow = isActive ? `5px 5px 0 ${step.color}` : 'none';
 
     let html = `<div class="step-header">
       <span class="step-icon">${step.icon}</span>
@@ -698,12 +734,12 @@ render();
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>

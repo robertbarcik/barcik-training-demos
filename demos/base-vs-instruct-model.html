@@ -4,8 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Base Model vs Instruction-Tuned Model | robert@barcik.training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+
+  /* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
+  :root {
+    --paper: #f3efe4; --panel: #fbf8f0; --ink: #1d2a6b; --muted: #525b8c; --rule: #c9c3ae; --rule-soft: #e2dccb;
+    --blue: #2a4bd7; --pink: #ff5fa2; --yellow: #ffe14d; --pink-ink: #c81e63;
+    --danger: #d5312a; --danger-bg: #fbe1dc; --safe: #178a5e; --safe-bg: #dcf1e4; --warn: #b85f00; --warn-bg: #ffefc2; --neutral: #8a8fa8;
+    --font: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    /* model output imitates raw completion text: it stays monospace */
+    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 
   @keyframes blink { 0%,50%{opacity:1}51%,100%{opacity:0} }
   @keyframes fadeIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
@@ -14,141 +28,148 @@
 
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 0; }
 
   body {
     min-height: 100vh;
-    background: #f5f8fc;
-    color: #1a202c;
-    font-family: 'IBM Plex Mono', 'Fira Code', monospace;
-    padding: 24px 20px;
+    background: var(--paper) var(--grain);
+    color: var(--ink);
+    font-family: var(--font);
+    padding: 24px 20px 64px;
   }
 
   .container { max-width: 1100px; margin: 0 auto; }
 
   /* Header */
-  .header { margin-bottom: 28px; }
-  .header-row { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .header { margin-bottom: 28px; padding: 2.6rem 0 1.2rem; text-align: center; border-bottom: 2px solid var(--ink); }
+  .header-row { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 8px; }
   .header-dot {
     width: 10px; height: 10px; border-radius: 50%;
-    background: #1e3a5f; box-shadow: 0 0 12px rgba(30,58,95,0.3); flex-shrink: 0;
+    background: var(--ink); flex-shrink: 0;
   }
   .header h1 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: #1e3a5f;
+    font-family: var(--font);
+    font-size: clamp(2.2rem, 6vw, 3.4rem); font-weight: 800; font-stretch: 78%; letter-spacing: -0.02em; line-height: .95;
+    color: var(--blue); text-shadow: .045em .04em 0 var(--pink);
   }
-  .header p { font-size: 13px; color: #64748b; padding-left: 24px; }
+  .header p { font-size: 16px; color: var(--ink); }
 
   /* Controls */
   .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
   .controls-label {
-    font-size: 11px; color: #64748b; text-transform: uppercase;
-    letter-spacing: 1px; margin-right: 4px;
+    font-size: 14px; font-weight: 800; color: var(--ink); margin-right: 4px;
   }
   .example-btn {
-    padding: 6px 14px; font-size: 12px;
-    font-family: 'IBM Plex Mono', monospace;
-    border: 1px solid #e2e8f0; border-radius: 4px;
-    background: transparent; color: #4a5568; cursor: pointer;
-    transition: all 0.2s;
+    padding: 8px 14px; min-height: 40px; font-size: 14px; font-weight: 700;
+    font-family: var(--font);
+    border: 2px solid var(--ink); border-radius: 0;
+    background: var(--panel); color: var(--ink); cursor: pointer;
+    transition: background 0.15s;
   }
-  .example-btn:hover { border-color: #cbd5e1; color: #1a202c; }
+  .example-btn:hover { background: var(--yellow); }
   .example-btn.active {
-    border-color: #1e3a5f; background: #e8edf4; color: #1e3a5f;
+    border-color: var(--ink); background: var(--ink); color: var(--paper);
   }
   .generate-btn {
-    margin-left: auto; padding: 8px 22px; font-size: 13px;
-    font-family: 'Space Grotesk', sans-serif; font-weight: 600;
-    border: none; border-radius: 4px;
-    background: #1e3a5f;
-    color: #fff; cursor: pointer; letter-spacing: 0.3px;
-    box-shadow: 0 2px 12px rgba(30,58,95,0.25);
-    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    margin-left: auto; padding: 9px 24px; min-height: 44px; font-size: 16px;
+    font-family: var(--font); font-weight: 800;
+    border: 2px solid var(--ink); border-radius: 0;
+    background: var(--pink);
+    color: var(--ink); cursor: pointer;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.12s, box-shadow 0.12s;
   }
   .generate-btn:hover {
-    background: #2d5a8e;
-    transform: translateY(-1px); box-shadow: 0 4px 20px rgba(30,58,95,0.35);
+    transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink);
   }
-  .example-btn:focus-visible, .generate-btn:focus-visible { outline: 2px solid #1e3a5f; outline-offset: 2px; }
+  .example-btn:focus-visible, .generate-btn:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
 
-  /* Prompt display */
+  /* Prompt display (what the user typed: kept in the same monospace as the completions) */
   .prompt-display {
-    padding: 12px 18px; background: #ffffff;
-    border: 1px solid #e2e8f0; border-radius: 6px;
-    font-size: 14px; color: #1a202c; margin-bottom: 20px;
+    padding: 12px 18px; background: var(--panel);
+    border: 2px solid var(--ink); border-radius: 0;
+    font-family: var(--mono); font-size: 15px; color: var(--ink); margin-bottom: 22px;
   }
-  .prompt-display .label { color: #64748b; margin-right: 10px; font-size: 12px; }
+  .prompt-display .label { color: var(--muted); margin-right: 10px; font-size: 13px; font-weight: 600; }
 
   /* Panels grid */
-  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   @media (max-width: 740px) { .panels { grid-template-columns: 1fr; } }
 
   .panel {
-    background: #ffffff; border: 1px solid #e2e8f0;
-    border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;
+    background: var(--panel); border: 2px solid var(--ink);
+    border-radius: 0; overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 5px 5px 0 var(--blue);
   }
   .panel-header {
-    padding: 10px 16px; border-bottom: 1px solid #e2e8f0;
-    display: flex; align-items: center; gap: 8px; background: #f8fafc;
+    padding: 10px 16px; border-bottom: 2px solid var(--ink);
+    display: flex; align-items: center; gap: 8px; background: var(--paper);
   }
-  .panel-dot { width: 8px; height: 8px; border-radius: 50%; opacity: 0.8; }
-  .panel-dot.red { background: #dc2626; }
-  .panel-dot.green { background: #059669; }
+  .panel-dot { width: 11px; height: 11px; border-radius: 50%; opacity: 1; }
+  .panel-dot.red { background: var(--danger); }
+  .panel-dot.green { background: var(--safe); }
   .panel-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 13px; font-weight: 600; color: #1a202c;
+    font-family: var(--font);
+    font-size: 18px; font-weight: 800; font-stretch: 85%; color: var(--ink);
   }
   .panel-tag {
-    margin-left: auto; font-size: 10px; color: #64748b;
-    text-transform: uppercase; letter-spacing: 1px;
+    margin-left: auto; font-size: 13px; font-weight: 700; color: var(--muted);
   }
   .panel-body {
     padding: 16px 18px; min-height: 220px;
-    font-size: 13px; line-height: 1.65; color: #334155;
-    white-space: pre-wrap;
+    font-family: var(--mono);
+    font-size: 13.5px; line-height: 1.65; color: var(--ink);
+    white-space: pre-wrap; overflow-wrap: anywhere;
   }
-  .panel-body .placeholder { color: #94a3b8; font-style: italic; }
+  .panel-body .placeholder { color: var(--muted); font-style: italic; }
   .panel-body .cursor-blink {
     display: inline-block; width: 2px; height: 1em;
-    background: #1e3a5f; margin-left: 1px; opacity: 0.7;
+    background: var(--ink); margin-left: 1px; opacity: 0.7;
     animation: blink 1s steps(1) infinite; vertical-align: text-bottom;
   }
 
   .explanation {
-    padding: 14px 18px; border-top: 1px solid #e2e8f0;
+    padding: 14px 18px; border-top: 2px solid var(--ink);
     animation: fadeIn 0.5s ease;
   }
-  .explanation.base-expl { background: #fef2f2; }
-  .explanation.instruct-expl { background: #f0fdf4; }
+  .explanation.base-expl { background: var(--danger-bg); }
+  .explanation.instruct-expl { background: var(--safe-bg); }
   .explanation .expl-label {
-    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
-    margin-bottom: 6px; font-weight: 600;
+    font-size: 14px; margin-bottom: 4px; font-weight: 800;
   }
-  .explanation .expl-label.red { color: #dc2626; }
-  .explanation .expl-label.green { color: #059669; }
-  .explanation .expl-text { font-size: 12px; line-height: 1.6; color: #475569; }
+  .explanation .expl-label.red { color: var(--danger); }
+  .explanation .expl-label.green { color: var(--safe); }
+  .explanation .expl-text { font-size: 14.5px; line-height: 1.55; color: var(--ink); }
 
   /* Key insight callout */
   .key-insight {
-    background: #1e3a5f;
-    border-left: 4px solid #2563eb;
+    background: var(--panel);
+    border: 2px solid var(--ink);
+    border-left: 8px solid var(--blue);
     padding: 1rem 1.25rem;
     margin: 0 0 1.5rem 0;
-    font-size: 0.88rem;
+    font-size: 1rem;
     line-height: 1.6;
-    color: rgba(255,255,255,0.75);
-    border-radius: 6px;
+    color: var(--ink);
+    border-radius: 0;
   }
-  .key-insight strong { color: #93c5fd; }
-  .key-insight em { color: #93c5fd; font-style: italic; }
+  .key-insight strong { color: var(--ink); background: linear-gradient(transparent 55%, var(--yellow) 55%); padding: 0 2px; }
+  .key-insight em { color: var(--blue); font-style: italic; font-weight: 700; }
+
+  @media (max-width: 640px) {
+    body { padding: 0 14px 64px; }
+    .header { padding-top: 0.6rem; }
+    .panel { box-shadow: 4px 4px 0 var(--blue); }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
 
@@ -159,7 +180,7 @@
       <h1>Base Model vs Instruction-Tuned Model</h1>
     </div>
     <p>Same architecture, different training — see why post-training matters.</p>
-    <p style="font-size:11px;color:#94a3b8;margin-top:4px;">robert@barcik.training</p>
+    <p style="font-size:14px;font-weight:700;color:#525b8c;margin-top:4px;">robert@barcik.training</p>
   </div>
 
   <div class="key-insight">
@@ -351,12 +372,12 @@ updatePrompt();
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>

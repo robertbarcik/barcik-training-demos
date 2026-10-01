@@ -4,73 +4,74 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Illusion of Chat — robert@barcik.training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
+  /* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
   :root{
-    --brand:#1e3a5f;
-    --brand-light:#2a5a8f;
-    --blue-100:#e8f0fe;
-    --blue-200:#c5d9f2;
-    --blue-500:#3b82f6;
-    --blue-600:#2563eb;
-    --amber-100:#fef3c7;
-    --amber-500:#f59e0b;
-    --red-100:#fee2e2;
-    --red-500:#ef4444;
-    --green-100:#d1fae5;
-    --green-500:#10b981;
-    --gray-50:#f9fafb;
-    --gray-100:#f3f4f6;
-    --gray-200:#e5e7eb;
-    --gray-300:#d1d5db;
-    --gray-500:#6b7280;
-    --gray-700:#374151;
-    --gray-900:#111827;
-    --highlight-chat:rgba(59,130,246,0.12);
-    --highlight-token:rgba(59,130,246,0.10);
-    --radius:8px;
-    --shadow:0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
-    --shadow-md:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.06);
-    --transition-speed:0.2s;
+    --paper:#f3efe4;--panel:#fbf8f0;--ink:#1d2a6b;--muted:#525b8c;--rule:#c9c3ae;--rule-soft:#e2dccb;
+    --blue:#2a4bd7;--pink:#ff5fa2;--yellow:#ffe14d;--pink-ink:#c81e63;
+    --danger:#d5312a;--danger-bg:#fbe1dc;--safe:#178a5e;--safe-bg:#dcf1e4;--warn:#b85f00;--warn-bg:#ffefc2;--neutral:#8a8fa8;
+    --cat-1:#2a4bd7;--cat-2:#e0368a;--cat-3:#178a5e;--cat-4:#e8710c;--cat-5:#7a4fd0;--cat-6:#0f8fa3;
+    --font:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+    --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+
+    /* token categories (legend swatches use these names inline, keep them) */
+    --blue-500:var(--cat-1);   /* role marker */
+    --amber-500:var(--cat-4);  /* separator */
+    --red-500:var(--danger);   /* end token */
+    --green-500:var(--cat-3);  /* tool token */
+    --blue-600:var(--blue);
+    --green-100:var(--safe-bg);
+    --highlight-chat:rgba(255,225,77,.45);
+    --highlight-token:rgba(255,225,77,.45);
+    --transition-speed:.15s;
   }
 
   html{font-size:16px;-webkit-text-size-adjust:100%}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-    background:#f0f4f8;
-    color:var(--gray-900);
+    font-family:var(--font);
+    background:var(--paper) var(--grain);
+    color:var(--ink);
     line-height:1.6;
     min-height:100vh;
   }
+  button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
 
   /* ── Header ─────────────────────────────────── */
   .header{
-    background:var(--brand);
-    color:#fff;
-    padding:1rem 1.5rem 1rem 11rem;
+    color:var(--ink);
+    border-bottom:2px solid var(--ink);
+    padding:1.1rem 1.5rem 1.1rem 11rem;
     display:flex;
     align-items:center;
     justify-content:space-between;
     flex-wrap:wrap;
-    gap:0.5rem;
+    gap:.5rem;
   }
-  .header-brand{font-size:1.1rem;font-weight:700;letter-spacing:.3px}
-  .header-title{font-size:1.25rem;font-weight:600;text-align:center;flex:1 1 auto}
+  .header-brand{font-size:.95rem;font-weight:700;color:var(--muted)}
+  .header-title{
+    flex:1 1 auto;text-align:center;
+    font-size:clamp(2rem,5vw,3.2rem);font-weight:800;font-stretch:78%;line-height:.98;letter-spacing:-.02em;
+    color:var(--blue);text-shadow:.045em .04em 0 var(--pink);
+  }
 
   /* ── Container ──────────────────────────────── */
-  .container{max-width:1280px;margin:0 auto;padding:1.25rem 1rem}
+  .container{max-width:1280px;margin:0 auto;padding:1.5rem 1rem}
 
   /* ── Intro ──────────────────────────────────── */
   .intro{
-    background:#fff;
-    border-left:4px solid var(--blue-500);
-    border-radius:var(--radius);
+    background:var(--panel);
+    border:2px solid var(--ink);
+    border-left:8px solid var(--blue);
     padding:1rem 1.25rem;
-    margin-bottom:1.25rem;
-    box-shadow:var(--shadow);
-    font-size:0.95rem;
-    color:var(--gray-700);
+    margin-bottom:1.5rem;
+    font-size:1rem;
+    color:var(--ink);
     line-height:1.7;
   }
 
@@ -78,80 +79,87 @@
   .tabs{
     display:flex;
     flex-wrap:wrap;
-    gap:0.5rem;
+    gap:.5rem;
     margin-bottom:1rem;
   }
   .tab-btn{
-    padding:0.5rem 1.1rem;
-    border:2px solid var(--blue-200);
-    border-radius:999px;
-    background:#fff;
-    color:var(--brand);
-    font-size:0.88rem;
-    font-weight:600;
+    padding:.5rem 1.1rem;
+    min-height:40px;
+    border:2px solid var(--ink);
+    border-radius:0;
+    background:var(--panel);
+    color:var(--ink);
+    font-family:var(--font);
+    font-size:.92rem;
+    font-weight:700;
     cursor:pointer;
-    transition:all var(--transition-speed);
+    transition:background var(--transition-speed);
     white-space:nowrap;
   }
-  .tab-btn:hover{background:var(--blue-100);border-color:var(--blue-500)}
-  .tab-btn.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .tab-btn:hover{background:var(--yellow)}
+  .tab-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
   /* ── View Toggle ────────────────────────────── */
   .view-toggle{
     display:flex;
-    gap:0.35rem;
-    margin-bottom:1rem;
-    background:var(--gray-100);
-    border-radius:var(--radius);
-    padding:0.25rem;
+    gap:0;
+    margin-bottom:1.25rem;
+    border:2px solid var(--ink);
+    background:var(--panel);
     width:fit-content;
+    max-width:100%;
   }
   .view-btn{
-    padding:0.4rem 1rem;
+    padding:.4rem 1rem;
+    min-height:38px;
     border:none;
-    border-radius:6px;
+    border-right:2px solid var(--ink);
+    border-radius:0;
     background:transparent;
-    color:var(--gray-700);
-    font-size:0.85rem;
-    font-weight:600;
+    color:var(--ink);
+    font-family:var(--font);
+    font-size:.88rem;
+    font-weight:700;
     cursor:pointer;
-    transition:all var(--transition-speed);
+    transition:background var(--transition-speed);
   }
-  .view-btn:hover{background:var(--gray-200)}
-  .view-btn.active{background:#fff;color:var(--brand);box-shadow:var(--shadow)}
+  .view-btn:last-child{border-right:none}
+  .view-btn:hover{background:var(--yellow)}
+  .view-btn.active{background:var(--ink);color:var(--paper)}
 
   /* ── Panels Wrapper ─────────────────────────── */
   .panels{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:1rem;
-    margin-bottom:1.25rem;
-    transition:grid-template-columns 0.35s ease;
+    gap:1.25rem;
+    margin-bottom:1.5rem;
+    transition:grid-template-columns .35s ease;
   }
   .panels.chat-only{grid-template-columns:1fr 0fr}
-  .panels.chat-only .panel-token{overflow:hidden;opacity:0;padding:0;border:none;min-width:0}
+  .panels.chat-only .panel-token{overflow:hidden;opacity:0;padding:0;border:none;min-width:0;box-shadow:none}
   .panels.tokens-only{grid-template-columns:0fr 1fr}
-  .panels.tokens-only .panel-chat{overflow:hidden;opacity:0;padding:0;border:none;min-width:0}
+  .panels.tokens-only .panel-chat{overflow:hidden;opacity:0;padding:0;border:none;min-width:0;box-shadow:none}
 
   .panel{
-    background:#fff;
-    border-radius:var(--radius);
-    box-shadow:var(--shadow);
+    background:var(--panel);
+    border:2px solid var(--ink);
+    border-radius:0;
     display:flex;
     flex-direction:column;
     overflow:hidden;
-    transition:opacity 0.3s ease;
+    transition:opacity .3s ease;
     min-width:0;
   }
+  .panel-chat{box-shadow:5px 5px 0 var(--blue)}
+  .panel-token{box-shadow:5px 5px 0 var(--pink)}
   .panel-header{
-    background:var(--gray-50);
-    border-bottom:1px solid var(--gray-200);
-    padding:0.6rem 1rem;
-    font-weight:700;
-    font-size:0.85rem;
-    color:var(--gray-700);
-    text-transform:uppercase;
-    letter-spacing:0.5px;
+    background:var(--panel);
+    border-bottom:2px solid var(--ink);
+    padding:.6rem 1rem;
+    font-weight:800;
+    font-size:1.15rem;
+    font-stretch:78%;
+    color:var(--ink);
   }
   .panel-body{
     padding:1rem;
@@ -160,35 +168,35 @@
     min-height:260px;
     max-height:520px;
   }
+  /* the raw side reads as a technical dump */
+  .panel-token .panel-body{background:var(--paper)}
 
-  /* ── Chat Bubbles ───────────────────────────── */
+  /* ── Chat Bubbles (keeps the look of a chat product) ── */
   .chat-msg{
-    margin-bottom:0.85rem;
+    margin-bottom:.85rem;
     display:flex;
     flex-direction:column;
-    transition:background 0.2s;
-    border-radius:var(--radius);
-    padding:0.2rem 0.35rem;
+    transition:background .2s;
+    border-radius:0;
+    padding:.2rem .35rem;
   }
   .chat-msg.highlighted{background:var(--highlight-chat)}
   .chat-msg .role-label{
-    font-size:0.72rem;
+    font-size:.8rem;
     font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:0.4px;
-    margin-bottom:0.2rem;
-    padding-left:0.25rem;
+    margin-bottom:.2rem;
+    padding-left:.25rem;
   }
-  .chat-msg.role-user .role-label{color:var(--blue-600);text-align:right;padding-right:0.25rem;padding-left:0}
-  .chat-msg.role-assistant .role-label{color:var(--gray-500)}
-  .chat-msg.role-system .role-label{color:var(--gray-500)}
+  .chat-msg.role-user .role-label{color:var(--blue-600);text-align:right;padding-right:.25rem;padding-left:0}
+  .chat-msg.role-assistant .role-label{color:var(--muted)}
+  .chat-msg.role-system .role-label{color:var(--muted)}
   .chat-msg.role-tool_call .role-label{color:var(--green-500)}
   .chat-msg.role-tool_result .role-label{color:var(--green-500)}
 
   .bubble{
-    padding:0.65rem 0.9rem;
-    border-radius:12px;
-    font-size:0.9rem;
+    padding:.65rem .9rem;
+    border-radius:14px;
+    font-size:.92rem;
     line-height:1.55;
     max-width:88%;
     word-break:break-word;
@@ -198,53 +206,54 @@
     background:var(--blue-600);
     color:#fff;
     align-self:flex-end;
-    border-bottom-right-radius:4px;
+    border-bottom-right-radius:3px;
   }
   .role-assistant .bubble{
-    background:var(--gray-100);
-    color:var(--gray-900);
+    background:var(--paper);
+    border:1px solid var(--rule);
+    color:var(--ink);
     align-self:flex-start;
-    border-bottom-left-radius:4px;
+    border-bottom-left-radius:3px;
   }
   .role-system .bubble{
-    background:var(--gray-200);
-    color:var(--gray-700);
+    background:#e9e5d8;
+    color:var(--ink);
     align-self:center;
     font-style:italic;
-    font-size:0.85rem;
+    font-size:.88rem;
     text-align:center;
     max-width:95%;
-    border-radius:8px;
+    border-radius:0;
   }
   .role-tool_call .bubble,
   .role-tool_result .bubble{
     background:var(--green-100);
-    color:var(--gray-900);
+    color:var(--ink);
     align-self:flex-start;
-    border:1px dashed var(--green-500);
-    font-family:"SF Mono",SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;
-    font-size:0.82rem;
+    border:1.5px dashed var(--green-500);
+    font-family:var(--mono);
+    font-size:.82rem;
     max-width:95%;
-    border-radius:8px;
+    border-radius:0;
   }
   .tool-label{
     display:inline-block;
     background:var(--green-500);
     color:#fff;
-    font-size:0.7rem;
+    font-family:var(--font);
+    font-size:.75rem;
     font-weight:700;
-    padding:0.1rem 0.45rem;
-    border-radius:4px;
-    margin-bottom:0.3rem;
-    text-transform:uppercase;
-    letter-spacing:0.3px;
+    padding:.05rem .45rem;
+    border-radius:0;
+    margin-bottom:.3rem;
   }
 
   /* ── Token Stream ───────────────────────────── */
   .token-stream{
-    font-family:"SF Mono",SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;
-    font-size:0.82rem;
+    font-family:var(--mono);
+    font-size:.82rem;
     line-height:1.75;
+    color:var(--ink);
     counter-reset:line;
     white-space:pre-wrap;
     word-break:break-all;
@@ -252,97 +261,97 @@
   .token-line{
     display:flex;
     gap:0;
-    transition:background 0.2s;
-    border-radius:3px;
-    padding:0 0.3rem;
+    transition:background .2s;
+    border-radius:0;
+    padding:0 .3rem;
   }
   .token-line.highlighted{background:var(--highlight-token)}
   .line-num{
     flex:0 0 2.5rem;
     text-align:right;
-    color:var(--gray-300);
+    color:var(--neutral);
     user-select:none;
-    padding-right:0.75rem;
-    font-size:0.75rem;
+    padding-right:.75rem;
+    font-size:.75rem;
     line-height:1.75;
   }
   .line-content{flex:1;min-width:0}
 
-  /* Special token pills */
+  /* Special token pills: one colour per category, same as the legend */
   .tok{
     display:inline;
-    padding:0.1rem 0.35rem;
-    border-radius:4px;
+    padding:.1rem .35rem;
+    border-radius:0;
     font-weight:700;
-    font-size:0.78rem;
+    font-size:.78rem;
     white-space:nowrap;
   }
   .tok-role{background:var(--blue-500);color:#fff}
-  .tok-sep{background:var(--amber-500);color:#fff}
+  .tok-sep{background:var(--amber-500);color:var(--ink)}
   .tok-end{background:var(--red-500);color:#fff}
   .tok-tool{background:var(--green-500);color:#fff}
 
   /* token region wrapper (for cross-highlighting) */
   .token-region{
-    transition:background 0.2s;
-    border-radius:3px;
+    transition:background .2s;
+    border-radius:0;
   }
   .token-region.highlighted{background:var(--highlight-token)}
 
   /* ── Legend ──────────────────────────────────── */
   .legend{
-    background:#fff;
-    border-radius:var(--radius);
-    box-shadow:var(--shadow);
-    padding:0.75rem 1rem;
-    margin-bottom:1.25rem;
+    background:var(--panel);
+    border:2px solid var(--ink);
+    padding:.75rem 1rem;
+    margin-bottom:1.5rem;
     display:flex;
     flex-wrap:wrap;
-    gap:0.75rem 1.5rem;
+    gap:.6rem 1.5rem;
     align-items:center;
   }
   .legend-title{
-    font-weight:700;
-    font-size:0.82rem;
-    color:var(--gray-700);
-    text-transform:uppercase;
-    letter-spacing:0.4px;
-    margin-right:0.5rem;
+    font-weight:800;
+    font-size:1.15rem;
+    font-stretch:78%;
+    color:var(--ink);
+    margin-right:.5rem;
+    padding:0 4px;
+    background:linear-gradient(transparent 55%,var(--yellow) 55%);
   }
   .legend-item{
     display:flex;
     align-items:center;
-    gap:0.4rem;
-    font-size:0.82rem;
-    color:var(--gray-700);
+    gap:.45rem;
+    font-size:.88rem;
+    color:var(--ink);
   }
   .legend-swatch{
     display:inline-block;
-    width:0.7rem;height:0.7rem;
-    border-radius:3px;
+    width:.85rem;height:.85rem;
+    border-radius:0;
     flex-shrink:0;
   }
 
   /* ── Insight Footer ─────────────────────────── */
   .insight{
-    background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light) 100%);
-    color:#fff;
-    border-radius:var(--radius);
+    background:var(--panel);
+    color:var(--ink);
+    border:2px solid var(--ink);
+    border-left:8px solid var(--pink);
     padding:1.1rem 1.35rem;
-    box-shadow:var(--shadow-md);
     line-height:1.7;
-    font-size:0.93rem;
+    font-size:.97rem;
+    margin-bottom:2.5rem;
   }
   .insight-label{
     display:inline-block;
-    background:rgba(255,255,255,0.2);
-    font-weight:700;
-    font-size:0.75rem;
-    text-transform:uppercase;
-    letter-spacing:0.6px;
-    padding:0.15rem 0.6rem;
-    border-radius:4px;
-    margin-bottom:0.55rem;
+    font-weight:800;
+    font-size:1.15rem;
+    font-stretch:78%;
+    padding:0 4px;
+    margin-right:.35rem;
+    margin-bottom:.3rem;
+    background:linear-gradient(transparent 55%,var(--yellow) 55%);
   }
 
   /* ── Responsive ─────────────────────────────── */
@@ -352,17 +361,23 @@
     .panels.tokens-only .panel-chat{display:none}
     .panel-body{max-height:400px;min-height:180px}
     .header{flex-direction:column;text-align:center;padding:4rem 1rem 1rem}
-    .header-title{font-size:1.05rem}
     .bubble{max-width:96%}
+    .panel-chat,.panel-token{box-shadow:4px 4px 0 var(--blue)}
+    .panel-token{box-shadow:4px 4px 0 var(--pink)}
   }
+  @media(max-width:640px){
+    .header{padding:.4rem 1rem 1rem}
+    .view-btn{padding:.4rem .75rem}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
 
@@ -804,12 +819,12 @@
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>

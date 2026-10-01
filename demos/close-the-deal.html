@@ -4,88 +4,110 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Close the Deal — NPC Game | robert@barcik.training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 <style>
+/* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
+:root {
+  --paper: #f3efe4; --panel: #fbf8f0; --ink: #1d2a6b; --muted: #525b8c; --rule: #c9c3ae; --rule-soft: #e2dccb;
+  --blue: #2a4bd7; --pink: #ff5fa2; --yellow: #ffe14d; --pink-ink: #c81e63;
+  --danger: #d5312a; --danger-bg: #fbe1dc; --safe: #178a5e; --safe-bg: #dcf1e4; --warn: #b85f00; --warn-bg: #ffefc2; --neutral: #8a8fa8;
+  --font: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f0f4f8; color: #1a202c; min-height: 100vh; line-height: 1.5;
+  font-family: var(--font);
+  background: var(--paper) var(--grain); color: var(--ink); min-height: 100vh; line-height: 1.5;
 }
-header { background: #1e3a5f; color: #fff; padding: 1.4rem 2rem; text-align: center; position: relative; }
-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
-header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
+header { color: var(--ink); padding: 1.6rem 2rem 1.2rem; text-align: center; position: relative; border-bottom: 2px solid var(--ink); }
+header h1 {
+  font-size: clamp(2.2rem, 6vw, 3.4rem); font-weight: 800; font-stretch: 78%; letter-spacing: -0.02em; line-height: .95; margin-bottom: 0.35rem;
+  color: var(--blue); text-shadow: .045em .04em 0 var(--pink);
+}
+header .brand { font-size: 0.9rem; font-weight: 700; color: var(--muted); }
 
 .game-container { max-width: 720px; margin: 1.5rem auto; padding: 0 1.25rem; }
 
-/* Trust Meter */
-.trust-meter { margin-bottom: 1.25rem; }
+/* Trust Meter (fill colour = meaning: red low, amber middling, green winning; set in JS) */
+.trust-meter { margin-bottom: 1.25rem; position: relative; }
 .trust-label-row { display: flex; justify-content: space-between; margin-bottom: 0.3rem; }
-.trust-label { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
-.trust-value { font-size: 0.85rem; font-weight: 800; color: #1e3a5f; }
-.trust-track { height: 14px; background: #e2e8f0; border-radius: 7px; position: relative; overflow: hidden; }
-.trust-fill { height: 100%; border-radius: 7px; transition: width 0.6s ease, background 0.6s ease; }
+.trust-label { font-size: 0.95rem; font-weight: 800; color: var(--ink); }
+.trust-value { font-size: 1rem; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.trust-track { height: 18px; background: var(--panel); border: 2px solid var(--ink); border-radius: 0; position: relative; overflow: hidden; }
+.trust-fill { height: 100%; border-radius: 0; transition: width 0.6s ease, background 0.6s ease; }
 .trust-delta {
-  position: absolute; top: -24px; font-size: 0.85rem; font-weight: 800;
+  position: absolute; top: -24px; font-size: 1rem; font-weight: 800;
   opacity: 0; transition: opacity 0.3s, transform 0.3s;
   transform: translateY(5px);
 }
 .trust-delta.show { opacity: 1; transform: translateY(0); }
-.trust-delta.positive { color: #27ae60; }
-.trust-delta.negative { color: #e74c3c; }
+.trust-delta.positive { color: var(--safe); }
+.trust-delta.negative { color: var(--danger); }
 
 /* Scene */
 .scene-panel {
-  background: #fff; border-radius: 12px; border: 2px solid #0d9488;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;
+  background: var(--panel); border-radius: 0; border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--blue); overflow: hidden;
 }
 .scene-header {
-  background: #f0f4f8; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--paper); padding: 0.75rem 1.1rem; display: flex; align-items: center; gap: 0.75rem;
+  border-bottom: 2px solid var(--ink);
 }
-.scene-number { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; font-weight: 600; }
-.scene-title { font-size: 1rem; font-weight: 700; color: #1e3a5f; }
+.scene-number { font-size: 0.85rem; color: var(--muted); font-weight: 700; }
+.scene-title {
+  display: inline-block; font-size: 1.35rem; font-weight: 800; font-stretch: 78%; line-height: 1.15; color: var(--ink);
+  background: linear-gradient(transparent 55%, var(--yellow) 55%); padding: 0 4px; margin-left: -4px;
+}
 
 .dialogue-area { padding: 1.25rem; }
 
 /* NPC Row */
 .npc-row { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1rem; }
 .npc-portrait {
-  width: 56px; height: 56px; flex-shrink: 0; background: #1e3a5f; border-radius: 8px;
+  width: 56px; height: 56px; flex-shrink: 0; background: var(--ink); border-radius: 0; box-shadow: 3px 3px 0 var(--pink);
   display: flex; align-items: center; justify-content: center;
 }
 .npc-bubble {
-  background: #f0f4f8; border-radius: 0 12px 12px 12px; padding: 0.75rem 1rem;
-  font-size: 0.9rem; color: #1a202c; line-height: 1.6; flex: 1; position: relative;
+  background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--ink); border-radius: 0; padding: 0.75rem 1rem;
+  font-size: 0.95rem; color: var(--ink); line-height: 1.6; flex: 1; position: relative;
 }
-.npc-name { font-size: 0.72rem; font-weight: 700; color: #0d9488; margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.typing-cursor { display: inline-block; width: 2px; height: 1em; background: #1e3a5f; animation: blink 0.7s infinite; vertical-align: text-bottom; margin-left: 2px; }
+.npc-name { font-size: 0.85rem; font-weight: 800; color: var(--blue); margin-bottom: 0.2rem; padding-right: 3.5rem; }
+.typing-cursor { display: inline-block; width: 2px; height: 1em; background: var(--ink); animation: blink 0.7s infinite; vertical-align: text-bottom; margin-left: 2px; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .skip-btn {
-  position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.2rem 0.5rem;
-  background: #e2e8f0; border: none; border-radius: 4px; font-size: 0.7rem;
-  color: #64748b; cursor: pointer; font-weight: 600;
+  position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.25rem 0.6rem;
+  background: var(--panel); border: 2px solid var(--ink); border-radius: 0; font-family: inherit; font-size: 0.8rem;
+  color: var(--ink); cursor: pointer; font-weight: 700;
 }
-.skip-btn:hover { background: #cbd5e0; }
+.skip-btn:hover { background: var(--yellow); }
 
 /* Choices */
 .choices { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
 .choice-btn {
-  padding: 0.75rem 1rem; border: 2px solid #e2e8f0; background: #fff; border-radius: 8px;
-  font-size: 0.88rem; cursor: pointer; transition: all 0.15s; text-align: left;
-  color: #1a202c; font-weight: 500;
+  padding: 0.75rem 1rem; border: 2px solid var(--ink); background: var(--panel); border-radius: 0;
+  font-family: inherit; font-size: 0.93rem; cursor: pointer; transition: background 0.15s; text-align: left;
+  color: var(--ink); font-weight: 500; line-height: 1.45;
 }
-.choice-btn:hover { border-color: #0d9488; background: #f0fdfa; }
-.choice-btn.selected { border-color: #0d9488; background: #0d9488; color: #fff; }
+.choice-btn:hover { background: var(--yellow); }
+.choice-btn.selected { border-color: var(--ink); background: var(--ink); color: var(--paper); box-shadow: 4px 4px 0 var(--pink); }
 .choice-btn:disabled { opacity: 0.5; cursor: default; }
-.choice-label { font-size: 0.72rem; font-weight: 700; color: #0d9488; margin-right: 0.5rem; }
-.choice-btn.selected .choice-label { color: #a7f3d0; }
+.choice-btn:disabled:hover { background: var(--panel); }
+.choice-btn.selected:disabled { opacity: 1; }
+.choice-btn.selected:disabled:hover { background: var(--ink); }
+.choice-label { font-size: 0.9rem; font-weight: 800; color: var(--pink-ink); margin-right: 0.5rem; }
+.choice-btn.selected .choice-label { color: var(--yellow); }
 
 /* Continue button */
 .continue-btn {
-  display: none; margin-top: 1rem; padding: 0.65rem 1.5rem; background: #1e3a5f; color: #fff;
-  border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
-  width: 100%; transition: background 0.2s;
+  display: none; margin-top: 1rem; padding: 0.7rem 1.5rem; min-height: 44px; background: var(--pink); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 0; box-shadow: 3px 3px 0 var(--ink); font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer;
+  width: 100%; transition: transform 0.12s, box-shadow 0.12s;
 }
-.continue-btn:hover { background: #2a4a73; }
+.continue-btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
 .continue-btn.visible { display: block; }
 
 /* NPC Response */
@@ -94,85 +116,103 @@ header .brand { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.03em; }
 
 /* Ending */
 .ending-panel {
-  display: none; background: #fff; border-radius: 12px; padding: 2rem; text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-top: 1.25rem;
+  display: none; background: var(--panel); border: 2px solid var(--ink); border-radius: 0; padding: 2rem; text-align: center;
+  box-shadow: 5px 5px 0 var(--pink); margin-top: 1.25rem;
 }
 .ending-panel.visible { display: block; }
 .ending-icon { font-size: 3rem; margin-bottom: 0.75rem; }
-.ending-title { font-size: 1.5rem; font-weight: 800; color: #1e3a5f; margin-bottom: 0.5rem; }
-.ending-desc { font-size: 0.95rem; color: #4a5568; margin-bottom: 1.5rem; }
+.ending-title { font-size: clamp(2rem, 5vw, 2.6rem); font-weight: 800; font-stretch: 78%; line-height: 1.05; color: var(--blue); text-shadow: .05em .05em 0 var(--pink); margin-bottom: 0.6rem; }
+.ending-desc { font-size: 1rem; color: var(--ink); margin-bottom: 1.5rem; }
 
 /* Debrief */
-.debrief-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; margin-bottom: 1.5rem; }
-.debrief-table th { background: #f0f4f8; padding: 0.5rem 0.75rem; color: #64748b; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
-.debrief-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f0f4f8; vertical-align: top; }
-.delta-pos { color: #27ae60; font-weight: 700; }
-.delta-neg { color: #e74c3c; font-weight: 700; }
-.delta-zero { color: #94a3b8; font-weight: 700; }
+.debrief-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left; margin-bottom: 1.5rem; color: var(--ink); }
+.debrief-table th { background: var(--paper); padding: 0.5rem 0.75rem; color: var(--ink); font-weight: 800; font-size: 0.85rem; border-bottom: 2px solid var(--ink); }
+.debrief-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+.delta-pos { color: var(--safe); font-weight: 800; }
+.delta-neg { color: var(--danger); font-weight: 800; }
+.delta-zero { color: var(--neutral); font-weight: 800; }
 
 .replay-btn {
-  padding: 0.65rem 2rem; background: #1e3a5f; color: #fff; border: none; border-radius: 8px;
-  font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
+  padding: 0.7rem 2rem; min-height: 44px; background: var(--pink); color: var(--ink); border: 2px solid var(--ink); border-radius: 0; box-shadow: 3px 3px 0 var(--ink);
+  font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s;
 }
-.replay-btn:hover { background: #2a4a73; }
+.replay-btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
 
 /* Export */
-.export-bar { display: flex; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 720px; padding: 0 1.25rem; }
-.export-btn { padding: 0.6rem 1.5rem; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
-.export-btn.primary { background: #1e3a5f; color: #fff; }
-.export-btn.secondary { background: #e2e8f0; color: #1e3a5f; }
-.copy-toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e3a5f; color: #fff; padding: 0.6rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; opacity: 0; transition: all 0.3s; z-index: 100; }
+.export-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 720px; padding: 0 1.25rem; }
+.export-btn { padding: 0.6rem 1.5rem; min-height: 44px; border: 2px solid var(--ink); border-radius: 0; font-family: inherit; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+.export-btn.primary { background: var(--panel); color: var(--ink); }
+.export-btn.secondary { background: var(--panel); color: var(--ink); }
+.export-btn:hover { background: var(--yellow); }
+.copy-toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--ink); color: var(--paper); border: 2px solid var(--paper); box-shadow: 4px 4px 0 var(--pink); padding: 0.6rem 1.5rem; border-radius: 0; font-size: 0.92rem; font-weight: 700; opacity: 0; transition: all 0.3s; z-index: 100; }
 .copy-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
+footer { text-align: center; padding: 2rem 2rem 3.5rem; font-size: 0.82rem; color: var(--muted); }
 
 /* Setup panel */
-.setup-panel { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 1.25rem; }
-.setup-panel h2 { font-size: 1.1rem; color: #1e3a5f; margin-bottom: 0.75rem; }
-.setup-panel p { font-size: 0.9rem; color: #4a5568; margin-bottom: 0.5rem; line-height: 1.6; }
-.setup-detail { display: flex; gap: 0.5rem; align-items: baseline; font-size: 0.85rem; margin-bottom: 0.25rem; }
-.setup-detail .sd-label { color: #64748b; font-weight: 600; min-width: 100px; }
-.setup-detail .sd-value { color: #1e3a5f; font-weight: 700; }
-.start-btn {
-  margin-top: 1rem; padding: 0.7rem 2rem; background: #0d9488; color: #fff; border: none;
-  border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s;
+.setup-panel { background: var(--panel); border: 2px solid var(--ink); border-radius: 0; padding: 1.5rem; box-shadow: 5px 5px 0 var(--blue); margin-bottom: 1.25rem; }
+.setup-panel h2 {
+  display: inline-block; font-size: 1.5rem; font-weight: 800; font-stretch: 78%; line-height: 1.15; color: var(--ink); margin-bottom: 0.75rem;
+  background: linear-gradient(transparent 55%, var(--yellow) 55%); padding: 0 4px; margin-left: -4px;
 }
-.start-btn:hover { background: #0f766e; }
+.setup-panel p { font-size: 0.95rem; color: var(--ink); margin-bottom: 0.5rem; line-height: 1.6; }
+.setup-detail { display: flex; gap: 0.5rem; align-items: baseline; font-size: 0.92rem; margin-bottom: 0.25rem; }
+.setup-detail .sd-label { color: var(--muted); font-weight: 700; min-width: 100px; }
+.setup-detail .sd-value { color: var(--ink); font-weight: 700; }
+.start-btn {
+  margin-top: 1rem; padding: 0.75rem 2rem; min-height: 46px; background: var(--pink); color: var(--ink); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+  border-radius: 0; font-family: inherit; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s;
+}
+.start-btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
 
 /* Scenario Selection */
-.scenario-select { margin-bottom: 1.25rem; }
-.scenario-select h2 { font-size: 1.1rem; color: #1e3a5f; margin-bottom: 0.5rem; }
-.scenario-select p { font-size: 0.88rem; color: #4a5568; margin-bottom: 1rem; }
+.scenario-select { margin-bottom: 1.5rem; }
+.scenario-select h2 {
+  display: inline-block; font-size: 1.5rem; font-weight: 800; font-stretch: 78%; line-height: 1.15; color: var(--ink); margin-bottom: 0.5rem;
+  background: linear-gradient(transparent 55%, var(--yellow) 55%); padding: 0 4px; margin-left: -4px;
+}
+.scenario-select p { font-size: 0.95rem; color: var(--ink); margin-bottom: 1rem; }
 .scenario-cards { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
 .scenario-card {
-  background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.25rem;
-  cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  background: var(--panel); border: 2px solid var(--ink); border-radius: 0; padding: 1.1rem 1.25rem;
+  cursor: pointer; transition: background 0.15s;
 }
-.scenario-card:hover { border-color: #0d9488; background: #f0fdfa; }
-.scenario-card.selected { border-color: #0d9488; background: #f0fdfa; box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
-.scenario-card h3 { font-size: 1rem; color: #1e3a5f; margin-bottom: 0.25rem; }
-.scenario-card .sc-industry { font-size: 0.75rem; font-weight: 600; color: #0d9488; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
-.scenario-card .sc-desc { font-size: 0.85rem; color: #64748b; line-height: 1.5; }
-.scenario-card .sc-difficulty { font-size: 0.75rem; color: #94a3b8; margin-top: 0.35rem; font-weight: 600; }
+.scenario-card:hover { background: #fff6c4; }
+.scenario-card.selected { border-color: var(--ink); background: var(--panel); border-left: 10px solid var(--blue); box-shadow: 4px 4px 0 var(--ink); }
+.scenario-card h3 { font-size: 1.15rem; font-weight: 800; font-stretch: 85%; color: var(--ink); margin-bottom: 0.25rem; }
+.scenario-card .sc-industry { font-size: 0.85rem; font-weight: 800; color: var(--blue); margin-bottom: 0.2rem; }
+.scenario-card .sc-desc { font-size: 0.9rem; color: var(--ink); line-height: 1.5; }
+.scenario-card .sc-difficulty { font-size: 0.85rem; color: var(--muted); margin-top: 0.35rem; font-weight: 700; }
+
+.choice-btn:focus-visible, .continue-btn:focus-visible, .replay-btn:focus-visible, .start-btn:focus-visible, .export-btn:focus-visible, .skip-btn:focus-visible, .scenario-card:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
 
 @media print {
   body { background: #fff; }
   header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .export-bar, footer, .replay-btn, .start-btn, .continue-btn, .skip-btn { display: none !important; }
-  .scene-panel, .ending-panel { box-shadow: none; border: 1px solid #e2e8f0; }
+  .scene-panel, .ending-panel { box-shadow: none; border: 1px solid var(--rule); }
   .ending-panel.visible { display: block !important; }
 }
 @media (max-width: 740px) {
   .npc-row { flex-direction: column; align-items: flex-start; }
   .npc-portrait { width: 40px; height: 40px; }
+  header { padding: 0.6rem 1rem 1rem; }
+  .dialogue-area { padding: 1rem; }
+  .ending-panel { padding: 1.25rem 1rem; }
+  .scene-panel, .setup-panel { box-shadow: 4px 4px 0 var(--blue); }
+  /* the five-column debrief: let it scroll sideways inside the panel instead of crushing the lesson column */
+  .debrief-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .debrief-table td:nth-child(2), .debrief-table td:nth-child(5) { min-width: 11rem; }
+  .debrief-table td:nth-child(4) { min-width: 7rem; }
 }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
 <a class="all-demos-link" href="../">&larr; All Demos</a>
 <style>
-  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#1e3a5f;color:#fff;border:1px solid rgba(255,255,255,.28);text-decoration:none;font:600 1rem/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:0.6rem 1.1rem;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);display:inline-flex;align-items:center;gap:.4rem;opacity:.95;transition:opacity .2s}
-  .all-demos-link:hover{opacity:1}
-  @media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .8rem}}
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
 </style>
 
 <header>
@@ -188,7 +228,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
       <span class="trust-value" id="trustValueLabel">3 / 10</span>
     </div>
     <div class="trust-track">
-      <div class="trust-fill" id="trustFill" style="width: 30%; background: #e67e22;"></div>
+      <div class="trust-fill" id="trustFill" style="width: 30%; background: #e8890c;"></div>
     </div>
     <div class="trust-delta" id="trustDelta"></div>
   </div>
@@ -231,7 +271,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
         <div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">5,000 docs/month processed manually</span></div>
         <div class="setup-detail"><span class="sd-label">Current cost:</span><span class="sd-value">3 FTEs = €180K/year</span></div>
       </div>
-      <p style="font-size: 0.85rem; color: #64748b;">Your starting trust level is <strong>3/10</strong>. Reach 6+ to win the deal.</p>
+      <p style="font-size: 0.9rem; color: #525b8c;">Your starting trust level is <strong>3/10</strong>. Reach 6+ to win the deal.</p>
     </div>
     <button class="start-btn" onclick="startGame()">Start Meeting</button>
   </div>
@@ -245,7 +285,7 @@ footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #a0aec0; }
     <div class="ending-title" id="endingTitle"></div>
     <div class="ending-desc" id="endingDesc"></div>
 
-    <h3 style="font-size: 1rem; font-weight: 700; color: #1e3a5f; margin-bottom: 0.75rem; text-align: left;">Post-Game Debrief</h3>
+    <h3 style="font-size: 1.2rem; font-weight: 800; font-stretch: 85%; color: #1d2a6b; margin-bottom: 0.75rem; text-align: left;">Post-Game Debrief</h3>
     <table class="debrief-table" id="debriefTable">
       <thead><tr><th>Scene</th><th>Your Choice</th><th>Trust</th><th>Framework</th><th>Lesson</th></tr></thead>
       <tbody id="debriefBody"></tbody>
@@ -269,8 +309,8 @@ const SCENARIOS = {
   acme: {
     name: 'ACME Corp', npcName: 'Elena Vasquez', npcTitle: 'CTO', industry: 'Logistics',
     startTrust: 3, winThreshold: 6,
-    portrait: '<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="13" r="8" fill="#94a3b8"/><rect x="8" y="22" width="20" height="14" rx="4" fill="#94a3b8"/><circle cx="14" cy="12" r="1.5" fill="#1e3a5f"/><circle cx="22" cy="12" r="1.5" fill="#1e3a5f"/><line x1="15" y1="16" x2="21" y2="16" stroke="#1e3a5f" stroke-width="1.5" stroke-linecap="round"/><path d="M10 6 Q18 2 26 6" stroke="#64748b" stroke-width="2" fill="none"/></svg>',
-    briefing: '<p>You are a <strong>GenAI Product Manager</strong> pitching an AI document processing agent to a skeptical CTO. Navigate 4 dialogue scenes to build trust and close the deal.</p><div style="margin:1rem 0"><div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">ACME Corp</span></div><div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Elena Vasquez, CTO</span></div><div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Logistics</span></div><div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">5,000 docs/month processed manually</span></div><div class="setup-detail"><span class="sd-label">Current cost:</span><span class="sd-value">3 FTEs = €180K/year</span></div></div><p style="font-size:0.85rem;color:#64748b;">Your starting trust level is <strong>3/10</strong>. Reach 6+ to win the deal.</p>',
+    portrait: '<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="13" r="8" fill="#f3efe4"/><rect x="8" y="22" width="20" height="14" rx="4" fill="#f3efe4"/><circle cx="14" cy="12" r="1.5" fill="#1d2a6b"/><circle cx="22" cy="12" r="1.5" fill="#1d2a6b"/><line x1="15" y1="16" x2="21" y2="16" stroke="#1d2a6b" stroke-width="1.5" stroke-linecap="round"/><path d="M10 6 Q18 2 26 6" stroke="#ff5fa2" stroke-width="2" fill="none"/></svg>',
+    briefing: '<p>You are a <strong>GenAI Product Manager</strong> pitching an AI document processing agent to a skeptical CTO. Navigate 4 dialogue scenes to build trust and close the deal.</p><div style="margin:1rem 0"><div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">ACME Corp</span></div><div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Elena Vasquez, CTO</span></div><div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Logistics</span></div><div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">5,000 docs/month processed manually</span></div><div class="setup-detail"><span class="sd-label">Current cost:</span><span class="sd-value">3 FTEs = €180K/year</span></div></div><p style="font-size:0.9rem;color:#525b8c;">Your starting trust level is <strong>3/10</strong>. Reach 6+ to win the deal.</p>',
     winDesc: 'Elena is impressed. ACME Corp signs the pilot agreement, and your solution is heading to production. Congratulations — you navigated a skeptical CTO with empathy, data, and smart positioning.',
     mehDesc: 'Elena is interested but not convinced. You\'ll get a follow-up meeting, but you didn\'t create enough urgency or differentiation to close today.',
     loseDesc: 'Elena politely ends the meeting. You lost trust through dismissiveness, pressure tactics, or failing to connect with her specific pain points.',
@@ -316,8 +356,8 @@ const SCENARIOS = {
   meridian: {
     name: 'Meridian Health', npcName: 'Dr. James Okonkwo', npcTitle: 'Chief Medical Officer', industry: 'Healthcare',
     startTrust: 2, winThreshold: 6,
-    portrait: '<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="13" r="8" fill="#94a3b8"/><rect x="8" y="22" width="20" height="14" rx="4" fill="#94a3b8"/><circle cx="14" cy="12" r="1.5" fill="#1e3a5f"/><circle cx="22" cy="12" r="1.5" fill="#1e3a5f"/><line x1="15" y1="16" x2="21" y2="16" stroke="#1e3a5f" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="3" width="24" height="3" rx="1.5" fill="#64748b"/></svg>',
-    briefing: '<p>You are a <strong>GenAI Product Manager</strong> pitching an AI triage assistant to a CMO who was burned by a previous AI vendor. Navigate 4 scenes with care — empathy matters more than ROI here.</p><div style="margin:1rem 0"><div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">Meridian Health</span></div><div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Dr. James Okonkwo, CMO</span></div><div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Healthcare</span></div><div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">4hr avg ER wait, 12% misrouted patients</span></div><div class="setup-detail"><span class="sd-label">History:</span><span class="sd-value">Previous AI vendor failed — trust is low</span></div></div><p style="font-size:0.85rem;color:#64748b;">Your starting trust level is <strong>2/10</strong>. Reach 6+ to win. <strong>Hint:</strong> empathy beats data in healthcare.</p>',
+    portrait: '<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="13" r="8" fill="#f3efe4"/><rect x="8" y="22" width="20" height="14" rx="4" fill="#f3efe4"/><circle cx="14" cy="12" r="1.5" fill="#1d2a6b"/><circle cx="22" cy="12" r="1.5" fill="#1d2a6b"/><line x1="15" y1="16" x2="21" y2="16" stroke="#1d2a6b" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="3" width="24" height="3" rx="1.5" fill="#ff5fa2"/></svg>',
+    briefing: '<p>You are a <strong>GenAI Product Manager</strong> pitching an AI triage assistant to a CMO who was burned by a previous AI vendor. Navigate 4 scenes with care — empathy matters more than ROI here.</p><div style="margin:1rem 0"><div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">Meridian Health</span></div><div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Dr. James Okonkwo, CMO</span></div><div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Healthcare</span></div><div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">4hr avg ER wait, 12% misrouted patients</span></div><div class="setup-detail"><span class="sd-label">History:</span><span class="sd-value">Previous AI vendor failed — trust is low</span></div></div><p style="font-size:0.9rem;color:#525b8c;">Your starting trust level is <strong>2/10</strong>. Reach 6+ to win. <strong>Hint:</strong> empathy beats data in healthcare.</p>',
     winDesc: 'Dr. Okonkwo is genuinely moved by your understanding of patient care. Meridian Health signs for a pilot. You succeeded by leading with empathy, not spreadsheets.',
     mehDesc: 'Dr. Okonkwo sees potential but can\'t get past the previous vendor trauma. He needs more time and a reference from another hospital.',
     loseDesc: 'Dr. Okonkwo politely declines. You treated a healthcare leader like a tech buyer — data and ROI without addressing the human cost of AI failure in medicine.',
@@ -363,8 +403,8 @@ const SCENARIOS = {
   novabank: {
     name: 'NovaBank', npcName: 'Catherine Zhao', npcTitle: 'Chief Risk Officer', industry: 'Financial Services',
     startTrust: 2, winThreshold: 7,
-    portrait: '<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="13" r="8" fill="#94a3b8"/><rect x="8" y="22" width="20" height="14" rx="4" fill="#94a3b8"/><circle cx="14" cy="12" r="1.5" fill="#1e3a5f"/><circle cx="22" cy="12" r="1.5" fill="#1e3a5f"/><line x1="15" y1="16" x2="21" y2="16" stroke="#1e3a5f" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="5" r="3" fill="none" stroke="#64748b" stroke-width="1.5"/></svg>',
-    briefing: '<p>You are a <strong>GenAI Product Manager</strong> pitching AI fraud detection to a Chief Risk Officer. This is the hardest scenario — compliance and explainability matter more than cost savings.</p><div style="margin:1rem 0"><div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">NovaBank</span></div><div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Catherine Zhao, CRO</span></div><div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Financial Services</span></div><div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">800 flagged transactions/day, 73% false positive rate</span></div><div class="setup-detail"><span class="sd-label">Team:</span><span class="sd-value">12 analysts manually reviewing alerts</span></div></div><p style="font-size:0.85rem;color:#64748b;">Your starting trust level is <strong>2/10</strong>. Reach <strong>7+</strong> to win. <strong>Warning:</strong> this is the hardest scenario. Compliance > ROI.</p>',
+    portrait: '<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="13" r="8" fill="#f3efe4"/><rect x="8" y="22" width="20" height="14" rx="4" fill="#f3efe4"/><circle cx="14" cy="12" r="1.5" fill="#1d2a6b"/><circle cx="22" cy="12" r="1.5" fill="#1d2a6b"/><line x1="15" y1="16" x2="21" y2="16" stroke="#1d2a6b" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="5" r="3" fill="none" stroke="#ff5fa2" stroke-width="1.5"/></svg>',
+    briefing: '<p>You are a <strong>GenAI Product Manager</strong> pitching AI fraud detection to a Chief Risk Officer. This is the hardest scenario — compliance and explainability matter more than cost savings.</p><div style="margin:1rem 0"><div class="setup-detail"><span class="sd-label">Client:</span><span class="sd-value">NovaBank</span></div><div class="setup-detail"><span class="sd-label">Contact:</span><span class="sd-value">Catherine Zhao, CRO</span></div><div class="setup-detail"><span class="sd-label">Industry:</span><span class="sd-value">Financial Services</span></div><div class="setup-detail"><span class="sd-label">Problem:</span><span class="sd-value">800 flagged transactions/day, 73% false positive rate</span></div><div class="setup-detail"><span class="sd-label">Team:</span><span class="sd-value">12 analysts manually reviewing alerts</span></div></div><p style="font-size:0.9rem;color:#525b8c;">Your starting trust level is <strong>2/10</strong>. Reach <strong>7+</strong> to win. <strong>Warning:</strong> this is the hardest scenario. Compliance > ROI.</p>',
     winDesc: 'Catherine is convinced your approach puts compliance first. NovaBank signs a pilot — the first AI vendor she\'s trusted in 3 years. You won by speaking the language of risk, not revenue.',
     mehDesc: 'Catherine sees potential but needs more time. She\'ll run it by the audit committee. You got close but missed a few opportunities to demonstrate compliance-first thinking.',
     loseDesc: 'Catherine terminates the meeting. In financial services, leading with cost savings or dismissing explainability concerns is a deal-killer. CROs think in audit trails, not ROI.',
@@ -437,7 +477,7 @@ function startGame() {
   const fill = document.getElementById('trustFill');
   const pct = (trust / 10) * 100;
   fill.style.width = pct + '%';
-  fill.style.background = trust <= 2 ? '#e74c3c' : '#e67e22';
+  fill.style.background = trust <= 2 ? '#d5312a' : '#e8890c';
   document.getElementById('trustValueLabel').textContent = trust + ' / 10';
 
   renderScene(0);
@@ -543,7 +583,7 @@ function updateTrustMeter(delta) {
   const fill = document.getElementById('trustFill');
   const label = document.getElementById('trustValueLabel');
   const pct = (trust / 10) * 100;
-  let color = trust <= 2 ? '#e74c3c' : trust <= 4 ? '#e67e22' : '#27ae60';
+  let color = trust <= 2 ? '#d5312a' : trust <= 4 ? '#e8890c' : '#178a5e';
   fill.style.width = pct + '%';
   fill.style.background = color;
   label.textContent = trust + ' / 10';
@@ -606,7 +646,7 @@ function resetGame() {
   document.getElementById('sceneContainer').innerHTML = '';
   const pct = (trust / 10) * 100;
   document.getElementById('trustFill').style.width = pct + '%';
-  document.getElementById('trustFill').style.background = trust <= 2 ? '#e74c3c' : '#e67e22';
+  document.getElementById('trustFill').style.background = trust <= 2 ? '#d5312a' : '#e8890c';
   document.getElementById('trustValueLabel').textContent = trust + ' / 10';
 }
 
@@ -634,12 +674,12 @@ function copyResults() {
 <!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
 <details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
 <style>
-.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0}
-.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:999px;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);opacity:.8;transition:opacity .15s}
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
 .ai-transparency-pill summary::-webkit-details-marker{display:none}
 .ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
 .ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
-.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:.6rem;background:rgba(15,23,42,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:left}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
 .ai-transparency-pill .ait-panel p{margin:0}
 @media print{.ai-transparency-pill{display:none}}
 </style>
