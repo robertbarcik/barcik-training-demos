@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oscillatory Neural Networks — Clocks That Compute | robert@barcik.training</title>
+<meta name="description" content="Interactive demo of oscillatory neural networks: watch coupled oscillators fall into step, recall a stored pattern from a noisy one, and read an honest take on whether the idea is useful.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
+<style>
+/* ===== RISO TOKENS (training-ops/web/riso/demo-kit.css) ===== */
+:root {
+  --paper: #f3efe4; --panel: #fbf8f0; --ink: #1d2a6b; --muted: #525b8c; --rule: #c9c3ae; --rule-soft: #e2dccb;
+  --blue: #2a4bd7; --pink: #ff5fa2; --yellow: #ffe14d; --pink-ink: #c81e63;
+  --danger: #d5312a; --danger-bg: #fbe1dc; --safe: #178a5e; --safe-bg: #dcf1e4; --warn: #b85f00; --warn-bg: #ffefc2; --neutral: #8a8fa8;
+  --font: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .42 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--paper) var(--grain); color: var(--ink); min-height: 100vh; line-height: 1.5; }
+
+header { color: var(--ink); padding: 1.6rem 2rem 1.2rem; text-align: center; position: relative; border-bottom: 2px solid var(--ink); }
+header h1 { font-size: clamp(2.1rem, 6vw, 3.4rem); font-weight: 800; font-stretch: 78%; letter-spacing: -0.02em; line-height: .95; color: var(--blue); text-shadow: .045em .04em 0 var(--pink); }
+header .brand { font-size: 0.9rem; font-weight: 700; color: var(--muted); margin-bottom: 0.35rem; }
+
+.intro { max-width: 760px; margin: 1.5rem auto 0; padding: 0 1.25rem; text-align: center; }
+.intro p { font-size: 1rem; line-height: 1.6; }
+.intro p + p { margin-top: 0.7rem; }
+.intro strong { background: linear-gradient(transparent 55%, var(--yellow) 55%); padding: 0 2px; }
+
+.wrap { max-width: 1040px; margin: 1.75rem auto; padding: 0 1.25rem; }
+.panel { background: var(--panel); border: 2px solid var(--ink); padding: 1.25rem; box-shadow: 5px 5px 0 var(--blue); margin-bottom: 1.9rem; }
+.panel.pink-shadow { box-shadow: 5px 5px 0 var(--pink); }
+.panel-title { display: inline; font-size: 1.3rem; line-height: 1.35; font-stretch: 78%; font-weight: 800; background: linear-gradient(transparent 55%, var(--yellow) 55%); padding: 0 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.panel-lead { font-size: 0.95rem; line-height: 1.55; max-width: 760px; margin: 0.6rem 0 1rem; }
+
+.well { background: var(--paper); border: 1px solid var(--rule); padding: 0.6rem; }
+.well.dark { background: var(--ink); border-color: var(--ink); }
+.well-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 0.4rem; }
+.well.dark .well-label { color: #c9cdea; }
+canvas { display: block; width: 100%; }
+
+/* ----- part 1 ----- */
+.sync-grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 1rem; align-items: start; }
+#flies { aspect-ratio: 8 / 5; }
+#circle { aspect-ratio: 1 / 1; max-width: 300px; margin: 0 auto; }
+#strip { height: 72px; }
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem 1.5rem; margin-top: 1rem; align-items: end; }
+.ctl-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.35rem; }
+.ctl-label span:last-child { font-variant-numeric: tabular-nums; color: var(--blue); }
+.ctl-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.4; }
+input[type="range"] { width: 100%; height: 6px; -webkit-appearance: none; appearance: none; background: var(--rule); border-radius: 0; outline: none; cursor: pointer; margin: 0.6rem 0; }
+input[type="range"]:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--yellow); cursor: pointer; border: 2px solid var(--ink); }
+input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--yellow); cursor: pointer; border: 2px solid var(--ink); }
+
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.btn { min-height: 40px; padding: 0.45rem 0.9rem; border: 2px solid var(--ink); border-radius: 0; background: var(--panel); font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--ink); cursor: pointer; transition: background .15s; }
+.btn:hover { background: var(--yellow); }
+.btn:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+.btn.active { background: var(--ink); color: var(--paper); }
+.btn.primary { background: var(--pink); box-shadow: 3px 3px 0 var(--ink); }
+.btn.primary:hover { background: var(--yellow); }
+.btn:disabled { opacity: .45; cursor: default; background: var(--panel); box-shadow: none; }
+
+.meter { margin-top: 1rem; }
+.meter-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.9rem; font-weight: 700; }
+.meter-num { font-size: 1.5rem; font-weight: 800; font-stretch: 78%; color: var(--blue); text-shadow: .05em .05em 0 var(--pink); font-variant-numeric: tabular-nums; }
+.meter-track { height: 14px; background: var(--paper); border: 2px solid var(--ink); margin-top: 0.25rem; }
+.meter-fill { height: 100%; width: 0; background: var(--blue); }
+.status { font-size: 0.95rem; font-weight: 700; margin-top: 0.6rem; min-height: 2.9em; padding-left: 0.6rem; border-left: 3px solid var(--pink); }
+
+.formula { font-family: var(--mono); font-size: 0.82rem; background: var(--paper); border: 1px solid var(--rule); padding: 0.6rem 0.75rem; margin-top: 1rem; overflow-x: auto; white-space: nowrap; }
+.formula-note { font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; line-height: 1.5; }
+
+/* ----- part 2 ----- */
+.mem-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(240px, 1.15fr); gap: 1rem; align-items: start; }
+.mem-grid canvas { aspect-ratio: 1 / 1; cursor: pointer; touch-action: manipulation; }
+.mem-side > * + * { margin-top: 0.9rem; }
+.side-label { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.35rem; }
+.check { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.88rem; line-height: 1.4; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin-top: 0.1rem; accent-color: var(--ink); flex: none; }
+.ov-row { display: grid; grid-template-columns: 1.4rem 1fr 3rem; gap: 0.5rem; align-items: center; font-size: 0.85rem; font-weight: 700; margin-top: 0.3rem; }
+.ov-track { height: 10px; background: var(--paper); border: 1px solid var(--ink); }
+.ov-fill { height: 100%; width: 0; background: var(--ink); }
+.ov-val { text-align: right; font-variant-numeric: tabular-nums; }
+.verdict { font-size: 0.92rem; font-weight: 700; line-height: 1.45; padding: 0.55rem 0.7rem; border: 2px solid currentColor; color: var(--ink); background: var(--paper); min-height: 4.6em; }
+.verdict.ok { color: var(--safe); background: var(--safe-bg); }
+.verdict.warn { color: var(--warn); background: var(--warn-bg); }
+
+/* ----- assessment ----- */
+.section-title { font-size: clamp(1.6rem, 4vw, 2.1rem); font-weight: 800; font-stretch: 78%; line-height: 1.05; margin: 2.4rem 0 0.4rem; }
+.section-lead { font-size: 1rem; max-width: 760px; margin-bottom: 1.1rem; line-height: 1.6; }
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+.card { padding: 1.2rem 1.4rem; background: var(--panel); border: 2px solid var(--ink); }
+.card.c-blue { border-left: 8px solid var(--blue); }
+.card.c-pink { border-left: 8px solid var(--pink); }
+.card.c-wide { grid-column: 1 / -1; border-left: 8px solid var(--yellow); }
+.card-title { font-size: 1.2rem; font-weight: 800; font-stretch: 78%; line-height: 1.15; margin-bottom: 0.5rem; }
+.card p, .card li { font-size: 0.93rem; line-height: 1.6; }
+.card ul { list-style: none; }
+.card li { padding-left: 1.1rem; position: relative; margin-top: 0.55rem; }
+.card li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 7px; height: 7px; background: var(--ink); }
+.card p + p { margin-top: 0.6rem; }
+.card b { font-weight: 800; }
+a { color: var(--pink-ink); font-weight: 700; }
+a:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+.sources { margin-top: 1.6rem; font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+.sources summary { cursor: pointer; font-weight: 700; color: var(--ink); font-size: 0.9rem; padding: 0.4rem 0; }
+.sources summary:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+.sources ol { margin: 0.4rem 0 0 1.3rem; }
+.sources li { margin-top: 0.3rem; overflow-wrap: anywhere; }
+
+footer { text-align: center; padding: 1.5rem 1.5rem 3.5rem; font-size: 0.82rem; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .mem-grid { grid-template-columns: 1fr 1fr; }
+  .mem-side { grid-column: 1 / -1; }
+}
+@media (max-width: 740px) {
+  header { padding: 0.6rem 1rem 1rem; }
+  .intro p { font-size: 0.95rem; }
+  .sync-grid, .controls, .cards { grid-template-columns: 1fr; }
+  .panel { padding: 1rem; box-shadow: 4px 4px 0 var(--blue); }
+  .panel.pink-shadow { box-shadow: 4px 4px 0 var(--pink); }
+  #circle { max-width: 240px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<a class="all-demos-link" href="../">&larr; All Demos</a>
+<style>
+  .all-demos-link{position:absolute;top:1rem;left:1rem;z-index:9999;background:#fbf8f0;color:#1d2a6b;border:2px solid #1d2a6b;text-decoration:none;font:800 .95rem/1 'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;padding:.55rem .9rem;border-radius:0;box-shadow:3px 3px 0 #1d2a6b;display:inline-flex;align-items:center;gap:.4rem;transition:transform .12s,box-shadow .12s}
+.all-demos-link:hover{background:#ffe14d;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #1d2a6b}
+@media (max-width:640px){.all-demos-link{position:static;display:inline-flex;margin:.6rem 0 .4rem .6rem;font-size:.85rem;padding:.45rem .7rem}}
+</style>
+
+<header>
+  <div class="brand">robert@barcik.training</div>
+  <h1>Oscillatory Neural Networks</h1>
+</header>
+
+<div class="intro">
+  <p>
+    A standard artificial neuron outputs a number. An oscillatory neuron is a small clock that never
+    stops ticking. What it &ldquo;says&rdquo; is <strong>when it ticks compared with its neighbours</strong>,
+    which engineers call its phase.
+  </p>
+  <p>
+    Connect many such clocks and they tug on each other&rsquo;s timing. The answer of the network is the
+    pattern of who ends up in step with whom. Two experiments below show the idea, then an assessment of
+    whether it is good for anything.
+  </p>
+</div>
+
+<div class="wrap">
+
+  <!-- ================= PART 1 ================= -->
+  <section class="panel" aria-labelledby="t1">
+    <h2 class="panel-title" id="t1">1. From scattered ticking to one rhythm</h2>
+    <p class="panel-lead">
+      Forty oscillators, each with its own preferred tempo, like fireflies that flash at slightly different
+      speeds. Turn up the coupling: each one starts to nudge its timing towards the crowd. Nothing happens
+      for a while, then the group snaps into step.
+    </p>
+
+    <div class="sync-grid">
+      <div class="well dark">
+        <div class="well-label">Each dot flashes once per cycle</div>
+        <canvas id="flies" role="img" aria-label="Forty dots flashing, each at its own rhythm until coupling pulls them into step"></canvas>
+      </div>
+      <div class="well">
+        <div class="well-label">The same oscillators as hands on one clock face</div>
+        <canvas id="circle" role="img" aria-label="Forty dots travelling around a circle; the arrow in the middle grows as they bunch together"></canvas>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div>
+        <div class="ctl-label"><label for="k">Coupling strength</label><span id="k-val">0.0</span></div>
+        <input type="range" id="k" min="0" max="4" step="0.1" value="0">
+        <div class="ctl-hint">How hard each oscillator is pulled towards the others.</div>
+      </div>
+      <div>
+        <div class="ctl-label"><label for="spread">Variety of tempos</label><span id="spread-val">0.6</span></div>
+        <input type="range" id="spread" min="0.1" max="1.5" step="0.1" value="0.6">
+        <div class="ctl-hint">How different the natural speeds are. More variety needs more coupling.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="scramble" type="button">Scramble timing</button>
+        <button class="btn" id="play" type="button" aria-pressed="false">Pause</button>
+      </div>
+      <div class="well">
+        <div class="well-label">Synchrony over the last 20 seconds</div>
+        <canvas id="strip" role="img" aria-label="Line chart of synchrony over time"></canvas>
+      </div>
+    </div>
+
+    <div class="meter">
+      <div class="meter-head"><span>Synchrony (0 = scattered, 1 = perfectly in step)</span><span class="meter-num" id="r-num">0.00</span></div>
+      <div class="meter-track"><div class="meter-fill" id="r-fill"></div></div>
+      <div class="status" id="status" aria-live="polite"></div>
+    </div>
+
+    <div class="formula">d&theta;<sub>i</sub>/dt = &omega;<sub>i</sub> + (K / N) &middot; &Sigma;<sub>j</sub> sin(&theta;<sub>j</sub> &minus; &theta;<sub>i</sub>)</div>
+    <p class="formula-note">
+      The Kuramoto model (1975). &theta; is where an oscillator is in its cycle, &omega; its own tempo, K the
+      coupling. The pink arrow on the clock face is the average of all hands: its length is the synchrony number.
+    </p>
+  </section>
+
+  <!-- ================= PART 2 ================= -->
+  <section class="panel pink-shadow" aria-labelledby="t2">
+    <h2 class="panel-title" id="t2">2. A memory made of timing</h2>
+    <p class="panel-lead">
+      Now 64 oscillators with identical tempo, every one coupled to every other. The couplings were set from
+      three stored pictures: cells that share a colour in a picture pull each other into step, cells that
+      differ push each other half a beat apart. Damage a picture, let the network settle, and the timing
+      repairs it.
+    </p>
+
+    <div class="mem-grid">
+      <div class="well">
+        <div class="well-label">What you would see: every cell blinking</div>
+        <canvas id="blink" role="img" aria-label="Eight by eight grid of blinking cells; two groups blink half a beat apart"></canvas>
+      </div>
+      <div class="well">
+        <div class="well-label">Read out by timing: dark = on the beat</div>
+        <canvas id="read" role="img" aria-label="Eight by eight grid showing which cells tick on the beat"></canvas>
+      </div>
+
+      <div class="mem-side">
+        <div>
+          <div class="side-label">Start from a stored picture</div>
+          <div class="btn-row" id="pat-btns"></div>
+        </div>
+        <div>
+          <div class="ctl-label"><label for="noise">Damage</label><span id="noise-val">20%</span></div>
+          <input type="range" id="noise" min="0" max="45" step="5" value="20">
+          <div class="ctl-hint">Share of cells flipped. You can also tap cells to flip them yourself.</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="settle" type="button">Let it settle</button>
+          <button class="btn" id="random" type="button">Random start</button>
+        </div>
+        <div class="verdict" id="verdict" aria-live="polite"></div>
+        <div>
+          <div class="side-label">Match with each stored picture</div>
+          <div id="overlaps"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="fourth"> <span>Store a fourth picture (Z), which resembles the others. Then try recalling again.</span></label>
+      </div>
+    </div>
+
+    <div class="formula">d&theta;<sub>i</sub>/dt = (1 / N) &middot; &Sigma;<sub>j</sub> J<sub>ij</sub> sin(&theta;<sub>j</sub> &minus; &theta;<sub>i</sub>) &minus; K<sub>s</sub> sin(2&theta;<sub>i</sub>)</div>
+    <p class="formula-note">
+      J<sub>ij</sub> is positive when cells i and j agree across the stored pictures and negative when they
+      disagree (a Hebbian rule, as in a Hopfield network). The last term is a reference signal at twice the
+      tempo that makes each oscillator choose one of two timings. No program runs the recall: the network
+      slides into the nearest stable timing pattern by itself.
+    </p>
+  </section>
+
+  <!-- ================= ASSESSMENT ================= -->
+  <h2 class="section-title">So, is this useful?</h2>
+  <p class="section-lead">
+    Short answer: an elegant idea with a long history, serious researchers and no product. Whether it
+    becomes useful depends on two separate bets, and neither has paid off yet.
+  </p>
+
+  <div class="cards">
+    <div class="card c-blue">
+      <h3 class="card-title">Why people are excited</h3>
+      <ul>
+        <li><b>Physics does the computing.</b> Coupled oscillators settle into a stable state on their own,
+          as you saw in part 2. Build them from tiny analog devices and recall or optimisation could cost
+          far less energy than digital arithmetic. The EU project NeurONN (2020 to 2023) set out to build
+          such chips from vanadium-dioxide oscillators and stated goals of up to 250&times; better energy
+          efficiency than digital CMOS oscillators.</li>
+        <li><b>Hard puzzles as a landscape.</b> The same settling can search for good answers to
+          combinatorial problems such as splitting a graph. These are &ldquo;oscillator Ising machines&rdquo;
+          (Wang and Roychowdhury, 2019).</li>
+        <li><b>Timing as an extra channel.</b> Neurons that fire in step can mark &ldquo;these features belong
+          to the same object&rdquo;. A deep-learning version, Artificial Kuramoto Oscillatory Neurons (AKOrN,
+          an oral paper at ICLR 2025), reported gains in finding objects without labels, in Sudoku-style
+          reasoning and in robustness to adversarial images.</li>
+      </ul>
+    </div>
+
+    <div class="card c-pink">
+      <h3 class="card-title">Why people are sceptical</h3>
+      <ul>
+        <li><b>The hardware is tiny.</b> Published chips couple a handful of oscillators: up to nine
+          vanadium-dioxide oscillators in a 2024 Nature Communications paper, a two-by-two array in a 2025
+          proof of concept. Energy advantages are mostly goals and simulations, not measurements at scale.</li>
+        <li><b>Memory capacity is poor.</b> Tick the fourth picture in part 2 and recall starts to fail.
+          Classic oscillator memories store only a few patterns before they blur into blends.</li>
+        <li><b>Wiring and precision.</b> Coupling everything to everything needs N&sup2; connections, and
+          real analog oscillators drift in tempo. Both get worse as the network grows.</li>
+        <li><b>Ordinary computers are hard to beat.</b> For optimisation, reviews of Ising machines have
+          found no clear, general advantage over good classical algorithms on standard processors.</li>
+        <li><b>The software results run on GPUs.</b> AKOrN is trained with backpropagation and simulated
+          step by step, so it gains none of the hoped-for energy savings, and its accuracy on clean
+          images trails a plain ResNet.</li>
+      </ul>
+    </div>
+
+    <div class="card c-wide">
+      <h3 class="card-title">Where it stands at the end of 2026</h3>
+      <p>
+        The idea is half a century old (Kuramoto 1975; Hoppensteadt and Izhikevich proposed an oscillatory
+        associative memory in 1999) and it borrows from a hypothesis about the brain, binding by synchrony,
+        that neuroscientists themselves still dispute. It is having a second life in two places: analog
+        hardware for low-power devices and optimisation, and oscillator layers inside otherwise normal deep
+        networks.
+      </p>
+      <p>
+        <b>For a practitioner:</b> nothing here is something you can buy or deploy today, and nothing in it
+        threatens transformers. It is worth knowing as a reminder that &ldquo;a neuron outputs a
+        number&rdquo; is a design choice, not a law. If oscillators matter in practice, the first sign will
+        be a chip that beats a microcontroller on a real task at a real size, or an oscillator layer that
+        wins on a mainstream benchmark. Neither has happened yet.
+      </p>
+    </div>
+  </div>
+
+  <details class="sources">
+    <summary>Sources</summary>
+    <ol>
+      <li>Y. Kuramoto, &ldquo;Self-entrainment of a population of coupled non-linear oscillators&rdquo;, Lecture Notes in Physics 39, 1975. <a href="https://doi.org/10.1007/BFb0013365" rel="noopener">doi</a></li>
+      <li>F. Hoppensteadt, E. Izhikevich, &ldquo;Oscillatory Neurocomputers with Dynamic Connectivity&rdquo;, Physical Review Letters 82, 2983, 1999. <a href="https://doi.org/10.1103/PhysRevLett.82.2983" rel="noopener">doi</a></li>
+      <li>G. Csaba, W. Porod, &ldquo;Coupled oscillators for computing: A review and perspective&rdquo;, Applied Physics Reviews 7, 011302, 2020. <a href="https://doi.org/10.1063/1.5120412" rel="noopener">doi</a></li>
+      <li>NeurONN, Horizon 2020 grant 871501, coordinated by CNRS. <a href="https://cordis.europa.eu/project/id/871501" rel="noopener">CORDIS</a></li>
+      <li>O. Maher et al., &ldquo;A CMOS-compatible oscillation-based VO2 Ising machine solver&rdquo;, Nature Communications 15, 3334, 2024. <a href="https://doi.org/10.1038/s41467-024-47642-5" rel="noopener">doi</a></li>
+      <li>Choi et al., &ldquo;Hardware Implementation of Ring Oscillator Networks Coupled by BEOL Integrated ReRAM for Associative Memory Tasks&rdquo;, 2025. <a href="https://arxiv.org/abs/2503.14126" rel="noopener">arXiv 2503.14126</a></li>
+      <li>T. Wang, J. Roychowdhury, &ldquo;OIM: Oscillator-based Ising Machines for Solving Combinatorial Optimisation Problems&rdquo;, 2019. <a href="https://arxiv.org/abs/1903.07163" rel="noopener">arXiv 1903.07163</a></li>
+      <li>N. Mohseni, P. McMahon, T. Byrnes, &ldquo;Ising machines as hardware solvers of combinatorial optimization problems&rdquo;, Nature Reviews Physics 4, 2022. <a href="https://arxiv.org/abs/2204.00276" rel="noopener">arXiv 2204.00276</a></li>
+      <li>T. Miyato, S. L&ouml;we, A. Geiger, M. Welling, &ldquo;Artificial Kuramoto Oscillatory Neurons&rdquo;, ICLR 2025 (oral). <a href="https://arxiv.org/abs/2410.13821" rel="noopener">arXiv 2410.13821</a></li>
+      <li>M. Shadlen, J. A. Movshon, &ldquo;Synchrony unbound: a critical evaluation of the temporal binding hypothesis&rdquo;, Neuron 24, 1999. <a href="https://www.cns.nyu.edu/~tony/Publications/shadlen-movshon-1999.pdf" rel="noopener">PDF</a></li>
+    </ol>
+  </details>
+</div>
+
+<footer>&copy; 2026 robert@barcik.training</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var TWO_PI = Math.PI * 2;
+  function $(id) { return document.getElementById(id); }
+
+  // Size a canvas to its CSS box (device-pixel sharp) and return a context in CSS pixels.
+  function fit(c) {
+    var dpr = window.devicePixelRatio || 1;
+    var w = c.clientWidth, h = c.clientHeight;
+    var pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+    if (c.width !== pw || c.height !== ph) { c.width = pw; c.height = ph; }
+    var x = c.getContext('2d');
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.clearRect(0, 0, w, h);
+    return { x: x, w: w, h: h };
+  }
+  function mix(a, b, t) {
+    t = Math.max(0, Math.min(1, t));
+    return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * t) + ',' + Math.round(a[1] + (b[1] - a[1]) * t) + ',' + Math.round(a[2] + (b[2] - a[2]) * t) + ')';
+  }
+  var INK = [29, 42, 107], PAPER = [243, 239, 228], PANEL = [251, 248, 240], PINK = [255, 95, 162],
+      YELLOW = [255, 225, 77], DIM = [48, 60, 134];
+
+  /* =====================================================================
+     PART 1: Kuramoto model, 40 oscillators with different natural tempos
+     ===================================================================== */
+  var N1 = 40, COLS1 = 8, ROWS1 = 5, W0 = TWO_PI * 0.7;
+  var th = [], g = [], K = 0, spread = 0.6, playing = !REDUCED;
+  var r = 0, psi = 0, rSmooth = 0, hist = [], histClock = 0;
+
+  function gauss() {
+    var u = 1 - Math.random(), v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(TWO_PI * v);
+  }
+  (function initTempos() {
+    var i, mean = 0;
+    for (i = 0; i < N1; i++) { g[i] = gauss(); mean += g[i]; }
+    mean /= N1;
+    for (i = 0; i < N1; i++) g[i] -= mean;
+  })();
+  function scramble() { for (var i = 0; i < N1; i++) th[i] = Math.random() * TWO_PI; }
+  scramble();
+
+  function order() {
+    var cx = 0, sy = 0;
+    for (var i = 0; i < N1; i++) { cx += Math.cos(th[i]); sy += Math.sin(th[i]); }
+    cx /= N1; sy /= N1;
+    r = Math.sqrt(cx * cx + sy * sy);
+    psi = Math.atan2(sy, cx);
+  }
+  function step1(dt) {
+    order();
+    // mean-field form of the Kuramoto sum: (K/N) * sum_j sin(th_j - th_i) = K * r * sin(psi - th_i)
+    for (var i = 0; i < N1; i++) th[i] += dt * (W0 + spread * g[i] + K * r * Math.sin(psi - th[i]));
+    order();
+    rSmooth += (r - rSmooth) * Math.min(1, dt * 3);
+    histClock += dt;
+    if (histClock >= 0.1) { histClock = 0; hist.push(r); if (hist.length > 200) hist.shift(); }
+  }
+
+  function drawFlies() {
+    var f = fit($('flies')), x = f.x, cell = f.w / COLS1, rad = cell * 0.27;
+    for (var i = 0; i < N1; i++) {
+      var cx = (i % COLS1 + 0.5) * cell, cy = (Math.floor(i / COLS1) + 0.5) * (f.h / ROWS1);
+      var b = Math.pow(Math.max(0, Math.cos(th[i])), 3);
+      if (b > 0.05) {
+        x.beginPath(); x.arc(cx, cy, rad * (1.2 + 0.5 * b), 0, TWO_PI);
+        x.fillStyle = 'rgba(255,225,77,' + (0.22 * b).toFixed(3) + ')'; x.fill();
+      }
+      x.beginPath(); x.arc(cx, cy, rad, 0, TWO_PI);
+      x.fillStyle = mix(DIM, YELLOW, b); x.fill();
+    }
+  }
+  function drawCircle() {
+    var f = fit($('circle')), x = f.x, cx = f.w / 2, cy = f.h / 2, R = Math.min(f.w, f.h) / 2 - 14;
+    x.beginPath(); x.arc(cx, cy, R, 0, TWO_PI); x.strokeStyle = '#c9c3ae'; x.lineWidth = 2; x.stroke();
+    for (var i = 0; i < N1; i++) {
+      x.beginPath(); x.arc(cx + R * Math.cos(th[i]), cy - R * Math.sin(th[i]), 5.5, 0, TWO_PI);
+      x.fillStyle = 'rgba(42,75,215,0.78)'; x.fill();
+      x.strokeStyle = '#1d2a6b'; x.lineWidth = 1.2; x.stroke();
+    }
+    var ax = cx + r * R * Math.cos(psi), ay = cy - r * R * Math.sin(psi);
+    x.beginPath(); x.moveTo(cx, cy); x.lineTo(ax, ay);
+    x.strokeStyle = '#ff5fa2'; x.lineWidth = 5; x.lineCap = 'round'; x.stroke();
+    x.beginPath(); x.arc(ax, ay, 6, 0, TWO_PI); x.fillStyle = '#ff5fa2'; x.fill();
+    x.strokeStyle = '#1d2a6b'; x.lineWidth = 2; x.stroke();
+    x.beginPath(); x.arc(cx, cy, 3, 0, TWO_PI); x.fillStyle = '#1d2a6b'; x.fill();
+  }
+  function drawStrip() {
+    var f = fit($('strip')), x = f.x, pad = 4, h = f.h - pad * 2, i;
+    x.strokeStyle = '#e2dccb'; x.lineWidth = 1; x.beginPath();
+    for (i = 0; i <= 2; i++) { var y = pad + h * i / 2; x.moveTo(0, y); x.lineTo(f.w, y); }
+    x.stroke();
+    if (hist.length < 2) return;
+    x.beginPath();
+    for (i = 0; i < hist.length; i++) {
+      var px = f.w - (hist.length - 1 - i) * (f.w / 199), py = pad + h * (1 - hist[i]);
+      if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+    }
+    x.strokeStyle = '#2a4bd7'; x.lineWidth = 2.5; x.lineJoin = 'round'; x.stroke();
+  }
+  var lastStatus = '';
+  function readout1() {
+    $('r-num').textContent = rSmooth.toFixed(2);
+    $('r-fill').style.width = (rSmooth * 100).toFixed(1) + '%';
+    var s;
+    if (rSmooth < 0.35) s = 'Everyone keeps their own tempo. The flashes are scattered and the arrow stays short.';
+    else if (rSmooth < 0.8) s = 'A group has locked together and is pulling the others in. The fastest and slowest still run free.';
+    else s = 'Locked. The whole population flashes as one, although no oscillator is in charge.';
+    if (s !== lastStatus) { $('status').textContent = s; lastStatus = s; }
+  }
+
+  $('k').addEventListener('input', function () { K = parseFloat(this.value); $('k-val').textContent = K.toFixed(1); });
+  $('spread').addEventListener('input', function () { spread = parseFloat(this.value); $('spread-val').textContent = spread.toFixed(1); });
+  $('scramble').addEventListener('click', function () { scramble(); order(); });
+  function setPlaying(p) {
+    playing = p;
+    $('play').textContent = p ? 'Pause' : 'Play';
+    $('play').setAttribute('aria-pressed', p ? 'false' : 'true');
+  }
+  $('play').addEventListener('click', function () { setPlaying(!playing); });
+  setPlaying(playing);
+
+  /* =====================================================================
+     PART 2: oscillator associative memory, 8 x 8, Hebbian couplings
+     ===================================================================== */
+  var G = 8, N2 = G * G, KS = 0.15, RATE = 7;
+  var PICS = {
+    T: ['########', '########', '...##...', '...##...', '...##...', '...##...', '...##...', '...##...'],
+    X: ['#......#', '.#....#.', '..#..#..', '...##...', '...##...', '..#..#..', '.#....#.', '#......#'],
+    O: ['..####..', '.#....#.', '#......#', '#......#', '#......#', '#......#', '.#....#.', '..####..'],
+    Z: ['########', '......#.', '.....#..', '....#...', '...#....', '..#.....', '.#......', '########']
+  };
+  function vec(k) { return PICS[k].join('').split('').map(function (c) { return c === '#' ? 1 : -1; }); }
+  var keys = ['T', 'X', 'O'], xi = keys.map(vec);
+  var th2 = [], mode = 'hold', target = 'X', tRun = 0, carrier = 0, ov = [];
+
+  function overlaps() {
+    ov = xi.map(function (p) {
+      var m = 0;
+      for (var j = 0; j < N2; j++) m += p[j] * Math.cos(th2[j]);
+      return m / N2;
+    });
+  }
+  function buildPatternUI() {
+    var box = $('pat-btns'); box.innerHTML = '';
+    keys.forEach(function (k) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn' + (k === target ? ' active' : ''); b.textContent = k;
+      b.setAttribute('aria-label', 'Start from the stored picture ' + k);
+      b.addEventListener('click', function () { setInput(k); });
+      box.appendChild(b);
+    });
+    var o = $('overlaps'); o.innerHTML = '';
+    keys.forEach(function (k, i) {
+      var row = document.createElement('div'); row.className = 'ov-row';
+      row.innerHTML = '<span>' + k + '</span><div class="ov-track"><div class="ov-fill" id="ov-f' + i + '"></div></div><span class="ov-val" id="ov-v' + i + '">0%</span>';
+      o.appendChild(row);
+    });
+  }
+  function setVerdict(cls, text) { var v = $('verdict'); v.className = 'verdict' + (cls ? ' ' + cls : ''); v.textContent = text; }
+
+  function setInput(k) {
+    target = k;
+    var base = vec(k), n = Math.round(parseInt($('noise').value, 10) / 100 * N2), idx = [], i;
+    for (i = 0; i < N2; i++) idx.push(i);
+    for (i = N2 - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+    for (i = 0; i < n; i++) base[idx[i]] *= -1;
+    // a small random offset: real oscillators are never exactly on the beat
+    for (i = 0; i < N2; i++) th2[i] = (base[i] > 0 ? 0 : Math.PI) + (Math.random() - 0.5) * 0.6;
+    mode = 'hold';
+    buildPatternUI();
+    setVerdict('', n === 0
+      ? 'The stored picture ' + k + ', undamaged. Raise the damage or tap cells, then let it settle.'
+      : 'Picture ' + k + ' with ' + n + ' of 64 cells flipped. The couplings are switched off for now. Press "Let it settle".');
+    $('settle').disabled = false;
+  }
+  function settle() { mode = 'run'; tRun = 0; $('settle').disabled = true; setVerdict('', 'Settling: every oscillator is adjusting its timing to its neighbours...'); }
+  function randomStart() {
+    target = null;
+    for (var i = 0; i < N2; i++) th2[i] = Math.random() * TWO_PI;
+    buildPatternUI();
+    settle();
+    setVerdict('', 'Random timing, no picture at all. Settling...');
+  }
+  function finish() {
+    mode = 'done';
+    overlaps();
+    var best = 0, i;
+    for (i = 1; i < ov.length; i++) if (Math.abs(ov[i]) > Math.abs(ov[best])) best = i;
+    var m = ov[best], k = keys[best], pct = Math.round(Math.abs(m) * 100);
+    var neg = m < 0 ? ' in negative (every cell half a beat shifted, which is the same memory: only relative timing counts)' : '';
+    if (Math.abs(m) > 0.95) {
+      if (target === null) setVerdict('ok', 'From random timing the network fell into the stored picture ' + k + neg + '.');
+      else if (k === target) setVerdict('ok', 'Recalled ' + k + neg + '. The damaged cells were pulled back onto the right beat.');
+      else setVerdict('warn', 'Settled on ' + k + neg + ', not the ' + target + ' you started from. With this much damage the input sat closer to another memory.');
+    } else {
+      setVerdict('warn', 'Settled on a blend that was never stored (closest: ' + k + ', ' + pct + '% match). This is a spurious memory, the classic failure of this kind of network.');
+    }
+  }
+  function step2(dt) {
+    var m, i, P = xi.length, S = [], C = [], maxd = 0;
+    for (m = 0; m < P; m++) {
+      var s = 0, c = 0, p = xi[m];
+      for (i = 0; i < N2; i++) { s += p[i] * Math.sin(th2[i]); c += p[i] * Math.cos(th2[i]); }
+      S[m] = s / N2; C[m] = c / N2;
+    }
+    for (i = 0; i < N2; i++) {
+      var d = 0, sn = Math.sin(th2[i]), cs = Math.cos(th2[i]);
+      // (1/N) * sum_j J_ij sin(th_j - th_i) with Hebbian J_ij = sum_m xi_i xi_j
+      for (m = 0; m < P; m++) d += xi[m][i] * (S[m] * cs - C[m] * sn);
+      d -= KS * Math.sin(2 * th2[i]);
+      th2[i] += RATE * dt * d;
+      if (Math.abs(d) > maxd) maxd = Math.abs(d);
+    }
+    tRun += dt;
+    if ((maxd < 0.01 && tRun > 0.6) || tRun > 9) finish();
+  }
+  function drawGrid(id, colourOf) {
+    var f = fit($(id)), x = f.x, cell = f.w / G, gap = Math.max(1.5, cell * 0.06);
+    for (var i = 0; i < N2; i++) {
+      x.fillStyle = colourOf(i);
+      x.fillRect((i % G) * cell + gap / 2, Math.floor(i / G) * cell + gap / 2, cell - gap, cell - gap);
+    }
+  }
+  function draw2() {
+    drawGrid('blink', function (i) { var b = (1 + Math.cos(carrier + th2[i])) / 2; return mix(PANEL, PINK, Math.pow(b, 1.4)); });
+    drawGrid('read', function (i) { return mix(PAPER, INK, (1 + Math.cos(th2[i])) / 2); });
+    overlaps();
+    for (var i = 0; i < ov.length; i++) {
+      var pct = Math.round(Math.abs(ov[i]) * 100);
+      $('ov-f' + i).style.width = pct + '%';
+      $('ov-v' + i).textContent = pct + '%';
+    }
+  }
+  function flipCell(ev) {
+    var c = ev.currentTarget, rc = c.getBoundingClientRect();
+    var col = Math.floor((ev.clientX - rc.left) / rc.width * G), row = Math.floor((ev.clientY - rc.top) / rc.height * G);
+    if (col < 0 || col >= G || row < 0 || row >= G) return;
+    var i = row * G + col;
+    th2[i] = (Math.cos(th2[i]) > 0 ? Math.PI : 0) + (Math.random() - 0.5) * 0.6;
+    mode = 'hold'; $('settle').disabled = false;
+    setVerdict('', 'You changed the input by hand. Press "Let it settle" to see where the network takes it.');
+  }
+  $('blink').addEventListener('click', flipCell);
+  $('read').addEventListener('click', flipCell);
+  $('settle').addEventListener('click', settle);
+  $('random').addEventListener('click', randomStart);
+  $('noise').addEventListener('input', function () {
+    $('noise-val').textContent = this.value + '%';
+    setInput(target || 'X');
+  });
+  $('fourth').addEventListener('change', function () {
+    keys = this.checked ? ['T', 'X', 'O', 'Z'] : ['T', 'X', 'O'];
+    xi = keys.map(vec);
+    if (keys.indexOf(target) < 0) target = 'X';
+    setInput(target || 'X');
+  });
+  setInput('X');
+
+  /* ===== one animation loop for both parts ===== */
+  var last = 0;
+  function frame(t) {
+    var dt = last ? Math.min(0.05, (t - last) / 1000) : 0.016;
+    last = t;
+    if (playing) { step1(dt / 2); step1(dt / 2); } else { order(); }
+    if (!REDUCED) carrier += dt * TWO_PI * 0.6;
+    if (mode === 'run') step2(dt);
+    drawFlies(); drawCircle(); drawStrip(); readout1(); draw2();
+    window.requestAnimationFrame(frame);
+  }
+  window.requestAnimationFrame(frame);
+})();
+</script>
+
+<!-- AI transparency notice (Art 50 EU AI Act, voluntary) -->
+<details class="ai-transparency-pill" id="ai-transparency" lang="en"><summary aria-label="AI transparency notice"><svg class="ait-icon" viewBox="85 96 374 374" aria-hidden="true" focusable="false"><defs><mask id="ait-m-p"><rect width="566.93" height="566.93" fill="#000"/><circle cx="272.03" cy="283.47" r="182.75" fill="#fff"/><path fill="#000" d="M170.79,353.74c-1.08,0-2.05-.43-2.92-1.31-.88-.87-1.31-1.84-1.31-2.92,0-.67.07-1.27.2-1.81l47.34-129.32c.4-1.48,1.24-2.79,2.52-3.93,1.27-1.14,3.05-1.71,5.34-1.71h29.81c2.28,0,4.06.57,5.34,1.71,1.27,1.14,2.11,2.45,2.52,3.93l47.14,129.32c.27.54.4,1.14.4,1.81,0,1.08-.44,2.05-1.31,2.92s-1.91,1.31-3.12,1.31h-24.78c-2.01,0-3.52-.5-4.53-1.51-1.01-1.01-1.65-1.91-1.91-2.72l-7.86-20.55h-53.78l-7.65,20.55c-.27.81-.88,1.71-1.81,2.72-.94,1.01-2.55,1.51-4.83,1.51h-24.78ZM218.13,299.96h37.47l-18.93-53.18-18.53,53.18Z"/><path fill="#000" d="M328.11,353.74c-1.48,0-2.69-.47-3.63-1.41-.94-.94-1.41-2.15-1.41-3.63v-130.93c0-1.48.47-2.68,1.41-3.63s2.15-1.41,3.63-1.41h26.99c1.48,0,2.68.47,3.63,1.41.94.94,1.41,2.15,1.41,3.63v130.93c0,1.48-.47,2.69-1.41,3.63-.94.94-2.15,1.41-3.63,1.41h-26.99Z"/></mask></defs><rect width="566.93" height="566.93" fill="currentColor" opacity=".5" mask="url(#ait-m-p)"/></svg><span>AI transparency</span></summary><div class="ait-panel"><p>This demo is a scripted, self-contained browser simulation. Nothing you type is sent to an AI model and no live AI system runs behind it, even where it plays one. Its code and copy were built with generative AI (Anthropic&rsquo;s Claude) and reviewed by Robert Barcik, who is responsible for what is published (LearningDoe s.r.o.). Disclosed in the spirit of Article&nbsp;50 of the EU AI Act.</p></div></details>
+<style>
+.ai-transparency-pill{position:fixed;right:.75rem;bottom:.75rem;z-index:2147483000;font:600 12px/1.45 'Bricolage Grotesque',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f3efe4}
+.ai-transparency-pill summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem .3rem .45rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:2px 2px 0 #1d2a6b;opacity:.92;transition:opacity .15s}
+.ai-transparency-pill summary::-webkit-details-marker{display:none}
+.ai-transparency-pill summary:hover,.ai-transparency-pill[open] summary{opacity:1}
+.ai-transparency-pill .ait-icon{width:1.1rem;height:1.1rem;color:#fff}
+.ai-transparency-pill .ait-panel{position:absolute;right:0;bottom:calc(100% + .5rem);width:min(22rem,calc(100vw - 1.5rem));padding:.85rem 1rem;border-radius:0;background:#1d2a6b;border:2px solid #f3efe4;box-shadow:5px 5px 0 #ff5fa2;text-align:left;font-weight:400}
+.ai-transparency-pill .ait-panel p{margin:0}
+@media print{.ai-transparency-pill{display:none}}
+</style>
+</body>
+</html>
